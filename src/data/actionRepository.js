@@ -47,10 +47,18 @@ function getSearchDisplayName(action, languagePreference = "mixed") {
 }
 
 function getLessonDisplayName(action, languagePreference = "mixed") {
+  if (languagePreference === "mixed") {
+    return getSearchDisplayName(action, languagePreference);
+  }
+
   return getPrimaryName(action, languagePreference);
 }
 
 function getPosterDisplayName(action, languagePreference = "mixed") {
+  if (languagePreference === "mixed") {
+    return getSearchDisplayName(action, languagePreference);
+  }
+
   return getPrimaryName(action, languagePreference);
 }
 

@@ -8,7 +8,7 @@ export const starterActions = [
     id: "starter-r-footwork-series",
     source: "starter",
     apparatus: "R",
-    name: "Footwork / Leg Press Series",
+    name: "Footwork",
     cnName: "蹬腿系列",
     level: "",
     benefits: [

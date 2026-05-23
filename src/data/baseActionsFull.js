@@ -50,7 +50,7 @@ export const baseActionsFull = [
     id: "full-r-footwork-series",
     source: "full",
     apparatus: "R",
-    name: "Footwork / Leg Press Series",
+    name: "Footwork ",
     cnName: "蹬腿系列",
     level: "G",
     benefits: [

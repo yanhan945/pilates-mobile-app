@@ -69,6 +69,7 @@ const apparatusOptions = [
 function App() {
   const [activeTab, setActiveTab] = useState("home");
   const [selectedMember, setSelectedMember] = useState(null);
+const [languagePreference, setLanguagePreference] = useState("chinese");
 
   function openSchedule(member) {
     setSelectedMember(member);
@@ -79,9 +80,19 @@ function App() {
     <div className="app-shell">
       <main className="phone-page">
         {activeTab === "home" && <HomePage onOpenSchedule={openSchedule} />}
-        {activeTab === "schedule" && <SchedulePage member={selectedMember} />}
+        {activeTab === "schedule" && (
+  <SchedulePage
+    member={selectedMember}
+    languagePreference={languagePreference}
+  />
+)}
         {activeTab === "members" && <MembersPage onOpenSchedule={openSchedule} />}
-        {activeTab === "settings" && <SettingsPage />}
+        {activeTab === "settings" && (
+  <SettingsPage
+    languagePreference={languagePreference}
+    setLanguagePreference={setLanguagePreference}
+  />
+)}
       </main>
 
       <nav className="bottom-tabs">
@@ -160,7 +171,7 @@ function HomePage({ onOpenSchedule }) {
   );
 }
 
-function SchedulePage({ member }) {
+function SchedulePage({ member, languagePreference }) {
   const searchInputRef = useRef(null);
   const apparatusPickerRef = useRef(null);
 
@@ -210,9 +221,9 @@ function SchedulePage({ member }) {
   return searchActions({
     keyword: searchKeyword,
     apparatus: selectedApparatus,
-    languagePreference: "mixed",
+    languagePreference,
   }).slice(0, 8);
-}, [searchKeyword, selectedApparatus]);
+}, [searchKeyword, selectedApparatus, languagePreference]);
 
   function addAction(action) {
     setActions((currentActions) => [
@@ -445,7 +456,20 @@ function MembersPage({ onOpenSchedule }) {
   );
 }
 
-function SettingsPage() {
+function SettingsPage({ languagePreference, setLanguagePreference }) {
+  const [isLanguagePanelOpen, setIsLanguagePanelOpen] = useState(false);
+
+  const languageLabelMap = {
+    chinese: "中文优先",
+    english: "英文优先",
+    mixed: "中英对照",
+  };
+
+  function chooseLanguagePreference(nextPreference) {
+    setLanguagePreference(nextPreference);
+    setIsLanguagePanelOpen(false);
+  }
+
   return (
     <section className="page">
       <header className="simple-header">
@@ -453,13 +477,68 @@ function SettingsPage() {
       </header>
 
       <div className="settings-list">
-        <button>工作室信息 <span>›</span></button>
-        <button>课程模板管理 <span>›</span></button>
-        <button>动作语言偏好 <span>›</span></button>
-        <button>动作库管理 <span>›</span></button>
-        <button>导出数据 <span>›</span></button>
-        <button>导入数据 <span>›</span></button>
-        <button>账户管理 <span>›</span></button>
+        <button>
+          工作室信息 <span>›</span>
+        </button>
+
+        <button>
+          课程模板管理 <span>›</span>
+        </button>
+
+        <button
+          className="settings-row-with-subtitle"
+          onClick={() => setIsLanguagePanelOpen((current) => !current)}
+        >
+          <div>
+            <strong>动作语言偏好</strong>
+            <small>{languageLabelMap[languagePreference]}</small>
+          </div>
+          <span>{isLanguagePanelOpen ? "⌃" : "›"}</span>
+        </button>
+
+        {isLanguagePanelOpen && (
+          <div className="language-preference-panel">
+            <button
+              className={languagePreference === "chinese" ? "active" : ""}
+              onClick={() => chooseLanguagePreference("chinese")}
+            >
+              <strong>中文优先</strong>
+              <small>搜索和海报优先显示中文名，没有中文时显示英文。</small>
+            </button>
+
+            <button
+              className={languagePreference === "english" ? "active" : ""}
+              onClick={() => chooseLanguagePreference("english")}
+            >
+              <strong>英文优先</strong>
+              <small>适合习惯国际体系动作名的老师。</small>
+            </button>
+
+            <button
+              className={languagePreference === "mixed" ? "active" : ""}
+              onClick={() => chooseLanguagePreference("mixed")}
+            >
+              <strong>中英对照</strong>
+              <small>同时显示中文和英文，方便对照。</small>
+            </button>
+          </div>
+        )}
+
+        <button>
+          动作库管理 <span>›</span>
+        </button>
+
+        <button>
+          导出数据 <span>›</span>
+        </button>
+
+        <button>
+          导入数据 <span>›</span>
+        </button>
+
+        <button>
+          账户管理 <span>›</span>
+        </button>
       </div>
     </section>
   );
