@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
+import { createSelectedLessonAction, searchActions } from "./data/actionRepository";
 
 const recentMembers = [
   {
@@ -49,16 +50,21 @@ const allMembers = [
   },
 ];
 
-const starterActions = [
-  {
-    name: "Footwork",
-    benefit: "激活下肢力量，建立稳定发力节奏。",
-  },
-  {
-    name: "Hundred",
-    benefit: "提升核心控制，帮助呼吸和躯干稳定。",
-  },
+const apparatusOptions = [
+  { key: "all", label: "全部", desc: "全部动作" },
+  { key: "M", label: "M", desc: "垫上" },
+  { key: "R", label: "R", desc: "核心床" },
+  { key: "TT", label: "TT", desc: "卡迪拉克 / 秋千床" },
+  { key: "LB", label: "LB", desc: "梯桶 / Ladder Barrel" },
+  { key: "C", label: "C", desc: "椅子 / 稳踏椅" },
+  { key: "SC", label: "SC", desc: "脊柱矫正器" },
+  { key: "favorite", label: "收藏", desc: "常用收藏动作" },
+  { key: "dumbbell", label: "哑铃", desc: "哑铃类小工具" },
+  { key: "kettlebell", label: "壶铃", desc: "壶铃类小工具" },
+  { key: "bosu", label: "波速球", desc: "BOSU / 平衡训练" },
 ];
+
+
 
 function App() {
   const [activeTab, setActiveTab] = useState("home");
@@ -155,7 +161,89 @@ function HomePage({ onOpenSchedule }) {
 }
 
 function SchedulePage({ member }) {
+  const searchInputRef = useRef(null);
+  const apparatusPickerRef = useRef(null);
+
+  const [selectedApparatus, setSelectedApparatus] = useState("all");
+  const [isApparatusOpen, setIsApparatusOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [actions, setActions] = useState([
+  {
+    id: "selected-footwork",
+    name: "Footwork",
+    benefit: "激活下肢力量，建立稳定发力节奏。",
+    comment: "",
+  },
+  {
+    id: "selected-hundred",
+    name: "Hundred",
+    benefit: "提升核心控制，帮助呼吸和躯干稳定。",
+    comment: "",
+  },
+]);
+  
+
   const lessonNumber = member ? member.lessons + 1 : 1;
+
+  const selectedApparatusLabel =
+    apparatusOptions.find((item) => item.key === selectedApparatus)?.label || "全部";
+
+    useEffect(() => {
+  function closeApparatusWhenClickOutside(event) {
+    if (!apparatusPickerRef.current) return;
+
+    if (!apparatusPickerRef.current.contains(event.target)) {
+      setIsApparatusOpen(false);
+    }
+  }
+
+  document.addEventListener("mousedown", closeApparatusWhenClickOutside);
+  document.addEventListener("touchstart", closeApparatusWhenClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", closeApparatusWhenClickOutside);
+    document.removeEventListener("touchstart", closeApparatusWhenClickOutside);
+  };
+}, []);
+
+  const filteredActions = useMemo(() => {
+  return searchActions({
+    keyword: searchKeyword,
+    apparatus: selectedApparatus,
+    languagePreference: "mixed",
+  }).slice(0, 8);
+}, [searchKeyword, selectedApparatus]);
+
+  function addAction(action) {
+    setActions((currentActions) => [
+  ...currentActions,
+  createSelectedLessonAction(action),
+]);
+
+    setSearchKeyword("");
+
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 0);
+  }
+
+  function updateActionField(actionId, fieldName, nextValue) {
+  setActions((currentActions) =>
+    currentActions.map((action) =>
+      action.id === actionId ? { ...action, [fieldName]: nextValue } : action
+    )
+  );
+}
+
+  function deleteAction(actionId) {
+    setActions((currentActions) =>
+      currentActions.filter((action) => action.id !== actionId)
+    );
+
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 0);
+  }
 
   return (
     <section className="page">
@@ -164,11 +252,11 @@ function SchedulePage({ member }) {
           <h1>普拉提私教助手</h1>
           <p>2026.05.23 · 周六</p>
         </div>
-        <button className="small-button">导入计划</button>
+        <button className="small-button">快速填充</button>
       </header>
 
       <section className="form-card">
-        <h2>课程主题 / 学员姓名</h2>
+        <h2>课程信息</h2>
 
         <label className="field">
           <span>天气</span>
@@ -200,26 +288,111 @@ function SchedulePage({ member }) {
       <section className="form-card">
         <div className="section-title compact">
           <h2>训练动作详情</h2>
-          <span>{starterActions.length} 个动作</span>
+          <span>{actions.length} 个动作</span>
         </div>
 
         <div className="action-toolbar">
-          <button className="filter-button">器械 ▾</button>
-          <input placeholder="输入动作关键词" />
-          <button className="add-button">＋</button>
+          <div className="apparatus-picker" ref={apparatusPickerRef}>
+            <button
+              className="filter-button"
+              onClick={() => setIsApparatusOpen((current) => !current)}
+            >
+              {selectedApparatusLabel} ▾
+            </button>
+
+            {isApparatusOpen && (
+              <div className="apparatus-menu">
+                {apparatusOptions.map((item) => (
+                  <button
+                    key={item.key}
+                    className={selectedApparatus === item.key ? "selected" : ""}
+                    onClick={() => {
+                      setSelectedApparatus(item.key);
+                      setIsApparatusOpen(false);
+
+                      setTimeout(() => {
+                        searchInputRef.current?.focus();
+                      }, 0);
+                    }}
+                  >
+                    <strong>{item.label}</strong>
+                    <span>{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <input
+            ref={searchInputRef}
+            value={searchKeyword}
+            onChange={(event) => setSearchKeyword(event.target.value)}
+            placeholder="输入动作关键词"
+          />
+
+          <button
+            className="add-button"
+            onClick={() => {
+              if (filteredActions[0]) {
+                addAction(filteredActions[0]);
+              }
+            }}
+          >
+            ＋
+          </button>
         </div>
 
+        {(searchKeyword || isApparatusOpen) && (
+          <div className="search-results">
+            {filteredActions.map((action) => (
+  <button key={action.id} onClick={() => addAction(action)}>
+    <div>
+      <strong>{action.displayName}</strong>
+      <span>{action.defaultBenefit}</span>
+    </div>
+    <em>{action.apparatus}</em>
+  </button>
+))}
+            {filteredActions.length === 0 && (
+              <p className="empty-result">没有找到动作，可以之后做“临时新增动作”。</p>
+            )}
+          </div>
+        )}
+
         <div className="action-list">
-          {starterActions.map((action, index) => (
-            <div className="action-card" key={action.name}>
-              <div className="action-number">{index + 1}</div>
-              <div className="action-content">
-                <strong>{action.name}</strong>
-                <textarea defaultValue={action.benefit} />
-              </div>
-              <button className="delete-mini">×</button>
-            </div>
-          ))}
+         {actions.map((action, index) => (
+  <div className="action-card" key={action.id}>
+    <div className="action-card-top">
+      <div className="action-number">{index + 1}</div>
+      <strong className="action-name">{action.name}</strong>
+      <button className="delete-mini" onClick={() => deleteAction(action.id)}>
+        ×
+      </button>
+    </div>
+
+    <label className="action-line">
+      <span>好处</span>
+      <textarea
+        value={action.benefit}
+        onChange={(event) =>
+          updateActionField(action.id, "benefit", event.target.value)
+        }
+        placeholder="输入这个动作本节课的训练好处..."
+      />
+    </label>
+
+    <label className="action-line">
+      <span>点评</span>
+      <textarea
+        value={action.comment}
+        onChange={(event) =>
+          updateActionField(action.id, "comment", event.target.value)
+        }
+        placeholder="输入动作点评，可不填..."
+      />
+    </label>
+  </div>
+))}
         </div>
       </section>
 
@@ -280,13 +453,13 @@ function SettingsPage() {
       </header>
 
       <div className="settings-list">
-        <button>账户管理 <span>›</span></button>
         <button>工作室信息 <span>›</span></button>
-        <button>动作库管理 <span>›</span></button>
-        <button>动作语言偏好 <span>›</span></button>
         <button>课程模板管理 <span>›</span></button>
+        <button>动作语言偏好 <span>›</span></button>
+        <button>动作库管理 <span>›</span></button>
         <button>导出数据 <span>›</span></button>
         <button>导入数据 <span>›</span></button>
+        <button>账户管理 <span>›</span></button>
       </div>
     </section>
   );
