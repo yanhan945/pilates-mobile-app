@@ -668,3 +668,259 @@ textarea {
     overflow: hidden;
   }
 }
+.schedule-header h1 {
+  font-size: 22px;
+}
+
+.save-toast {
+  position: fixed;
+  left: 50%;
+  top: 18px;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: #17352f;
+  color: white;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: 0 10px 24px rgba(23, 53, 47, 0.18);
+}
+
+.quick-recommend-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  margin: 4px 0 8px;
+}
+
+.quick-recommend-title strong {
+  color: #21332f;
+  font-size: 14px;
+}
+
+.quick-recommend-title span {
+  color: #8ba09a;
+  font-size: 12px;
+}
+
+.search-results.always-visible {
+  margin-bottom: 14px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(19, 32, 28, 0.36);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-sheet {
+  width: min(430px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: #f7faf7;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  padding: 18px 16px 28px;
+  box-shadow: 0 -18px 42px rgba(19, 32, 28, 0.18);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.modal-header p {
+  margin: 6px 0 0;
+  color: #7c8e88;
+  font-size: 13px;
+}
+
+.modal-header button {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #edf5f1;
+  color: #4d6960;
+  font-size: 24px;
+}
+
+.quick-mode-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 6px;
+  border-radius: 18px;
+  background: #edf6f2;
+}
+
+.quick-mode-tabs button {
+  height: 42px;
+  border-radius: 14px;
+  background: transparent;
+  color: #71827d;
+  font-weight: 800;
+}
+
+.quick-mode-tabs button.active {
+  background: white;
+  color: #078d7b;
+  box-shadow: 0 8px 18px rgba(47, 75, 68, 0.08);
+}
+
+.template-list {
+  display: grid;
+  gap: 10px;
+}
+
+.template-list button {
+  width: 100%;
+  min-height: 84px;
+  border-radius: 18px;
+  background: white;
+  color: #21332f;
+  text-align: left;
+  padding: 14px;
+  display: grid;
+  gap: 6px;
+  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
+}
+
+.template-list strong {
+  font-size: 17px;
+}
+
+.template-list span {
+  color: #6f827c;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.template-list em {
+  width: fit-content;
+  font-style: normal;
+  color: #078d7b;
+  background: #e5f8f1;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.paste-panel textarea {
+  min-height: 160px;
+  resize: vertical;
+  background: white;
+  border-radius: 18px;
+  padding: 14px;
+  line-height: 1.55;
+  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
+}
+
+.main-wide-button {
+  width: 100%;
+  height: 52px;
+  border-radius: 16px;
+  background: #079b87;
+  color: white;
+  font-weight: 900;
+  margin-top: 12px;
+  box-shadow: 0 10px 20px rgba(7, 155, 135, 0.22);
+}
+
+.parsed-list {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.parsed-list h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.parsed-row {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 10px;
+  background: white;
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.06);
+}
+
+.parsed-index {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #dff8ef;
+  color: #078d7b;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+}
+
+.parsed-content strong {
+  display: block;
+  color: #21332f;
+  font-size: 14px;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+
+.type-switch {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.type-switch button {
+  height: 30px;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: #f1f6f3;
+  color: #72877f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.type-switch button.active {
+  background: #079b87;
+  color: white;
+}
+
+.empty-quick-panel {
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
+}
+
+.empty-quick-panel strong {
+  display: block;
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.empty-quick-panel p {
+  margin: 0;
+  color: #6f827c;
+  line-height: 1.55;
+  font-size: 14px;
+}
