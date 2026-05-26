@@ -4,14 +4,18 @@ import {
   createSelectedLessonAction,
   createTemporaryLessonAction,
   findBestActionMatch,
+  getActionIdentityKey,
+  getAllActions,
   searchActions,
 } from "./data/actionRepository";
 import {
+  deleteTemplate,
   getAppData,
   getTemplates,
   saveLesson,
   saveLessonDraft,
   saveSettings,
+  saveTemplate,
 } from "./data/localStore";
 
 const apparatusOptions = [
@@ -51,6 +55,26 @@ function getTodayLabel() {
   ).padStart(2, "0")} · ${weekdays[now.getDay()]}`;
 }
 
+function getApparatusLabel(apparatus) {
+  return apparatusOptions.find((item) => item.key === apparatus)?.label || apparatus || "";
+}
+
+function parseActionLine(line) {
+  const apparatusMatch = line.match(/^([A-Za-z]{1,3}|哑铃|壶铃|波速球)\s*[-—:：]?\s*(.+)$/);
+  if (!apparatusMatch) return null;
+
+  const rawApparatus = apparatusMatch[1];
+  const normalizedApparatus =
+    apparatusAliases[rawApparatus.toUpperCase()] || apparatusAliases[rawApparatus];
+
+  if (!normalizedApparatus) return null;
+
+  return {
+    apparatus: normalizedApparatus,
+    keyword: apparatusMatch[2].trim(),
+  };
+}
+
 function parsePasteCourseText(rawText) {
   return rawText
     .split(/\r?\n/)
@@ -69,17 +93,15 @@ function parsePasteCourseText(rawText) {
         };
       }
 
-      const apparatusMatch = line.match(/^([A-Za-z]{1,3}|哑铃|壶铃|波速球)\s*[-—:：]?\s*(.+)$/);
-      const maybeApparatus = apparatusMatch?.[1]?.toUpperCase();
-      const normalizedApparatus = apparatusAliases[maybeApparatus] || apparatusAliases[apparatusMatch?.[1]];
+      const actionLine = parseActionLine(line);
 
-      if (normalizedApparatus && apparatusMatch?.[2]) {
+      if (actionLine) {
         return {
           id: `parsed-${index}`,
           rawText: line,
           type: "action",
-          apparatus: normalizedApparatus,
-          keyword: apparatusMatch[2].trim(),
+          apparatus: actionLine.apparatus,
+          keyword: actionLine.keyword,
         };
       }
 
@@ -238,7 +260,32 @@ function SchedulePage({ member, languagePreference }) {
       "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
   });
 
-  const [actions, setActions] = useState([]);
+  const [actions, setActions] = useState([
+    {
+      id: "selected-footwork-default",
+      baseActionId: "starter-r-footwork-series",
+      identityKey: "R|蹬腿系列|footwork",
+      name: "Footwork",
+      posterName: "Footwork",
+      rawName: "Footwork",
+      cnName: "蹬腿系列",
+      apparatus: "R",
+      benefit: "激活下肢力量，建立稳定发力节奏。",
+      comment: "",
+    },
+    {
+      id: "selected-hundred-default",
+      baseActionId: "starter-m-hundred",
+      identityKey: "M|百次拍击|thehundred",
+      name: "Hundred",
+      posterName: "Hundred",
+      rawName: "The Hundred",
+      cnName: "百次拍击",
+      apparatus: "M",
+      benefit: "提升核心控制，帮助呼吸和躯干稳定。",
+      comment: "",
+    },
+  ]);
 
   const templates = useMemo(() => getTemplates(), []);
   const lessonNumber = member ? member.lessons + 1 : 1;
@@ -272,13 +319,34 @@ function SchedulePage({ member, languagePreference }) {
     };
   }, []);
 
+  const addedActionKeys = useMemo(() => {
+    return new Set(
+      actions
+        .map((action) => action.identityKey || getActionIdentityKey(action))
+        .filter(Boolean)
+    );
+  }, [actions]);
+
+  const addedBaseActionIds = useMemo(() => {
+    return new Set(actions.map((action) => action.baseActionId).filter(Boolean));
+  }, [actions]);
+
   const recommendedActions = useMemo(() => {
     return searchActions({
       keyword: searchKeyword,
       apparatus: selectedApparatus,
       languagePreference,
-    }).slice(0, 8);
-  }, [searchKeyword, selectedApparatus, languagePreference]);
+    })
+      .filter((action) => !addedBaseActionIds.has(action.id))
+      .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)))
+      .slice(0, 8);
+  }, [
+    searchKeyword,
+    selectedApparatus,
+    languagePreference,
+    addedBaseActionIds,
+    addedActionKeys,
+  ]);
 
   function updateLessonField(fieldName, nextValue) {
     setLessonForm((current) => ({
@@ -288,18 +356,16 @@ function SchedulePage({ member, languagePreference }) {
   }
 
   function addAction(action) {
-  setActions((currentActions) => [
-    ...currentActions,
-    createSelectedLessonAction(action),
-  ]);
+    const nextAction = createSelectedLessonAction(action);
 
-  setSearchKeyword("");
-  setAddMessage(`已添加：${action.displayName || action.cnName || action.name}`);
+    setActions((currentActions) => [...currentActions, nextAction]);
+    setSearchKeyword("");
+    setAddMessage(`已添加：${action.displayName || action.cnName || action.name}`);
 
-  setTimeout(() => {
-    setAddMessage("");
-  }, 900);
-}
+    setTimeout(() => {
+      setAddMessage("");
+    }, 900);
+  }
 
   function updateActionField(actionId, fieldName, nextValue) {
     setActions((currentActions) =>
@@ -317,7 +383,7 @@ function SchedulePage({ member, languagePreference }) {
 
   function buildLessonPayload() {
     return {
-      id: `lesson-${member?.name || "guest"}-${lessonNumber}`,
+      id: `lesson-${lessonForm.studentName || "guest"}-${lessonNumber}`,
       memberName: lessonForm.studentName,
       lessonNumber,
       lessonDate: getTodayLabel(),
@@ -341,23 +407,25 @@ function SchedulePage({ member, languagePreference }) {
     setTimeout(() => setSaveMessage(""), 1600);
   }
 
-  function applyTemplate(template) {
-    const nextActions = template.actions.map((item) => {
-      const matchedAction = findBestActionMatch({
-        apparatus: item.apparatus,
-        keyword: item.keyword,
-        languagePreference,
-      });
-
-      if (matchedAction) {
-        return createSelectedLessonAction(matchedAction);
-      }
-
-      return createTemporaryLessonAction({
-        apparatus: item.apparatus,
-        name: item.keyword,
-      });
+  function buildActionFromKeyword(item) {
+    const matchedAction = findBestActionMatch({
+      apparatus: item.apparatus || "all",
+      keyword: item.keyword,
+      languagePreference,
     });
+
+    if (matchedAction) {
+      return createSelectedLessonAction(matchedAction);
+    }
+
+    return createTemporaryLessonAction({
+      apparatus: item.apparatus || "M",
+      name: item.keyword,
+    });
+  }
+
+  function applyTemplate(template) {
+    const nextActions = template.actions.map(buildActionFromKeyword);
 
     setActions((currentActions) => [...currentActions, ...nextActions]);
     setLessonForm((current) => ({
@@ -380,34 +448,25 @@ function SchedulePage({ member, languagePreference }) {
   }
 
   function importParsedRows() {
+    if (!parsedRows.length) return;
+
     const nextActions = [];
     let pendingSummary = lessonForm.summary || "";
 
     parsedRows.forEach((row) => {
       if (row.type === "summary") {
-        pendingSummary = row.keyword;
+        pendingSummary = row.keyword || row.rawText.replace(/^(课后总结|总结)\s*[:：]\s*/, "");
         return;
       }
 
       if (row.type === "action") {
-        const matchedAction = findBestActionMatch({
-          apparatus: row.apparatus || "all",
-          keyword: row.keyword,
-          languagePreference,
-        });
+        const reparsedAction = parseActionLine(row.rawText);
+        const actionInput = {
+          apparatus: row.apparatus || reparsedAction?.apparatus || "all",
+          keyword: row.keyword || reparsedAction?.keyword || row.rawText,
+        };
 
-        if (matchedAction) {
-          nextActions.push(createSelectedLessonAction(matchedAction));
-          return;
-        }
-
-        nextActions.push(
-          createTemporaryLessonAction({
-            apparatus: row.apparatus || "M",
-            name: row.keyword || row.rawText,
-          })
-        );
-
+        nextActions.push(buildActionFromKeyword(actionInput));
         return;
       }
 
@@ -438,7 +497,11 @@ function SchedulePage({ member, languagePreference }) {
     <section className="page">
       <header className="simple-header schedule-header">
         <div>
-          <h1>{lessonForm.studentName ? `${lessonForm.studentName} · 第${lessonNumber}节` : "普拉提私教助手"}</h1>
+          <h1>
+            {lessonForm.studentName
+              ? `${lessonForm.studentName} · 第${lessonNumber}节`
+              : "普拉提私教助手"}
+          </h1>
           <p>{lessonForm.lessonTheme || "选择学员或填写课程主题"} · {getTodayLabel()}</p>
         </div>
         <button
@@ -521,7 +584,6 @@ function SchedulePage({ member, languagePreference }) {
                     onClick={() => {
                       setSelectedApparatus(item.key);
                       setIsApparatusOpen(false);
-                      setTimeout(() => searchInputRef.current?.focus(), 0);
                     }}
                   >
                     <strong>{item.label}</strong>
@@ -577,7 +639,10 @@ function SchedulePage({ member, languagePreference }) {
             <div className="action-card" key={action.id}>
               <div className="action-card-top">
                 <div className="action-number">{index + 1}</div>
-                <strong className="action-name">{action.name}</strong>
+                <div className="action-title-wrap">
+                  <strong className="action-name">{action.name}</strong>
+                  <span>{getApparatusLabel(action.apparatus)} · {action.rawName || action.cnName || action.name}</span>
+                </div>
                 <button className="delete-mini" onClick={() => deleteAction(action.id)}>
                   ×
                 </button>
@@ -757,8 +822,33 @@ function MembersPage({ members, onOpenSchedule }) {
 }
 
 function SettingsPage({ languagePreference, setLanguagePreference }) {
-  const [isLanguagePanelOpen, setIsLanguagePanelOpen] = useState(false);
-  const templates = useMemo(() => getTemplates(), []);
+  const initialData = useMemo(() => getAppData(), []);
+  const [openPanel, setOpenPanel] = useState("");
+  const [settingsForm, setSettingsForm] = useState(initialData.settings);
+  const [templates, setTemplates] = useState(getTemplates());
+  const [templateName, setTemplateName] = useState("");
+  const [templateDesc, setTemplateDesc] = useState("");
+  const [templateText, setTemplateText] = useState("");
+  const [libraryKeyword, setLibraryKeyword] = useState("");
+
+  const allActions = useMemo(() => {
+    return getAllActions(languagePreference);
+  }, [languagePreference]);
+
+  const filteredLibraryActions = useMemo(() => {
+    const keyword = libraryKeyword.trim().toLowerCase();
+
+    return allActions
+      .filter((action) => {
+        if (!keyword) return true;
+
+        return [action.name, action.cnName, action.defaultBenefit, action.apparatus]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
+      })
+      .slice(0, 30);
+  }, [allActions, libraryKeyword]);
 
   const languageLabelMap = {
     chinese: "中文优先",
@@ -768,7 +858,69 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
 
   function chooseLanguagePreference(nextPreference) {
     setLanguagePreference(nextPreference);
-    setIsLanguagePanelOpen(false);
+  }
+
+  function updateSettingsField(fieldName, value) {
+    setSettingsForm((current) => ({
+      ...current,
+      [fieldName]: value,
+    }));
+  }
+
+  function saveStudioInfo() {
+    saveSettings(settingsForm);
+  }
+
+  function autoFillEnglishName() {
+    if (settingsForm.studioNameEn) return;
+
+    if (settingsForm.studioNameCn?.includes("北极星")) {
+      updateSettingsField("studioNameEn", "Polaris Pilates");
+      return;
+    }
+
+    updateSettingsField("studioNameEn", "Pilates Studio");
+  }
+
+  function handleLogoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      updateSettingsField("logoDataUrl", reader.result);
+      saveSettings({
+        ...settingsForm,
+        logoDataUrl: reader.result,
+      });
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function createTemplateFromText() {
+    const actions = parsePasteCourseText(templateText)
+      .filter((row) => row.type === "action")
+      .map((row) => ({
+        apparatus: row.apparatus || "all",
+        keyword: row.keyword,
+      }));
+
+    const nextTemplates = saveTemplate({
+      name: templateName || "新课程模板",
+      desc: templateDesc || "自定义快速排课模板",
+      actions,
+    });
+
+    setTemplates(nextTemplates);
+    setTemplateName("");
+    setTemplateDesc("");
+    setTemplateText("");
+  }
+
+  function removeTemplate(templateId) {
+    setTemplates(deleteTemplate(templateId));
   }
 
   return (
@@ -778,30 +930,122 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
       </header>
 
       <div className="settings-list">
-        <button>
-          工作室信息 <span>›</span>
+        <button
+          className="settings-row-with-subtitle"
+          onClick={() => setOpenPanel(openPanel === "studio" ? "" : "studio")}
+        >
+          <div>
+            <strong>工作室信息</strong>
+            <small>{settingsForm.studioNameCn || "设置店铺名称、英文名和 Logo"}</small>
+          </div>
+          <span>{openPanel === "studio" ? "⌃" : "›"}</span>
         </button>
 
-        <button className="settings-row-with-subtitle">
+        {openPanel === "studio" && (
+          <div className="settings-panel-card">
+            <label className="field">
+              <span>中文名称</span>
+              <input
+                value={settingsForm.studioNameCn || ""}
+                onChange={(event) => updateSettingsField("studioNameCn", event.target.value)}
+                placeholder="例如：北极星普拉提"
+              />
+            </label>
+
+            <label className="field">
+              <span>英文名称</span>
+              <input
+                value={settingsForm.studioNameEn || ""}
+                onChange={(event) => updateSettingsField("studioNameEn", event.target.value)}
+                placeholder="例如：Polaris Pilates"
+              />
+            </label>
+
+            <div className="settings-action-row">
+              <button onClick={autoFillEnglishName}>生成英文名</button>
+              <button onClick={saveStudioInfo}>保存信息</button>
+            </div>
+
+            <label className="logo-upload-box">
+              {settingsForm.logoDataUrl ? (
+                <img src={settingsForm.logoDataUrl} alt="工作室 Logo" />
+              ) : (
+                <span>上传 Logo</span>
+              )}
+              <input type="file" accept="image/*" onChange={handleLogoUpload} />
+            </label>
+          </div>
+        )}
+
+        <button
+          className="settings-row-with-subtitle"
+          onClick={() => setOpenPanel(openPanel === "templates" ? "" : "templates")}
+        >
           <div>
             <strong>课程模板管理</strong>
             <small>已内置 {templates.length} 个快速排课模板</small>
           </div>
-          <span>›</span>
+          <span>{openPanel === "templates" ? "⌃" : "›"}</span>
         </button>
+
+        {openPanel === "templates" && (
+          <div className="settings-panel-card">
+            <div className="template-mini-list">
+              {templates.map((template) => (
+                <div key={template.id}>
+                  <strong>{template.name}</strong>
+                  <span>{template.actions.length} 个动作 · {template.desc}</span>
+                  <button onClick={() => removeTemplate(template.id)}>删除</button>
+                </div>
+              ))}
+            </div>
+
+            <label className="field">
+              <span>新模板名称</span>
+              <input
+                value={templateName}
+                onChange={(event) => setTemplateName(event.target.value)}
+                placeholder="例如：肩颈放松"
+              />
+            </label>
+
+            <label className="field">
+              <span>模板说明</span>
+              <input
+                value={templateDesc}
+                onChange={(event) => setTemplateDesc(event.target.value)}
+                placeholder="例如：适合久坐肩颈紧张"
+              />
+            </label>
+
+            <label className="field">
+              <span>模板动作</span>
+              <textarea
+                className="settings-textarea"
+                value={templateText}
+                onChange={(event) => setTemplateText(event.target.value)}
+                placeholder={`每行一个动作，例如：\nR 蹬腿系列\nM 臀桥\nM 死虫式\nC 美人鱼侧弯`}
+              />
+            </label>
+
+            <button className="main-wide-button" onClick={createTemplateFromText}>
+              保存为新模板
+            </button>
+          </div>
+        )}
 
         <button
           className="settings-row-with-subtitle"
-          onClick={() => setIsLanguagePanelOpen((current) => !current)}
+          onClick={() => setOpenPanel(openPanel === "language" ? "" : "language")}
         >
           <div>
             <strong>动作语言偏好</strong>
             <small>{languageLabelMap[languagePreference]}</small>
           </div>
-          <span>{isLanguagePanelOpen ? "⌃" : "›"}</span>
+          <span>{openPanel === "language" ? "⌃" : "›"}</span>
         </button>
 
-        {isLanguagePanelOpen && (
+        {openPanel === "language" && (
           <div className="language-preference-panel">
             <button
               className={languagePreference === "chinese" ? "active" : ""}
@@ -829,9 +1073,41 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
           </div>
         )}
 
-        <button>
-          动作库管理 <span>›</span>
+        <button
+          className="settings-row-with-subtitle"
+          onClick={() => setOpenPanel(openPanel === "library" ? "" : "library")}
+        >
+          <div>
+            <strong>动作库管理</strong>
+            <small>当前动作池 {allActions.length} 个，后续可接入完整 700+ 动作库</small>
+          </div>
+          <span>{openPanel === "library" ? "⌃" : "›"}</span>
         </button>
+
+        {openPanel === "library" && (
+          <div className="settings-panel-card">
+            <label className="field">
+              <span>搜索动作库</span>
+              <input
+                value={libraryKeyword}
+                onChange={(event) => setLibraryKeyword(event.target.value)}
+                placeholder="输入中文、英文或器械代码"
+              />
+            </label>
+
+            <div className="library-list">
+              {filteredLibraryActions.map((action) => (
+                <div key={action.id}>
+                  <em>{action.apparatus}</em>
+                  <div>
+                    <strong>{action.displayName}</strong>
+                    <span>{action.defaultBenefit || "暂无动作好处"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <button>
           导出数据 <span>›</span>
