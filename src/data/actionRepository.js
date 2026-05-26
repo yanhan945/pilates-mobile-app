@@ -1,7 +1,7 @@
 import { starterActions } from "./starterActions";
 import { baseActionsFull } from "./baseActionsFull";
 
-// 临时模拟：以后这些会来自本地存储或账号云同步
+// 临时模拟：以后这些会来自 Supabase 或本地账号数据
 const userCustomActions = [];
 const userActionOverrides = {};
 const userActionUsage = {};
@@ -9,6 +9,14 @@ const userFavorites = new Set();
 
 function normalizeText(value) {
   return String(value || "").trim().toLowerCase();
+}
+
+function createSafeId(prefix = "selected") {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function getPrimaryName(action, languagePreference = "mixed") {
@@ -43,6 +51,10 @@ function getSearchDisplayName(action, languagePreference = "mixed") {
   if (!secondaryName) return primaryName;
   if (primaryName === secondaryName) return primaryName;
 
+  if (languagePreference === "english") {
+    return `${primaryName} / ${secondaryName}`;
+  }
+
   return `${primaryName} / ${secondaryName}`;
 }
 
@@ -65,9 +77,7 @@ function getPosterDisplayName(action, languagePreference = "mixed") {
 function applyUserOverride(action) {
   const override = userActionOverrides[action.id];
 
-  if (!override) {
-    return action;
-  }
+  if (!override) return action;
 
   return {
     ...action,
@@ -81,10 +91,16 @@ function mergeActionsWithoutDuplicates(actions) {
   const map = new Map();
 
   actions.forEach((action) => {
-    const key = `${action.apparatus}-${normalizeText(action.name)}-${normalizeText(action.cnName)}`;
+    const normalizedName = normalizeText(action.name);
+    const normalizedCnName = normalizeText(action.cnName);
+    const key = `${action.apparatus}-${normalizedName}-${normalizedCnName}`;
 
     if (!map.has(key)) {
-      map.set(key, action);
+      map.set(key, {
+        ...action,
+        name: action.name?.trim() || "",
+        cnName: action.cnName?.trim() || "",
+      });
       return;
     }
 
@@ -109,11 +125,11 @@ function getUsageScore(action) {
 
 function getRecommendationScore(action) {
   const usageScore = getUsageScore(action) * 100;
-  const favoriteScore = userFavorites.has(action.id) || action.isFavorite ? 50 : 0;
-  const customScore = action.source === "custom" ? 80 : 0;
-  const starterScore = action.source === "starter" ? 20 : 0;
+  const favoriteScore = userFavorites.has(action.id) || action.isFavorite ? 1000 : 0;
+  const customScore = action.source === "custom" ? 800 : 0;
+  const starterScore = action.source === "starter" ? 200 : 0;
 
-  return usageScore + customScore + favoriteScore + starterScore;
+  return favoriteScore + customScore + usageScore + starterScore;
 }
 
 export function getAllActions() {
@@ -134,6 +150,7 @@ export function searchActions({
   return getAllActions()
     .filter((action) => {
       if (apparatus === "all") return true;
+
       if (apparatus === "favorite") {
         return userFavorites.has(action.id) || action.isFavorite;
       }
@@ -151,23 +168,52 @@ export function searchActions({
     })
     .sort((a, b) => getRecommendationScore(b) - getRecommendationScore(a))
     .map((action) => ({
-  ...action,
-  displayName: getSearchDisplayName(action, languagePreference),
-  lessonName: getLessonDisplayName(action, languagePreference),
-  posterName: getPosterDisplayName(action, languagePreference),
-}));
+      ...action,
+      displayName: getSearchDisplayName(action, languagePreference),
+      lessonName: getLessonDisplayName(action, languagePreference),
+      posterName: getPosterDisplayName(action, languagePreference),
+    }));
+}
+
+export function findBestActionMatch({ apparatus = "all", keyword = "", languagePreference = "mixed" }) {
+  const results = searchActions({
+    keyword,
+    apparatus,
+    languagePreference,
+  });
+
+  return results[0] || null;
 }
 
 export function createSelectedLessonAction(action) {
   return {
-    id: `${action.id}-${Date.now()}`,
+    id: createSafeId("selected-action"),
     baseActionId: action.id,
     name: action.lessonName || action.cnName || action.name,
     posterName: action.posterName || action.lessonName || action.cnName || action.name,
     rawName: action.name,
     cnName: action.cnName,
     apparatus: action.apparatus,
-    benefit: action.defaultBenefit,
-    comment: "",
+    benefit: action.defaultBenefit || "",
+    comment: action.comment || "",
+  };
+}
+
+export function createTemporaryLessonAction({
+  apparatus = "M",
+  name = "",
+  comment = "",
+}) {
+  return {
+    id: createSafeId("temporary-action"),
+    baseActionId: "",
+    name,
+    posterName: name,
+    rawName: name,
+    cnName: name,
+    apparatus,
+    benefit: "",
+    comment,
+    isTemporary: true,
   };
 }
