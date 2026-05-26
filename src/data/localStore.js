@@ -37,12 +37,12 @@ const defaultTemplates = [
     name: "肩颈理疗",
     desc: "放松肩颈、打开胸廓、改善圆肩紧张",
     actions: [
-      { apparatus: "M", keyword: "翻书" },
       { apparatus: "M", keyword: "稻草人" },
-      { apparatus: "R", keyword: "手臂弧" },
-      { apparatus: "R", keyword: "坐姿手臂后拉" },
-      { apparatus: "TT", keyword: "坐姿高位下拉" },
-      { apparatus: "SC", keyword: "翻书" },
+      { apparatus: "M", keyword: "站姿向下卷动" },
+      { apparatus: "R", keyword: "手臂弧系列" },
+      { apparatus: "R", keyword: "坐姿手臂后拉系列" },
+      { apparatus: "R", keyword: "飞镖" },
+      { apparatus: "C", keyword: "美人鱼侧弯" },
     ],
   },
   {
@@ -50,12 +50,12 @@ const defaultTemplates = [
     name: "核心增强",
     desc: "核心激活、骨盆稳定、躯干控制",
     actions: [
-      { apparatus: "M", keyword: "死虫" },
-      { apparatus: "M", keyword: "百次" },
-      { apparatus: "R", keyword: "平板支撑" },
+      { apparatus: "M", keyword: "死虫式" },
+      { apparatus: "M", keyword: "百次拍击" },
+      { apparatus: "M", keyword: "平板支撑" },
       { apparatus: "R", keyword: "卷腹" },
-      { apparatus: "R", keyword: "蹬腿" },
-      { apparatus: "SC", keyword: "V字" },
+      { apparatus: "R", keyword: "蹬腿系列" },
+      { apparatus: "SC", keyword: "V字挑战" },
     ],
   },
   {
@@ -64,11 +64,11 @@ const defaultTemplates = [
     desc: "臀腿激活、髋稳定、下肢控制",
     actions: [
       { apparatus: "M", keyword: "臀桥" },
-      { apparatus: "M", keyword: "蚌式" },
-      { apparatus: "R", keyword: "腿绳索" },
-      { apparatus: "R", keyword: "腿画圈" },
-      { apparatus: "R", keyword: "摩托" },
-      { apparatus: "LB", keyword: "天鹅" },
+      { apparatus: "M", keyword: "蚌式开合" },
+      { apparatus: "R", keyword: "腿绳索系列" },
+      { apparatus: "R", keyword: "腿画圈系列" },
+      { apparatus: "R", keyword: "摩托蹬腿" },
+      { apparatus: "LB", keyword: "天鹅伸展" },
     ],
   },
 ];
@@ -76,7 +76,8 @@ const defaultTemplates = [
 const defaultState = {
   settings: {
     languagePreference: "chinese",
-    studioName: "北极星普拉提",
+    studioNameCn: "北极星普拉提",
+    studioNameEn: "Polaris Pilates",
     logoDataUrl: "",
   },
   members: defaultMembers,
@@ -96,9 +97,17 @@ function readState() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState;
 
+    const parsed = JSON.parse(raw);
+
     return {
       ...defaultState,
-      ...JSON.parse(raw),
+      ...parsed,
+      settings: {
+        ...defaultState.settings,
+        ...(parsed.settings || {}),
+      },
+      templates: parsed.templates?.length ? parsed.templates : defaultTemplates,
+      members: parsed.members?.length ? parsed.members : defaultMembers,
     };
   } catch (error) {
     console.warn("读取本地数据失败，已使用默认数据", error);
@@ -108,8 +117,15 @@ function readState() {
 
 function writeState(nextState) {
   if (!canUseLocalStorage()) return;
-
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+}
+
+function createId(prefix) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 export function getAppData() {
@@ -138,6 +154,38 @@ export function getTemplates() {
   return readState().templates;
 }
 
+export function saveTemplate(template) {
+  const current = readState();
+  const nextTemplate = {
+    id: template.id || createId("template"),
+    name: template.name || "未命名模板",
+    desc: template.desc || "",
+    actions: template.actions || [],
+  };
+
+  const nextState = {
+    ...current,
+    templates: [
+      nextTemplate,
+      ...current.templates.filter((item) => item.id !== nextTemplate.id),
+    ],
+  };
+
+  writeState(nextState);
+  return nextState.templates;
+}
+
+export function deleteTemplate(templateId) {
+  const current = readState();
+  const nextState = {
+    ...current,
+    templates: current.templates.filter((template) => template.id !== templateId),
+  };
+
+  writeState(nextState);
+  return nextState.templates;
+}
+
 export function saveLessonDraft(lessonDraft) {
   const current = readState();
   const nextState = {
@@ -160,7 +208,7 @@ export function saveLesson(lesson) {
   const current = readState();
   const savedLesson = {
     ...lesson,
-    id: lesson.id || `lesson-${Date.now()}`,
+    id: lesson.id || createId("lesson"),
     savedAt: new Date().toISOString(),
   };
 
