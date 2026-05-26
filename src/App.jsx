@@ -26,6 +26,7 @@ const apparatusOptions = [
   { key: "LB", label: "LB", desc: "梯桶 / Ladder Barrel" },
   { key: "C", label: "C", desc: "椅子 / 稳踏椅" },
   { key: "SC", label: "SC", desc: "脊柱矫正器" },
+  { key: "P", label: "P", desc: "小工具" },
   { key: "favorite", label: "收藏", desc: "常用收藏动作" },
   { key: "dumbbell", label: "哑铃", desc: "哑铃类小工具" },
   { key: "kettlebell", label: "壶铃", desc: "壶铃类小工具" },
@@ -42,6 +43,7 @@ const apparatusAliases = {
   L: "LB",
   C: "C",
   SC: "SC",
+  P: "P",
   哑铃: "dumbbell",
   壶铃: "kettlebell",
   波速球: "bosu",
@@ -115,6 +117,15 @@ function parsePasteCourseText(rawText) {
     });
 }
 
+function normalizeTemplateItemFromAction(action) {
+  return {
+    apparatus: action.apparatus,
+    keyword: action.cnName || action.name,
+    baseActionId: action.id,
+    displayName: action.displayName,
+  };
+}
+
 function App() {
   const initialData = useMemo(() => getAppData(), []);
 
@@ -142,10 +153,7 @@ function App() {
         )}
 
         {activeTab === "schedule" && (
-          <SchedulePage
-            member={selectedMember}
-            languagePreference={languagePreference}
-          />
+          <SchedulePage member={selectedMember} languagePreference={languagePreference} />
         )}
 
         {activeTab === "members" && (
@@ -260,32 +268,7 @@ function SchedulePage({ member, languagePreference }) {
       "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
   });
 
-  const [actions, setActions] = useState([
-    {
-      id: "selected-footwork-default",
-      baseActionId: "starter-r-footwork-series",
-      identityKey: "R|蹬腿系列|footwork",
-      name: "Footwork",
-      posterName: "Footwork",
-      rawName: "Footwork",
-      cnName: "蹬腿系列",
-      apparatus: "R",
-      benefit: "激活下肢力量，建立稳定发力节奏。",
-      comment: "",
-    },
-    {
-      id: "selected-hundred-default",
-      baseActionId: "starter-m-hundred",
-      identityKey: "M|百次拍击|thehundred",
-      name: "Hundred",
-      posterName: "Hundred",
-      rawName: "The Hundred",
-      cnName: "百次拍击",
-      apparatus: "M",
-      benefit: "提升核心控制，帮助呼吸和躯干稳定。",
-      comment: "",
-    },
-  ]);
+  const [actions, setActions] = useState([]);
 
   const templates = useMemo(() => getTemplates(), []);
   const lessonNumber = member ? member.lessons + 1 : 1;
@@ -304,7 +287,6 @@ function SchedulePage({ member, languagePreference }) {
   useEffect(() => {
     function closeApparatusWhenClickOutside(event) {
       if (!apparatusPickerRef.current) return;
-
       if (!apparatusPickerRef.current.contains(event.target)) {
         setIsApparatusOpen(false);
       }
@@ -321,9 +303,7 @@ function SchedulePage({ member, languagePreference }) {
 
   const addedActionKeys = useMemo(() => {
     return new Set(
-      actions
-        .map((action) => action.identityKey || getActionIdentityKey(action))
-        .filter(Boolean)
+      actions.map((action) => action.identityKey || getActionIdentityKey(action)).filter(Boolean)
     );
   }, [actions]);
 
@@ -340,13 +320,7 @@ function SchedulePage({ member, languagePreference }) {
       .filter((action) => !addedBaseActionIds.has(action.id))
       .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)))
       .slice(0, 8);
-  }, [
-    searchKeyword,
-    selectedApparatus,
-    languagePreference,
-    addedBaseActionIds,
-    addedActionKeys,
-  ]);
+  }, [searchKeyword, selectedApparatus, languagePreference, addedBaseActionIds, addedActionKeys]);
 
   function updateLessonField(fieldName, nextValue) {
     setLessonForm((current) => ({
@@ -357,7 +331,6 @@ function SchedulePage({ member, languagePreference }) {
 
   function addAction(action) {
     const nextAction = createSelectedLessonAction(action);
-
     setActions((currentActions) => [...currentActions, nextAction]);
     setSearchKeyword("");
     setAddMessage(`已添加：${action.displayName || action.cnName || action.name}`);
@@ -376,9 +349,7 @@ function SchedulePage({ member, languagePreference }) {
   }
 
   function deleteAction(actionId) {
-    setActions((currentActions) =>
-      currentActions.filter((action) => action.id !== actionId)
-    );
+    setActions((currentActions) => currentActions.filter((action) => action.id !== actionId));
   }
 
   function buildLessonPayload() {
@@ -408,15 +379,18 @@ function SchedulePage({ member, languagePreference }) {
   }
 
   function buildActionFromKeyword(item) {
+    if (item.baseActionId) {
+      const foundById = getAllActions(languagePreference).find((action) => action.id === item.baseActionId);
+      if (foundById) return createSelectedLessonAction(foundById);
+    }
+
     const matchedAction = findBestActionMatch({
       apparatus: item.apparatus || "all",
       keyword: item.keyword,
       languagePreference,
     });
 
-    if (matchedAction) {
-      return createSelectedLessonAction(matchedAction);
-    }
+    if (matchedAction) return createSelectedLessonAction(matchedAction);
 
     return createTemporaryLessonAction({
       apparatus: item.apparatus || "M",
@@ -441,9 +415,7 @@ function SchedulePage({ member, languagePreference }) {
 
   function updateParsedRowType(rowId, nextType) {
     setParsedRows((currentRows) =>
-      currentRows.map((row) =>
-        row.id === rowId ? { ...row, type: nextType } : row
-      )
+      currentRows.map((row) => (row.id === rowId ? { ...row, type: nextType } : row))
     );
   }
 
@@ -473,21 +445,14 @@ function SchedulePage({ member, languagePreference }) {
       const lastAction = nextActions[nextActions.length - 1];
 
       if (lastAction) {
-        lastAction.comment = lastAction.comment
-          ? `${lastAction.comment}\n${row.keyword}`
-          : row.keyword;
+        lastAction.comment = lastAction.comment ? `${lastAction.comment}\n${row.keyword}` : row.keyword;
       } else {
-        pendingSummary = pendingSummary
-          ? `${pendingSummary}\n${row.keyword}`
-          : row.keyword;
+        pendingSummary = pendingSummary ? `${pendingSummary}\n${row.keyword}` : row.keyword;
       }
     });
 
     setActions((currentActions) => [...currentActions, ...nextActions]);
-    setLessonForm((current) => ({
-      ...current,
-      summary: pendingSummary,
-    }));
+    setLessonForm((current) => ({ ...current, summary: pendingSummary }));
     setPasteText("");
     setParsedRows([]);
     setIsQuickPanelOpen(false);
@@ -604,9 +569,7 @@ function SchedulePage({ member, languagePreference }) {
           <button
             className="add-button"
             onClick={() => {
-              if (recommendedActions[0]) {
-                addAction(recommendedActions[0]);
-              }
+              if (recommendedActions[0]) addAction(recommendedActions[0]);
             }}
           >
             ＋
@@ -652,9 +615,7 @@ function SchedulePage({ member, languagePreference }) {
                 <span>好处</span>
                 <textarea
                   value={action.benefit}
-                  onChange={(event) =>
-                    updateActionField(action.id, "benefit", event.target.value)
-                  }
+                  onChange={(event) => updateActionField(action.id, "benefit", event.target.value)}
                   placeholder="输入这个动作本节课的训练好处..."
                 />
               </label>
@@ -663,9 +624,7 @@ function SchedulePage({ member, languagePreference }) {
                 <span>点评</span>
                 <textarea
                   value={action.comment}
-                  onChange={(event) =>
-                    updateActionField(action.id, "comment", event.target.value)
-                  }
+                  onChange={(event) => updateActionField(action.id, "comment", event.target.value)}
                   placeholder="输入动作点评，可不填..."
                 />
               </label>
@@ -702,22 +661,13 @@ function SchedulePage({ member, languagePreference }) {
             </div>
 
             <div className="quick-mode-tabs">
-              <button
-                className={quickMode === "templates" ? "active" : ""}
-                onClick={() => setQuickMode("templates")}
-              >
+              <button className={quickMode === "templates" ? "active" : ""} onClick={() => setQuickMode("templates")}>
                 套用模板
               </button>
-              <button
-                className={quickMode === "paste" ? "active" : ""}
-                onClick={() => setQuickMode("paste")}
-              >
+              <button className={quickMode === "paste" ? "active" : ""} onClick={() => setQuickMode("paste")}>
                 粘贴排课
               </button>
-              <button
-                className={quickMode === "history" ? "active" : ""}
-                onClick={() => setQuickMode("history")}
-              >
+              <button className={quickMode === "history" ? "active" : ""} onClick={() => setQuickMode("history")}>
                 复制历史
               </button>
             </div>
@@ -802,11 +752,7 @@ function MembersPage({ members, onOpenSchedule }) {
 
       <div className="card-list">
         {members.map((member) => (
-          <button
-            className="member-card"
-            key={member.name}
-            onClick={() => onOpenSchedule(member)}
-          >
+          <button className="member-card" key={member.name} onClick={() => onOpenSchedule(member)}>
             <div className="avatar">{member.name.slice(0, 1)}</div>
             <div className="member-info">
               <strong>{member.name}</strong>
@@ -828,27 +774,38 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
   const [templates, setTemplates] = useState(getTemplates());
   const [templateName, setTemplateName] = useState("");
   const [templateDesc, setTemplateDesc] = useState("");
-  const [templateText, setTemplateText] = useState("");
+  const [templateApparatus, setTemplateApparatus] = useState("all");
+  const [templateKeyword, setTemplateKeyword] = useState("");
+  const [selectedTemplateActions, setSelectedTemplateActions] = useState([]);
+  const [libraryApparatus, setLibraryApparatus] = useState("all");
   const [libraryKeyword, setLibraryKeyword] = useState("");
 
-  const allActions = useMemo(() => {
-    return getAllActions(languagePreference);
-  }, [languagePreference]);
+  const allActions = useMemo(() => getAllActions(languagePreference), [languagePreference]);
+
+  const actionStats = useMemo(() => {
+    const result = allActions.reduce((acc, action) => {
+      acc[action.apparatus] = (acc[action.apparatus] || 0) + 1;
+      return acc;
+    }, {});
+
+    return result;
+  }, [allActions]);
+
+  const templateSearchResults = useMemo(() => {
+    return searchActions({
+      keyword: templateKeyword,
+      apparatus: templateApparatus,
+      languagePreference,
+    }).slice(0, 20);
+  }, [templateKeyword, templateApparatus, languagePreference]);
 
   const filteredLibraryActions = useMemo(() => {
-    const keyword = libraryKeyword.trim().toLowerCase();
-
-    return allActions
-      .filter((action) => {
-        if (!keyword) return true;
-
-        return [action.name, action.cnName, action.defaultBenefit, action.apparatus]
-          .join(" ")
-          .toLowerCase()
-          .includes(keyword);
-      })
-      .slice(0, 30);
-  }, [allActions, libraryKeyword]);
+    return searchActions({
+      keyword: libraryKeyword,
+      apparatus: libraryApparatus,
+      languagePreference,
+    }).slice(0, 80);
+  }, [libraryKeyword, libraryApparatus, languagePreference]);
 
   const languageLabelMap = {
     chinese: "中文优先",
@@ -861,10 +818,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
   }
 
   function updateSettingsField(fieldName, value) {
-    setSettingsForm((current) => ({
-      ...current,
-      [fieldName]: value,
-    }));
+    setSettingsForm((current) => ({ ...current, [fieldName]: value }));
   }
 
   function saveStudioInfo() {
@@ -889,34 +843,44 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     const reader = new FileReader();
 
     reader.onload = () => {
-      updateSettingsField("logoDataUrl", reader.result);
-      saveSettings({
+      const nextSettings = {
         ...settingsForm,
         logoDataUrl: reader.result,
-      });
+      };
+      setSettingsForm(nextSettings);
+      saveSettings(nextSettings);
     };
 
     reader.readAsDataURL(file);
   }
 
-  function createTemplateFromText() {
-    const actions = parsePasteCourseText(templateText)
-      .filter((row) => row.type === "action")
-      .map((row) => ({
-        apparatus: row.apparatus || "all",
-        keyword: row.keyword,
-      }));
+  function addActionToTemplate(action) {
+    const nextItem = normalizeTemplateItemFromAction(action);
+    const exists = selectedTemplateActions.some((item) => item.baseActionId === nextItem.baseActionId);
+
+    if (exists) return;
+
+    setSelectedTemplateActions((current) => [...current, nextItem]);
+  }
+
+  function removeActionFromTemplate(baseActionId) {
+    setSelectedTemplateActions((current) => current.filter((item) => item.baseActionId !== baseActionId));
+  }
+
+  function createTemplateFromSelectedActions() {
+    if (!selectedTemplateActions.length) return;
 
     const nextTemplates = saveTemplate({
       name: templateName || "新课程模板",
       desc: templateDesc || "自定义快速排课模板",
-      actions,
+      actions: selectedTemplateActions,
     });
 
     setTemplates(nextTemplates);
     setTemplateName("");
     setTemplateDesc("");
-    setTemplateText("");
+    setTemplateKeyword("");
+    setSelectedTemplateActions([]);
   }
 
   function removeTemplate(templateId) {
@@ -983,7 +947,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
         >
           <div>
             <strong>课程模板管理</strong>
-            <small>已内置 {templates.length} 个快速排课模板</small>
+            <small>已保存 {templates.length} 个模板，从动作库选择动作</small>
           </div>
           <span>{openPanel === "templates" ? "⌃" : "›"}</span>
         </button>
@@ -1018,17 +982,42 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
               />
             </label>
 
-            <label className="field">
-              <span>模板动作</span>
-              <textarea
-                className="settings-textarea"
-                value={templateText}
-                onChange={(event) => setTemplateText(event.target.value)}
-                placeholder={`每行一个动作，例如：\nR 蹬腿系列\nM 臀桥\nM 死虫式\nC 美人鱼侧弯`}
+            <div className="template-builder-toolbar">
+              <select value={templateApparatus} onChange={(event) => setTemplateApparatus(event.target.value)}>
+                {apparatusOptions.map((item) => (
+                  <option key={item.key} value={item.key}>{item.label}</option>
+                ))}
+              </select>
+              <input
+                value={templateKeyword}
+                onChange={(event) => setTemplateKeyword(event.target.value)}
+                placeholder="搜索动作加入模板"
               />
-            </label>
+            </div>
 
-            <button className="main-wide-button" onClick={createTemplateFromText}>
+            <div className="selected-template-actions">
+              <strong>已选动作：{selectedTemplateActions.length}</strong>
+              {selectedTemplateActions.length === 0 && <p>从下方动作库点选加入模板。</p>}
+              {selectedTemplateActions.map((item, index) => (
+                <button key={item.baseActionId || `${item.apparatus}-${item.keyword}`} onClick={() => removeActionFromTemplate(item.baseActionId)}>
+                  {index + 1}. {item.apparatus} · {item.displayName || item.keyword} ×
+                </button>
+              ))}
+            </div>
+
+            <div className="template-action-picker">
+              {templateSearchResults.map((action) => (
+                <button key={action.id} onClick={() => addActionToTemplate(action)}>
+                  <em>{action.apparatus}</em>
+                  <div>
+                    <strong>{action.displayName}</strong>
+                    <span>{action.defaultBenefit || "暂无动作好处"}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <button className="main-wide-button" onClick={createTemplateFromSelectedActions}>
               保存为新模板
             </button>
           </div>
@@ -1079,21 +1068,36 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
         >
           <div>
             <strong>动作库管理</strong>
-            <small>当前动作池 {allActions.length} 个，后续可接入完整 700+ 动作库</small>
+            <small>当前动作池 {allActions.length} 个，可按器械和关键词搜索</small>
           </div>
           <span>{openPanel === "library" ? "⌃" : "›"}</span>
         </button>
 
         {openPanel === "library" && (
           <div className="settings-panel-card">
-            <label className="field">
-              <span>搜索动作库</span>
+            <div className="action-stats-grid">
+              {apparatusOptions
+                .filter((item) => item.key !== "all" && item.key !== "favorite")
+                .map((item) => (
+                  <div key={item.key}>
+                    <strong>{item.label}</strong>
+                    <span>{actionStats[item.key] || 0}</span>
+                  </div>
+                ))}
+            </div>
+
+            <div className="template-builder-toolbar">
+              <select value={libraryApparatus} onChange={(event) => setLibraryApparatus(event.target.value)}>
+                {apparatusOptions.map((item) => (
+                  <option key={item.key} value={item.key}>{item.label}</option>
+                ))}
+              </select>
               <input
                 value={libraryKeyword}
                 onChange={(event) => setLibraryKeyword(event.target.value)}
                 placeholder="输入中文、英文或器械代码"
               />
-            </label>
+            </div>
 
             <div className="library-list">
               {filteredLibraryActions.map((action) => (
