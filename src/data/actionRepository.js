@@ -176,13 +176,43 @@ export function searchActions({
 }
 
 export function findBestActionMatch({ apparatus = "all", keyword = "", languagePreference = "mixed" }) {
-  const results = searchActions({
-    keyword,
+  const normalizedKeyword = normalizeText(keyword);
+
+  if (!normalizedKeyword) return null;
+
+  const candidates = searchActions({
+    keyword: "",
     apparatus,
     languagePreference,
   });
 
-  return results[0] || null;
+  const exactMatch = candidates.find((action) => {
+    return (
+      normalizeText(action.cnName) === normalizedKeyword ||
+      normalizeText(action.name) === normalizedKeyword ||
+      normalizeText(action.displayName) === normalizedKeyword
+    );
+  });
+
+  if (exactMatch) return exactMatch;
+
+  const includesMatch = candidates.find((action) => {
+    return (
+      normalizeText(action.cnName).includes(normalizedKeyword) ||
+      normalizeText(action.name).includes(normalizedKeyword) ||
+      normalizeText(action.displayName).includes(normalizedKeyword) ||
+      normalizedKeyword.includes(normalizeText(action.cnName)) ||
+      normalizedKeyword.includes(normalizeText(action.name))
+    );
+  });
+
+  if (includesMatch) return includesMatch;
+
+  const benefitMatch = candidates.find((action) =>
+    normalizeText(action.defaultBenefit).includes(normalizedKeyword)
+  );
+
+  return benefitMatch || null;
 }
 
 export function createSelectedLessonAction(action) {
