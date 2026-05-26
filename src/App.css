@@ -924,3 +924,18 @@ textarea {
   line-height: 1.55;
   font-size: 14px;
 }
+.add-toast {
+  position: fixed;
+  left: 50%;
+  top: 64px;
+  transform: translateX(-50%);
+  z-index: 50;
+  background: #079b87;
+  color: white;
+  border-radius: 999px;
+  padding: 9px 15px;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(7, 155, 135, 0.2);
+  pointer-events: none;
+}
