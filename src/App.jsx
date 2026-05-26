@@ -228,6 +228,7 @@ function SchedulePage({ member, languagePreference }) {
   const [pasteText, setPasteText] = useState("");
   const [parsedRows, setParsedRows] = useState([]);
   const [saveMessage, setSaveMessage] = useState("");
+  const [addMessage, setAddMessage] = useState("");
 
   const [lessonForm, setLessonForm] = useState({
     weather: "晴 24℃",
@@ -287,17 +288,18 @@ function SchedulePage({ member, languagePreference }) {
   }
 
   function addAction(action) {
-    setActions((currentActions) => [
-      ...currentActions,
-      createSelectedLessonAction(action),
-    ]);
+  setActions((currentActions) => [
+    ...currentActions,
+    createSelectedLessonAction(action),
+  ]);
 
-    setSearchKeyword("");
+  setSearchKeyword("");
+  setAddMessage(`已添加：${action.displayName || action.cnName || action.name}`);
 
-    setTimeout(() => {
-      searchInputRef.current?.focus();
-    }, 0);
-  }
+  setTimeout(() => {
+    setAddMessage("");
+  }, 900);
+}
 
   function updateActionField(actionId, fieldName, nextValue) {
     setActions((currentActions) =>
@@ -451,6 +453,7 @@ function SchedulePage({ member, languagePreference }) {
       </header>
 
       {saveMessage && <div className="save-toast">{saveMessage}</div>}
+      {addMessage && <div className="add-toast">{addMessage}</div>}
 
       <section className="form-card">
         <h2>课程信息</h2>
