@@ -1170,227 +1170,235 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
         <div className="save-toast">{settingsSavedMessage}</div>
       )}
 
-      <div className="settings-list">
-        <button
-          className="settings-row-with-subtitle"
-          onClick={() => togglePanel("studio")}
-        >
-          <div>
-            <strong>工作室信息</strong>
-            <small>{settingsForm.studioNameCn || "设置 Logo、名称和教练称呼"}</small>
-          </div>
-          <span>{openPanel === "studio" ? "⌃" : "›"}</span>
-        </button>
+     <div className="settings-list">
+  <button
+    className="settings-row-with-subtitle"
+    onClick={() => togglePanel("studio")}
+  >
+    <div>
+      <strong>工作室信息</strong>
+      <small>{settingsForm.studioNameCn || "设置 Logo、名称和教练称呼"}</small>
+    </div>
+    <span>{openPanel === "studio" ? "⌃" : "›"}</span>
+  </button>
 
-        {openPanel === "studio" && (
-  <div className="settings-panel-card studio-settings-panel">
-    <div className="logo-upload-card">
-      <label className="logo-square-uploader">
-        {settingsForm.logoDataUrl ? (
-          <img src={settingsForm.logoDataUrl} alt="工作室 Logo" />
-        ) : (
-          <div className="logo-placeholder-content">
-            <strong>Logo</strong>
-            <span>点击上传</span>
-          </div>
-        )}
+  {openPanel === "studio" && (
+    <div className="settings-panel-card studio-settings-panel">
+      <div className="logo-upload-card">
+        <label className="logo-square-uploader">
+          {settingsForm.logoDataUrl ? (
+            <img src={settingsForm.logoDataUrl} alt="工作室 Logo" />
+          ) : (
+            <div className="logo-placeholder-content">
+              <strong>Logo</strong>
+              <span>点击上传</span>
+            </div>
+          )}
 
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleLogoUpload}
+          />
+        </label>
+
+        <div className="logo-upload-info">
+          <strong>工作室 Logo</strong>
+          <span>
+            建议上传正方形 Logo。第一版先保存在本机浏览器，后面接云端同步。
+          </span>
+
+          {settingsForm.logoDataUrl && (
+            <button className="logo-text-button" onClick={clearLogo}>
+              清除 Logo
+            </button>
+          )}
+        </div>
+      </div>
+
+      <label className="field">
+        <span>中文名称</span>
         <input
-          type="file"
-          accept="image/*"
-          onChange={handleLogoUpload}
+          value={settingsForm.studioNameCn || ""}
+          onChange={(event) =>
+            updateSettingsField("studioNameCn", event.target.value)
+          }
+          placeholder="例如：北极星普拉提"
         />
       </label>
 
-      <div className="logo-upload-info">
-        <strong>工作室 Logo</strong>
-        <span>建议上传正方形 Logo。第一版先保存在本机浏览器，后面接云端同步。</span>
+      <label className="field">
+        <span>英文名称</span>
+        <input
+          value={settingsForm.studioNameEn || ""}
+          onChange={(event) =>
+            updateSettingsField("studioNameEn", event.target.value)
+          }
+          placeholder="例如：Polaris Pilates"
+        />
+      </label>
 
-        {settingsForm.logoDataUrl && (
-          <button className="logo-text-button" onClick={clearLogo}>
-            清除 Logo
-          </button>
+      <label className="field">
+        <span>首页称呼</span>
+        <input
+          value={settingsForm.coachName || ""}
+          onChange={(event) =>
+            updateSettingsField("coachName", event.target.value)
+          }
+          placeholder="例如：严老师 / Jason"
+        />
+      </label>
+
+      <button className="main-wide-button" onClick={saveStudioInfo}>
+        保存工作室信息
+      </button>
+    </div>
+  )}
+
+  <button
+    className="settings-row-with-subtitle"
+    onClick={() => togglePanel("library")}
+  >
+    <div>
+      <strong>动作库管理</strong>
+      <small>当前动作池 {allActions.length} 个，可按器械和关键词搜索</small>
+    </div>
+    <span>{openPanel === "library" ? "⌃" : "›"}</span>
+  </button>
+
+  {openPanel === "library" && (
+    <div className="settings-panel-card action-library-entry">
+      <div className="library-combined-card">
+        <div className="library-combined-main">
+          <strong>动作库 {allActions.length} 个</strong>
+          <span>
+            M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
+            {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
+            {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
+            {actionStats.P || 0}
+          </span>
+        </div>
+
+        <button
+          className="library-open-button"
+          onClick={() => setLibraryModalOpen(true)}
+        >
+          查看动作
+        </button>
+
+        <p className="library-combined-tip">
+          支持筛选、搜索、打标签、收藏。
+        </p>
+      </div>
+    </div>
+  )}
+
+  <button
+    className="settings-row-with-subtitle"
+    onClick={() => togglePanel("templates")}
+  >
+    <div>
+      <strong>课程模板管理</strong>
+      <small>在设置页创建模板，排课页直接套用</small>
+    </div>
+    <span>{openPanel === "templates" ? "⌃" : "›"}</span>
+  </button>
+
+  {openPanel === "templates" && (
+    <div className="settings-panel-card template-manager-panel">
+      <div className="template-manager-head">
+        <div>
+          <strong>已有模板</strong>
+          <span>{templates.length} 个模板</span>
+        </div>
+
+        <button onClick={openNewTemplateModal}>
+          {hasTemplateDraft() ? "继续编辑" : "+ 新建模板"}
+        </button>
+      </div>
+
+      <div className="template-card-list">
+        {templates.length > 0 ? (
+          templates.map((template) => (
+            <div key={template.id} className="template-card">
+              <div>
+                <strong>{template.name}</strong>
+                <span>
+                  {template.actions?.length || 0} 个动作
+                  {template.desc ? ` · ${template.desc}` : ""}
+                </span>
+              </div>
+
+              <div className="template-card-actions">
+                <button onClick={() => openEditTemplateModal(template)}>
+                  编辑
+                </button>
+                <button onClick={() => removeTemplate(template.id)}>
+                  删除
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="empty-template-text">
+            暂无模板，点击“新建模板”创建第一个模板。
+          </p>
         )}
       </div>
     </div>
+  )}
 
-    <label className="field">
-      <span>中文名称</span>
-      <input
-        value={settingsForm.studioNameCn || ""}
-        onChange={(event) =>
-          updateSettingsField("studioNameCn", event.target.value)
-        }
-        placeholder="例如：北极星普拉提"
-      />
-    </label>
+  <button
+    className="settings-row-with-subtitle"
+    onClick={() => togglePanel("language")}
+  >
+    <div>
+      <strong>动作语言偏好</strong>
+      <small>{languageLabelMap[languagePreference]}</small>
+    </div>
+    <span>{openPanel === "language" ? "⌃" : "›"}</span>
+  </button>
 
-    <label className="field">
-      <span>英文名称</span>
-      <input
-        value={settingsForm.studioNameEn || ""}
-        onChange={(event) =>
-          updateSettingsField("studioNameEn", event.target.value)
-        }
-        placeholder="例如：Polaris Pilates"
-      />
-    </label>
-
-    <label className="field">
-      <span>首页称呼</span>
-      <input
-        value={settingsForm.coachName || ""}
-        onChange={(event) =>
-          updateSettingsField("coachName", event.target.value)
-        }
-        placeholder="例如：严老师 / Jason"
-      />
-    </label>
-
-    <button className="main-wide-button" onClick={saveStudioInfo}>
-      保存工作室信息
-    </button>
-  </div>
-)}
-
-<button
-  className="settings-row-with-subtitle"
-  onClick={() => togglePanel("library")}
->
-  <div>
-    <strong>动作库管理</strong>
-    <small>当前动作池 {allActions.length} 个，可按器械和关键词搜索</small>
-  </div>
-  <span>{openPanel === "library" ? "⌃" : "›"}</span>
-</button>
-
-{openPanel === "library" && (
-  <div className="settings-panel-card action-library-entry">
-    <div className="library-combined-card">
-      <div className="library-combined-main">
-        <strong>动作库 {allActions.length} 个</strong>
-        <span>
-          M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
-          {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
-          {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
-          {actionStats.P || 0}
-        </span>
-      </div>
+  {openPanel === "language" && (
+    <div className="language-preference-panel">
+      <button
+        className={languagePreference === "chinese" ? "active" : ""}
+        onClick={() => chooseLanguagePreference("chinese")}
+      >
+        <strong>中文优先</strong>
+        <small>排课和海报优先中文；没有中文时显示英文。</small>
+      </button>
 
       <button
-        className="library-open-button"
-        onClick={() => setLibraryModalOpen(true)}
+        className={languagePreference === "english" ? "active" : ""}
+        onClick={() => chooseLanguagePreference("english")}
       >
-        查看动作
+        <strong>英文优先</strong>
+        <small>排课端英文在前；海报只发英文。</small>
       </button>
 
-      <p className="library-combined-tip">
-        支持筛选、搜索、打标签、收藏。
-      </p>
-    </div>
-  </div>
-)}
-
-<button
-  className="settings-row-with-subtitle"
-  onClick={() => togglePanel("templates")}
->
-  <div>
-    <strong>课程模板管理</strong>
-    <small>在设置页创建模板，排课页直接套用</small>
-  </div>
-  <span>{openPanel === "templates" ? "⌃" : "›"}</span>
-</button>
-
-{openPanel === "templates" && (
-  <div className="settings-panel-card template-manager-panel">
-    <div className="template-manager-head">
-      <div>
-        <strong>已有模板</strong>
-        <span>{templates.length} 个模板</span>
-      </div>
-
-      <button onClick={openNewTemplateModal}>
-        {hasTemplateDraft() ? "继续编辑" : "+ 新建模板"}
+      <button
+        className={languagePreference === "mixed" ? "active" : ""}
+        onClick={() => chooseLanguagePreference("mixed")}
+      >
+        <strong>中英对照</strong>
+        <small>排课和海报尽量显示中英对照。</small>
       </button>
     </div>
+  )}
 
-    <div className="template-card-list">
-      {templates.length > 0 ? (
-        templates.map((template) => (
-          <div key={template.id} className="template-card">
-            <div>
-              <strong>{template.name}</strong>
-              <span>
-                {template.actions?.length || 0} 个动作
-                {template.desc ? ` · ${template.desc}` : ""}
-              </span>
-            </div>
+  <button>
+    导出数据 <span>›</span>
+  </button>
 
-            <div className="template-card-actions">
-              <button onClick={() => openEditTemplateModal(template)}>
-                编辑
-              </button>
-              <button onClick={() => removeTemplate(template.id)}>
-                删除
-              </button>
-            </div>
-          </div>
-        ))
-      ) : (
-        <p className="empty-template-text">
-          暂无模板，点击“新建模板”创建第一个模板。
-        </p>
-      )}
-    </div>
-  </div>
-)}
-            <strong>动作语言偏好</strong>
-            <small>{languageLabelMap[languagePreference]}</small>
-          </div>
-          <span>{openPanel === "language" ? "⌃" : "›"}</span>
-        </button>
+  <button>
+    导入数据 <span>›</span>
+  </button>
 
-        {openPanel === "language" && (
-          <div className="language-preference-panel">
-            <button
-              className={languagePreference === "chinese" ? "active" : ""}
-              onClick={() => chooseLanguagePreference("chinese")}
-            >
-              <strong>中文优先</strong>
-              <small>排课和海报优先中文；没有中文时显示英文。</small>
-            </button>
-
-            <button
-              className={languagePreference === "english" ? "active" : ""}
-              onClick={() => chooseLanguagePreference("english")}
-            >
-              <strong>英文优先</strong>
-              <small>排课端英文在前；海报只发英文。</small>
-            </button>
-
-            <button
-              className={languagePreference === "mixed" ? "active" : ""}
-              onClick={() => chooseLanguagePreference("mixed")}
-            >
-              <strong>中英对照</strong>
-              <small>排课和海报尽量显示中英对照。</small>
-            </button>
-          </div>
-        )}
-
-        <button>
-          导出数据 <span>›</span>
-        </button>
-
-        <button>
-          导入数据 <span>›</span>
-        </button>
-
-        <button>
-          账户管理 <span>›</span>
-        </button>
-      </div>
+  <button>
+    账户管理 <span>›</span>
+  </button>
+</div>
 
       {libraryModalOpen && (
   <div className="modal-backdrop" onClick={() => setLibraryModalOpen(false)}>
