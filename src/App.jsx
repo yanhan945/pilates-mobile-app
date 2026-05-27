@@ -609,7 +609,7 @@ function SchedulePage({ member, members = [], languagePreference }) {
   }
 
   function clearCurrentDraft() {
-    clearLessonDraft();
+    clearLessonDraft(lessonForm.studentName, lessonNumber);
 
     setLessonForm({
       weather: "晴 24℃",
