@@ -1183,83 +1183,75 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
         </button>
 
         {openPanel === "studio" && (
-          <div className="settings-panel-card studio-settings-panel">
-            <div className="studio-logo-row">
-              <div className="studio-logo-preview">
-                {settingsForm.logoDataUrl ? (
-                  <img src={settingsForm.logoDataUrl} alt="工作室 Logo" />
-                ) : (
-                  <span>Logo</span>
-                )}
-              </div>
-
-              <div className="studio-logo-actions">
-                <strong>工作室 Logo</strong>
-                <small>第一版先保存在本机浏览器，后面接云端同步。</small>
-
-                <div>
-                  <label className="logo-upload-button">
-                    上传 Logo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                    />
-                  </label>
-
-                  {settingsForm.logoDataUrl && (
-                    <button className="logo-clear-button" onClick={clearLogo}>
-                      清除
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <label className="field">
-              <span>中文名称</span>
-              <input
-                value={settingsForm.studioNameCn || ""}
-                onChange={(event) =>
-                  updateSettingsField("studioNameCn", event.target.value)
-                }
-                placeholder="例如：北极星普拉提"
-              />
-            </label>
-
-            <label className="field">
-              <span>英文名称</span>
-              <input
-                value={settingsForm.studioNameEn || ""}
-                onChange={(event) =>
-                  updateSettingsField("studioNameEn", event.target.value)
-                }
-                placeholder="例如：Polaris Pilates"
-              />
-            </label>
-
-            <label className="field">
-              <span>首页称呼</span>
-              <input
-                value={settingsForm.coachName || ""}
-                onChange={(event) =>
-                  updateSettingsField("coachName", event.target.value)
-                }
-                placeholder="例如：严老师 / Jason"
-              />
-            </label>
-
-            <button className="main-wide-button" onClick={saveStudioInfo}>
-              保存工作室信息
-            </button>
+  <div className="settings-panel-card studio-settings-panel">
+    <div className="logo-upload-card">
+      <label className="logo-square-uploader">
+        {settingsForm.logoDataUrl ? (
+          <img src={settingsForm.logoDataUrl} alt="工作室 Logo" />
+        ) : (
+          <div className="logo-placeholder-content">
+            <strong>Logo</strong>
+            <span>点击上传</span>
           </div>
         )}
 
-        <button
-          className="settings-row-with-subtitle"
-          onClick={() => togglePanel("library")}
-        >
-          <div>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleLogoUpload}
+        />
+      </label>
+
+      <div className="logo-upload-info">
+        <strong>工作室 Logo</strong>
+        <span>建议上传正方形 Logo。第一版先保存在本机浏览器，后面接云端同步。</span>
+
+        {settingsForm.logoDataUrl && (
+          <button className="logo-text-button" onClick={clearLogo}>
+            清除 Logo
+          </button>
+        )}
+      </div>
+    </div>
+
+    <label className="field">
+      <span>中文名称</span>
+      <input
+        value={settingsForm.studioNameCn || ""}
+        onChange={(event) =>
+          updateSettingsField("studioNameCn", event.target.value)
+        }
+        placeholder="例如：北极星普拉提"
+      />
+    </label>
+
+    <label className="field">
+      <span>英文名称</span>
+      <input
+        value={settingsForm.studioNameEn || ""}
+        onChange={(event) =>
+          updateSettingsField("studioNameEn", event.target.value)
+        }
+        placeholder="例如：Polaris Pilates"
+      />
+    </label>
+
+    <label className="field">
+      <span>首页称呼</span>
+      <input
+        value={settingsForm.coachName || ""}
+        onChange={(event) =>
+          updateSettingsField("coachName", event.target.value)
+        }
+        placeholder="例如：严老师 / Jason"
+      />
+    </label>
+
+    <button className="main-wide-button" onClick={saveStudioInfo}>
+      保存工作室信息
+    </button>
+  </div>
+)}
             <strong>动作库管理</strong>
             <small>当前动作池 {allActions.length} 个，可按器械和关键词搜索</small>
           </div>
@@ -1267,35 +1259,31 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
         </button>
 
         {openPanel === "library" && (
-          <div className="settings-panel-card action-library-entry">
-            <div className="library-summary compact-stats">
-              <strong>动作库 {allActions.length} 个</strong>
-              <span>
-                M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
-                {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
-                {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
-                {actionStats.P || 0}
-              </span>
-            </div>
+  <div className="settings-panel-card action-library-entry">
+    <div className="library-combined-card">
+      <div className="library-combined-main">
+        <strong>动作库 {allActions.length} 个</strong>
+        <span>
+          M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
+          {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
+          {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
+          {actionStats.P || 0}
+        </span>
+      </div>
 
-            <button
-              className="clean-entry-button"
-              onClick={() => setLibraryModalOpen(true)}
-            >
-              <div>
-                <strong>查看动作</strong>
-                <span>筛选、搜索、打标签、收藏</span>
-              </div>
-              <em>打开</em>
-            </button>
-          </div>
-        )}
+      <button
+        className="library-open-button"
+        onClick={() => setLibraryModalOpen(true)}
+      >
+        查看动作
+      </button>
 
-        <button
-          className="settings-row-with-subtitle"
-          onClick={() => togglePanel("templates")}
-        >
-          <div>
+      <p className="library-combined-tip">
+        支持筛选、搜索、打标签、收藏。
+      </p>
+    </div>
+  </div>
+)}
             <strong>课程模板管理</strong>
             <small>在设置页创建模板，排课页直接套用</small>
           </div>
@@ -1399,97 +1387,101 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
       </div>
 
       {libraryModalOpen && (
-        <div className="modal-backdrop" onClick={() => setLibraryModalOpen(false)}>
-          <div
-            className="modal-sheet library-modal-sheet"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="modal-header">
-              <div>
-                <h2>查看动作</h2>
-                <p>共 {filteredLibraryActions.length} 个动作，可按器械或关键词筛选。</p>
-              </div>
-              <button onClick={() => setLibraryModalOpen(false)}>×</button>
-            </div>
-
-            <div className="filter-strip modal-filter-strip">
-              {filterOptions.map((item) => (
-                <button
-                  key={item.key}
-                  className={libraryApparatus === item.key ? "active" : ""}
-                  onClick={() => updateLibraryFilter(item.key)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            <label className="field">
-              <span>搜索动作</span>
-              <input
-                value={libraryKeyword}
-                onChange={(event) => updateLibraryKeyword(event.target.value)}
-                placeholder="输入中文、英文或好处关键词"
-              />
-            </label>
-
-            <div className="library-list paged-library-list modal-library-list">
-              {pagedLibraryActions.map((action) => {
-                const tags = actionTags[action.id] || [];
-                const isFavorite = favoriteIds.includes(action.id);
-
-                return (
-                  <div key={action.id} className="library-action-card">
-                    <em>{action.apparatus}</em>
-                    <div>
-                      <strong>
-                        {action.cnName || action.name}
-                        {action.cnName && action.name ? ` / ${action.name}` : ""}
-                      </strong>
-
-                      <span>{action.defaultBenefit || "暂无动作好处"}</span>
-
-                      {tags.length > 0 && (
-                        <div className="tag-row">
-                          {tags.map((tag) => (
-                            <b key={tag}>{tag}</b>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="library-card-actions">
-                        <button onClick={() => openTagEditor(action)}>打标签</button>
-                        <button
-                          className={isFavorite ? "active" : ""}
-                          onClick={() => toggleFavorite(action)}
-                        >
-                          {isFavorite ? "已收藏" : "收藏"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="pagination-row">
-              <button onClick={previousLibraryPage} disabled={libraryPage <= 1}>
-                上一页
-              </button>
-              <span>
-                第 {Math.min(libraryPage, libraryTotalPages)} / {libraryTotalPages} 页
-                （{filteredLibraryActions.length} 个动作）
-              </span>
-              <button
-                onClick={nextLibraryPage}
-                disabled={libraryPage >= libraryTotalPages}
-              >
-                下一页
-              </button>
-            </div>
+  <div className="modal-backdrop" onClick={() => setLibraryModalOpen(false)}>
+    <div
+      className="modal-sheet library-modal-sheet"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="library-modal-fixed-head">
+        <div className="modal-header">
+          <div>
+            <h2>查看动作</h2>
+            <p>共 {filteredLibraryActions.length} 个动作，可按器械或关键词筛选。</p>
           </div>
+          <button onClick={() => setLibraryModalOpen(false)}>×</button>
         </div>
-      )}
+
+        <div className="filter-strip modal-filter-strip">
+          {filterOptions.map((item) => (
+            <button
+              key={item.key}
+              className={libraryApparatus === item.key ? "active" : ""}
+              onClick={() => updateLibraryFilter(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <label className="field library-search-field">
+          <span>搜索动作</span>
+          <input
+            value={libraryKeyword}
+            onChange={(event) => updateLibraryKeyword(event.target.value)}
+            placeholder="输入中文、英文或好处关键词"
+          />
+        </label>
+      </div>
+
+      <div className="library-modal-scroll-body">
+        <div className="library-list paged-library-list modal-library-list">
+          {pagedLibraryActions.map((action) => {
+            const tags = actionTags[action.id] || [];
+            const isFavorite = favoriteIds.includes(action.id);
+
+            return (
+              <div key={action.id} className="library-action-card">
+                <em>{action.apparatus}</em>
+                <div>
+                  <strong>
+                    {action.cnName || action.name}
+                    {action.cnName && action.name ? ` / ${action.name}` : ""}
+                  </strong>
+
+                  <span>{action.defaultBenefit || "暂无动作好处"}</span>
+
+                  {tags.length > 0 && (
+                    <div className="tag-row">
+                      {tags.map((tag) => (
+                        <b key={tag}>{tag}</b>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="library-card-actions">
+                    <button onClick={() => openTagEditor(action)}>打标签</button>
+                    <button
+                      className={isFavorite ? "active" : ""}
+                      onClick={() => toggleFavorite(action)}
+                    >
+                      {isFavorite ? "已收藏" : "收藏"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="pagination-row">
+          <button onClick={previousLibraryPage} disabled={libraryPage <= 1}>
+            上一页
+          </button>
+          <span>
+            第 {Math.min(libraryPage, libraryTotalPages)} / {libraryTotalPages} 页
+            （{filteredLibraryActions.length} 个动作）
+          </span>
+          <button
+            onClick={nextLibraryPage}
+            disabled={libraryPage >= libraryTotalPages}
+          >
+            下一页
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {templateModalOpen && (
         <div className="modal-backdrop" onClick={() => setTemplateModalOpen(false)}>
