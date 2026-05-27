@@ -784,6 +784,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
   const [libraryApparatus, setLibraryApparatus] = useState("all");
   const [libraryKeyword, setLibraryKeyword] = useState("");
   const [libraryPage, setLibraryPage] = useState(1);
+  const [libraryModalOpen, setLibraryModalOpen] = useState(false);
 
   const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState("");
@@ -1180,105 +1181,29 @@ function openNewTemplateModal() {
         </button>
 
         {openPanel === "library" && (
-          <div className="settings-panel-card action-library-panel">
-            <div className="library-summary compact-stats">
-              <strong>动作库 {allActions.length} 个</strong>
-              <span>
-                M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
-                {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
-                {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
-                {actionStats.P || 0}
-              </span>
-            </div>
+  <div className="settings-panel-card action-library-entry">
+    <div className="library-summary compact-stats">
+      <strong>动作库 {allActions.length} 个</strong>
+      <span>
+        M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
+        {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
+        {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
+        {actionStats.P || 0}
+      </span>
+    </div>
 
-            <div className="sub-section-title">
-              <strong>查看动作</strong>
-              <span>按器械或关键词快速定位</span>
-            </div>
-
-            <div className="filter-strip">
-              {filterOptions.map((item) => (
-                <button
-                  key={item.key}
-                  className={libraryApparatus === item.key ? "active" : ""}
-                  onClick={() => updateLibraryFilter(item.key)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            <label className="field">
-              <span>搜索动作</span>
-              <input
-                value={libraryKeyword}
-                onChange={(event) => updateLibraryKeyword(event.target.value)}
-                placeholder="输入中文、英文或好处关键词"
-              />
-            </label>
-
-            <div className="library-list paged-library-list">
-              {pagedLibraryActions.map((action) => {
-                const tags = actionTags[action.id] || [];
-                const isFavorite = favoriteIds.includes(action.id);
-
-                return (
-                  <div key={action.id} className="library-action-card">
-                    <em>{action.apparatus}</em>
-                    <div>
-                      <strong>
-                        {action.cnName || action.name}
-                        {action.cnName && action.name ? ` / ${action.name}` : ""}
-                      </strong>
-
-                      <span>{action.defaultBenefit || "暂无动作好处"}</span>
-
-                      {tags.length > 0 && (
-                        <div className="tag-row">
-                          {tags.map((tag) => (
-                            <b key={tag}>{tag}</b>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="library-card-actions">
-                        <button onClick={() => openTagEditor(action)}>打标签</button>
-                        <button
-                          className={isFavorite ? "active" : ""}
-                          onClick={() => toggleFavorite(action)}
-                        >
-                          {isFavorite ? "已收藏" : "收藏"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="pagination-row">
-              <button onClick={previousLibraryPage} disabled={libraryPage <= 1}>
-                上一页
-              </button>
-              <span>
-                第 {Math.min(libraryPage, libraryTotalPages)} / {libraryTotalPages} 页
-                （{filteredLibraryActions.length} 个动作）
-              </span>
-              <button
-                onClick={nextLibraryPage}
-                disabled={libraryPage >= libraryTotalPages}
-              >
-                下一页
-              </button>
-            </div>
-          </div>
-        )}
-
-        <button
-          className="settings-row-with-subtitle"
-          onClick={() => togglePanel("templates")}
-        >
-          <div>
+    <button
+      className="clean-entry-button"
+      onClick={() => setLibraryModalOpen(true)}
+    >
+      <div>
+        <strong>查看动作</strong>
+        <span>筛选、搜索、打标签、收藏</span>
+      </div>
+      <em>打开</em>
+    </button>
+  </div>
+)}
             <strong>课程模板管理</strong>
             <small>在设置页创建模板，排课页直接套用</small>
           </div>
@@ -1378,7 +1303,99 @@ function openNewTemplateModal() {
           账户管理 <span>›</span>
         </button>
       </div>
+  
+{libraryModalOpen && (
+  <div className="modal-backdrop" onClick={() => setLibraryModalOpen(false)}>
+    <div
+      className="modal-sheet library-modal-sheet"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="modal-header">
+        <div>
+          <h2>查看动作</h2>
+          <p>共 {filteredLibraryActions.length} 个动作，可按器械或关键词筛选。</p>
+        </div>
+        <button onClick={() => setLibraryModalOpen(false)}>×</button>
+      </div>
 
+      <div className="filter-strip modal-filter-strip">
+        {filterOptions.map((item) => (
+          <button
+            key={item.key}
+            className={libraryApparatus === item.key ? "active" : ""}
+            onClick={() => updateLibraryFilter(item.key)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+
+      <label className="field">
+        <span>搜索动作</span>
+        <input
+          value={libraryKeyword}
+          onChange={(event) => updateLibraryKeyword(event.target.value)}
+          placeholder="输入中文、英文或好处关键词"
+        />
+      </label>
+
+      <div className="library-list paged-library-list modal-library-list">
+        {pagedLibraryActions.map((action) => {
+          const tags = actionTags[action.id] || [];
+          const isFavorite = favoriteIds.includes(action.id);
+
+          return (
+            <div key={action.id} className="library-action-card">
+              <em>{action.apparatus}</em>
+              <div>
+                <strong>
+                  {action.cnName || action.name}
+                  {action.cnName && action.name ? ` / ${action.name}` : ""}
+                </strong>
+
+                <span>{action.defaultBenefit || "暂无动作好处"}</span>
+
+                {tags.length > 0 && (
+                  <div className="tag-row">
+                    {tags.map((tag) => (
+                      <b key={tag}>{tag}</b>
+                    ))}
+                  </div>
+                )}
+
+                <div className="library-card-actions">
+                  <button onClick={() => openTagEditor(action)}>打标签</button>
+                  <button
+                    className={isFavorite ? "active" : ""}
+                    onClick={() => toggleFavorite(action)}
+                  >
+                    {isFavorite ? "已收藏" : "收藏"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="pagination-row">
+        <button onClick={previousLibraryPage} disabled={libraryPage <= 1}>
+          上一页
+        </button>
+        <span>
+          第 {Math.min(libraryPage, libraryTotalPages)} / {libraryTotalPages} 页
+          （{filteredLibraryActions.length} 个动作）
+        </span>
+        <button
+          onClick={nextLibraryPage}
+          disabled={libraryPage >= libraryTotalPages}
+        >
+          下一页
+        </button>
+      </div>
+    </div>
+  </div>
+)}
       {templateModalOpen && (
         <div className="modal-backdrop" onClick={() => setTemplateModalOpen(false)}>
           <div className="modal-sheet template-editor-sheet" onClick={(event) => event.stopPropagation()}>
