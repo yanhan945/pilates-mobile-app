@@ -3254,3 +3254,86 @@ div[class*="tab-bar"] {
 .action-list {
   padding-bottom: 100px !important;
 }
+/* ===== 海报主题选择 + 预览骨架 ===== */
+
+.poster-theme-panel {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 14px;
+  margin: 0 0 14px;
+  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
+}
+
+.poster-theme-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.poster-theme-title strong {
+  color: #21332f;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.poster-theme-title span {
+  color: #8ba09a;
+  font-size: 12px;
+}
+
+.poster-theme-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.poster-theme-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.poster-theme-strip button {
+  flex: 0 0 auto;
+  height: 38px;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: #f3f8f5;
+  color: #6f827c;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.poster-theme-strip button.active {
+  background: #079b87;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(7, 155, 135, 0.18);
+}
+
+.course-save-actions {
+  grid-template-columns: 0.9fr 0.9fr 0.8fr 1.1fr;
+}
+
+.poster-preview-placeholder {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 28px 18px;
+  text-align: center;
+  border: 1px dashed #c8ddd6;
+}
+
+.poster-preview-placeholder strong {
+  display: block;
+  color: #21332f;
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.poster-preview-placeholder p {
+  margin: 0;
+  color: #7c8e88;
+  font-size: 13px;
+  line-height: 1.6;
+}
