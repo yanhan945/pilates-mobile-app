@@ -986,10 +986,22 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     setSelectedTemplateActions([]);
   }
 
-  function openNewTemplateModal() {
+ function hasTemplateDraft() {
+  return (
+    templateName.trim() ||
+    templateDesc.trim() ||
+    templateKeyword.trim() ||
+    selectedTemplateActions.length > 0
+  );
+}
+
+function openNewTemplateModal() {
+  if (editingTemplateId) {
     resetTemplateEditor();
-    setTemplateModalOpen(true);
   }
+
+  setTemplateModalOpen(true);
+}
 
   function openEditTemplateModal(template) {
     const loadedActions = (template.actions || []).map((item) => {
@@ -1280,7 +1292,9 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
                 <strong>已有模板</strong>
                 <span>{templates.length} 个模板</span>
               </div>
-              <button onClick={openNewTemplateModal}>+ 新建模板</button>
+              <button onClick={openNewTemplateModal}>
+  {hasTemplateDraft() ? "继续编辑" : "+ 新建模板"}
+</button>
             </div>
 
             <div className="template-card-list">
