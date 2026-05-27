@@ -2115,3 +2115,306 @@ textarea {
   border-radius: 14px !important;
   font-size: 12px !important;
 }
+/* ===== v1.3G 视觉统一修正版：颜色、卡片、按钮、筛选、底部导航 ===== */
+
+/* 统一颜色变量，后续都围绕这一套走 */
+:root {
+  --pilates-bg: #f3faf6;
+  --pilates-card: #ffffff;
+  --pilates-text: #203530;
+  --pilates-muted: #667a73;
+  --pilates-soft-muted: #7d918a;
+  --pilates-border: rgba(91, 139, 124, 0.16);
+  --pilates-green: #0b9b87;
+  --pilates-green-dark: #087d6f;
+  --pilates-green-soft: rgba(11, 155, 135, 0.08);
+  --pilates-shadow: 0 10px 28px rgba(36, 65, 56, 0.07);
+  --pilates-shadow-soft: 0 6px 18px rgba(36, 65, 56, 0.045);
+}
+
+/* 页面整体：减少过绿、过雾的感觉 */
+.page {
+  background: linear-gradient(180deg, #f7fbf8 0%, #eef7f2 100%) !important;
+}
+
+/* 副文本颜色加深：动作库统计、说明文字、模板说明 */
+.library-summary span,
+.compact-stats span,
+.settings-row-with-subtitle small,
+.template-card span,
+.clean-entry-button span,
+.sub-section-title span,
+.pagination-row span,
+.settings-tip,
+.library-action-card span,
+.template-action-picker small {
+  color: var(--pilates-muted) !important;
+}
+
+/* 白色卡片统一浮起来一点 */
+.settings-row-with-subtitle,
+.settings-panel-card,
+.library-summary,
+.clean-entry-button,
+.library-action-card,
+.template-card,
+.template-action-picker button,
+.selected-template-list,
+.pagination-row,
+.language-preference-panel button,
+.logo-upload-box,
+.field input,
+.field textarea,
+.field select {
+  box-shadow: var(--pilates-shadow-soft) !important;
+}
+
+/* 主要内容卡片更统一 */
+.settings-row-with-subtitle,
+.library-summary,
+.clean-entry-button,
+.library-action-card,
+.template-card {
+  background: var(--pilates-card) !important;
+  border: 1px solid var(--pilates-border) !important;
+  border-radius: 20px !important;
+}
+
+/* 设置页面板不要太厚重 */
+.settings-panel-card {
+  background: rgba(255, 255, 255, 0.58) !important;
+  border: 1px solid rgba(91, 139, 124, 0.1) !important;
+  box-shadow: none !important;
+}
+
+/* 搜索框：做成标准搜索组件，左侧加放大镜 */
+.action-library-panel .field,
+.library-modal-sheet .field,
+.template-editor-sheet .field,
+.settings-panel-card .field {
+  position: relative !important;
+}
+
+.action-library-panel .field input,
+.library-modal-sheet .field input,
+.template-editor-sheet .field input,
+.settings-panel-card .field input {
+  min-height: 46px !important;
+  border-radius: 16px !important;
+  border: 1.5px solid rgba(91, 139, 124, 0.18) !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  color: var(--pilates-text) !important;
+  font-size: 14px !important;
+  padding-left: 42px !important;
+  padding-right: 14px !important;
+  box-shadow: 0 6px 18px rgba(36, 65, 56, 0.035) !important;
+}
+
+.action-library-panel .field input:focus,
+.library-modal-sheet .field input:focus,
+.template-editor-sheet .field input:focus,
+.settings-panel-card .field input:focus {
+  border-color: rgba(11, 155, 135, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(11, 155, 135, 0.08) !important;
+}
+
+.action-library-panel .field::before,
+.library-modal-sheet .field::before,
+.template-editor-sheet .field::before,
+.settings-panel-card .field::before {
+  content: "🔍";
+  position: absolute;
+  left: 15px;
+  bottom: 13px;
+  z-index: 2;
+  font-size: 14px;
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+/* 不是搜索用途的普通输入框，避免所有表单都带放大镜 */
+.template-editor-sheet .field:first-of-type::before,
+.template-editor-sheet .field:nth-of-type(2)::before,
+.settings-panel-card .field:first-of-type::before,
+.settings-panel-card .field:nth-of-type(2)::before,
+.settings-panel-card .field:nth-of-type(3)::before {
+  content: none;
+}
+
+.template-editor-sheet .field:first-of-type input,
+.template-editor-sheet .field:nth-of-type(2) input,
+.settings-panel-card .field:first-of-type input,
+.settings-panel-card .field:nth-of-type(2) input,
+.settings-panel-card .field:nth-of-type(3) input {
+  padding-left: 14px !important;
+}
+
+/* 筛选项按钮：统一尺寸，不要 active 比别人胖一圈 */
+.filter-strip {
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 3px 0 10px !important;
+}
+
+.filter-strip button,
+.action-library-panel .filter-strip button,
+.template-editor-sheet .filter-strip button,
+.library-modal-sheet .filter-strip button {
+  height: 32px !important;
+  min-width: 42px !important;
+  border-radius: 12px !important;
+  padding: 0 12px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #536b64 !important;
+  border: 1px solid rgba(91, 139, 124, 0.18) !important;
+  box-shadow: 0 3px 10px rgba(36, 65, 56, 0.035) !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  transform: none !important;
+}
+
+.filter-strip button.active,
+.action-library-panel .filter-strip button.active,
+.template-editor-sheet .filter-strip button.active,
+.library-modal-sheet .filter-strip button.active {
+  height: 32px !important;
+  min-width: 42px !important;
+  background: var(--pilates-green) !important;
+  color: #ffffff !important;
+  border-color: var(--pilates-green) !important;
+  box-shadow: 0 5px 12px rgba(11, 155, 135, 0.16) !important;
+}
+
+/* 动作卡片里的“打标签 / 收藏”：不要像禁用态 */
+.library-card-actions button {
+  background: rgba(11, 155, 135, 0.07) !important;
+  color: var(--pilates-green-dark) !important;
+  border: 1px solid rgba(11, 155, 135, 0.14) !important;
+  box-shadow: none !important;
+  font-weight: 900 !important;
+}
+
+.library-card-actions button:first-child::before {
+  content: "🏷 ";
+}
+
+.library-card-actions button:last-child::before {
+  content: "♡ ";
+}
+
+.library-card-actions button.active {
+  background: rgba(255, 91, 73, 0.08) !important;
+  color: #d85c46 !important;
+  border-color: rgba(216, 92, 70, 0.16) !important;
+}
+
+.library-card-actions button.active::before {
+  content: "♥ ";
+}
+
+/* 模板卡片：更轻、更像产品卡片 */
+.template-card {
+  box-shadow: var(--pilates-shadow-soft) !important;
+  padding: 14px 14px 12px !important;
+}
+
+.template-card-actions button {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  font-size: 12px !important;
+}
+
+.template-card-actions button:first-child {
+  color: var(--pilates-green-dark) !important;
+}
+
+.template-card-actions button:last-child {
+  color: #d85c46 !important;
+}
+
+/* 新建模板：文字按钮，不要重胶囊 */
+.template-manager-head button {
+  background: transparent !important;
+  color: var(--pilates-green-dark) !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-width: 0 !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+/* 统一设置页各模块左右留白 */
+.settings-list,
+.action-library-entry,
+.template-manager-panel {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.settings-list {
+  display: grid !important;
+  gap: 14px !important;
+}
+
+/* 底部导航栏：先改为白色毛玻璃风格。实心图标下一版看 App.jsx 再换 */
+.bottom-nav,
+.tab-bar,
+.bottom-tab-bar,
+.mobile-tabbar,
+nav[class*="bottom"],
+div[class*="bottom-nav"],
+div[class*="tab-bar"] {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border-top: 1px solid rgba(91, 139, 124, 0.12) !important;
+  box-shadow: 0 -8px 24px rgba(36, 65, 56, 0.06) !important;
+}
+
+/* 底部导航普通态 */
+.bottom-nav button,
+.tab-bar button,
+.bottom-tab-bar button,
+.mobile-tabbar button,
+nav[class*="bottom"] button,
+div[class*="bottom-nav"] button,
+div[class*="tab-bar"] button {
+  color: #999999 !important;
+  font-weight: 600 !important;
+}
+
+/* 底部导航选中态：兼容 active/current/selected */
+.bottom-nav button.active,
+.tab-bar button.active,
+.bottom-tab-bar button.active,
+.mobile-tabbar button.active,
+nav[class*="bottom"] button.active,
+div[class*="bottom-nav"] button.active,
+div[class*="tab-bar"] button.active,
+.bottom-nav button[aria-current="page"],
+.tab-bar button[aria-current="page"],
+.bottom-tab-bar button[aria-current="page"],
+.mobile-tabbar button[aria-current="page"] {
+  color: var(--pilates-green) !important;
+  font-weight: 900 !important;
+}
+
+/* 底部导航里的图标稍微加粗放大一点 */
+.bottom-nav svg,
+.tab-bar svg,
+.bottom-tab-bar svg,
+.mobile-tabbar svg,
+nav[class*="bottom"] svg,
+div[class*="bottom-nav"] svg,
+div[class*="tab-bar"] svg {
+  stroke-width: 2.4 !important;
+}
+
+/* 防止白色底部导航遮内容 */
+.page,
+.settings-list {
+  padding-bottom: 132px !important;
+}
