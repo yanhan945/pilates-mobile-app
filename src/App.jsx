@@ -249,6 +249,7 @@ function HomePage({ members, onOpenSchedule }) {
 function SchedulePage({ member, languagePreference }) {
   const searchInputRef = useRef(null);
   const apparatusPickerRef = useRef(null);
+  const didAutoSaveOnceRef = useRef(false);
 
   const [selectedApparatus, setSelectedApparatus] = useState("all");
   const [isApparatusOpen, setIsApparatusOpen] = useState(false);
@@ -283,6 +284,26 @@ function SchedulePage({ member, languagePreference }) {
       lessonTheme: member ? current.lessonTheme || "核心增强" : current.lessonTheme,
     }));
   }, [member]);
+  useEffect(() => {
+  if (!didAutoSaveOnceRef.current) {
+    didAutoSaveOnceRef.current = true;
+    return;
+  }
+
+  const hasContent =
+    lessonForm.studentName.trim() ||
+    lessonForm.lessonTheme.trim() ||
+    lessonForm.summary.trim() ||
+    actions.length > 0;
+
+  if (!hasContent) return;
+
+  const timer = setTimeout(() => {
+    saveLessonDraft(buildLessonPayload());
+  }, 900);
+
+  return () => clearTimeout(timer);
+}, [lessonForm, actions, languagePreference, lessonNumber]);
 
   useEffect(() => {
     function closeApparatusWhenClickOutside(event) {
@@ -377,6 +398,34 @@ function SchedulePage({ member, languagePreference }) {
     setSaveMessage("课程已保存");
     setTimeout(() => setSaveMessage(""), 1600);
   }
+  function clearCurrentDraft() {
+  const nextForm = {
+    weather: "晴 24℃",
+    studentName: member?.name || "",
+    lessonTheme: "",
+    summary: "",
+  };
+
+  setLessonForm(nextForm);
+  setActions([]);
+  setPasteText("");
+  setParsedRows([]);
+
+  saveLessonDraft({
+    id: `draft-${nextForm.studentName || "guest"}-${lessonNumber}`,
+    memberName: nextForm.studentName,
+    lessonNumber,
+    lessonDate: getTodayLabel(),
+    weather: nextForm.weather,
+    lessonTheme: nextForm.lessonTheme,
+    actions: [],
+    summary: "",
+    languagePreference,
+  });
+
+  setSaveMessage("已清空当前草稿");
+  setTimeout(() => setSaveMessage(""), 1600);
+}
 
   function buildActionFromKeyword(item) {
     if (item.baseActionId) {
@@ -643,11 +692,20 @@ function SchedulePage({ member, languagePreference }) {
         />
       </section>
 
-      <div className="floating-actions">
-        <button className="dark-action" onClick={saveCurrentDraft}>保存草稿</button>
-        <button className="light-action" onClick={saveCurrentLesson}>保存课程</button>
-        <button className="main-action">生成海报</button>
-      </div>
+     <div className="floating-actions course-save-actions">
+  <button className="danger-action" onClick={clearCurrentDraft}>
+    清空草稿
+  </button>
+  <button className="dark-action" onClick={saveCurrentDraft}>
+    保存草稿
+  </button>
+  <button className="light-action" onClick={saveCurrentLesson}>
+    保存课程
+  </button>
+  <button className="main-action">
+    生成海报
+  </button>
+</div>
 
       {isQuickPanelOpen && (
         <div className="modal-backdrop">
