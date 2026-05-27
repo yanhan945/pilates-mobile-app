@@ -305,6 +305,7 @@ function SchedulePage({ member, members = [], languagePreference }) {
   const [isQuickPanelOpen, setIsQuickPanelOpen] = useState(false);
   const [selectedPosterTheme, setSelectedPosterTheme] = useState("vitalityOrange");
 const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false);
+  const [generatedPosterUrl, setGeneratedPosterUrl] = useState("");
   const [quickMode, setQuickMode] = useState("templates");
   const [pasteText, setPasteText] = useState("");
   const [parsedRows, setParsedRows] = useState([]);
@@ -703,8 +704,8 @@ async function generatePoster() {
     }
 
     setSaveMessage("海报已生成");
-    window.open(result.imageUrl, "_blank");
-    setTimeout(() => setSaveMessage(""), 1600);
+setGeneratedPosterUrl(result.imageUrl);
+setTimeout(() => setSaveMessage(""), 1600);
   } catch (error) {
     console.error("生成海报失败", error);
     setSaveMessage("生成海报失败，请检查后端接口");
@@ -1119,6 +1120,33 @@ async function generatePoster() {
   </button>
 </div>
 
+     {generatedPosterUrl && (
+  <div className="modal-backdrop" onClick={() => setGeneratedPosterUrl("")}>
+    <div
+      className="modal-sheet poster-result-sheet"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="modal-header">
+        <div>
+          <h2>海报已生成</h2>
+          <p>长按图片保存，或点击下方按钮打开原图。</p>
+        </div>
+        <button onClick={() => setGeneratedPosterUrl("")}>×</button>
+      </div>
+
+      <div className="poster-result-image-wrap">
+        <img src={generatedPosterUrl} alt="生成的课后海报" />
+      </div>
+
+      <button
+        className="main-wide-button"
+        onClick={() => window.open(generatedPosterUrl, "_blank")}
+      >
+        打开原图
+      </button>
+    </div>
+  </div>
+)}
       {isPosterPreviewOpen && (
   <div className="modal-backdrop" onClick={() => setIsPosterPreviewOpen(false)}>
     <div
