@@ -9868,5 +9868,19 @@ export const baseActionsFull = [
       "改善协调平衡"
     ],
     "defaultBenefit": "强化前庭-本体整合和核心控制；增加滚动复杂性；改善协调平衡"
+    export function getActionIdentityKey(action) {
+  const clean = (value) =>
+    String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/[\/\-\s（）()·+＋]/g, "");
+
+  return [
+    action.apparatus || "",
+    clean(action.cnName || ""),
+    clean(action.name || ""),
+  ].join("|");
+}
   }
 ];
