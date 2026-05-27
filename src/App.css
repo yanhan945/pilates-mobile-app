@@ -2418,3 +2418,232 @@ div[class*="tab-bar"] svg {
 .settings-list {
   padding-bottom: 132px !important;
 }
+/* ===== v1.4A 动作库弹窗化 + UI 减负版 ===== */
+
+/* 设置页动作库入口：只显示摘要和入口，不直接摊开 705 个动作 */
+.action-library-entry {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  gap: 10px !important;
+}
+
+.action-library-entry .compact-stats {
+  background: #ffffff !important;
+  border-radius: 18px !important;
+  padding: 14px !important;
+  border: 1px solid rgba(91, 139, 124, 0.14) !important;
+  box-shadow: 0 8px 20px rgba(36, 65, 56, 0.055) !important;
+}
+
+.action-library-entry .compact-stats span {
+  color: #667a73 !important;
+}
+
+/* 查看动作入口 */
+.clean-entry-button {
+  width: 100% !important;
+  min-height: 58px !important;
+  border-radius: 18px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(91, 139, 124, 0.14) !important;
+  box-shadow: 0 8px 20px rgba(36, 65, 56, 0.055) !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  align-items: center !important;
+  text-align: left !important;
+  padding: 12px 14px !important;
+}
+
+.clean-entry-button strong {
+  display: block !important;
+  color: #203530 !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  line-height: 1.3 !important;
+}
+
+.clean-entry-button span {
+  display: block !important;
+  margin-top: 3px !important;
+  color: #667a73 !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+.clean-entry-button em {
+  font-style: normal !important;
+  color: #0b8f7b !important;
+  background: rgba(11, 155, 135, 0.08) !important;
+  border-radius: 999px !important;
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+/* 动作库弹窗 */
+.library-modal-sheet {
+  width: calc(100vw - 34px) !important;
+  max-width: 420px !important;
+  max-height: 78vh !important;
+  border-radius: 24px !important;
+  padding: 16px 14px 18px !important;
+  overflow-y: auto !important;
+}
+
+.library-modal-sheet .modal-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 8 !important;
+  background: rgba(250, 255, 252, 0.96) !important;
+  backdrop-filter: blur(10px) !important;
+  padding-bottom: 10px !important;
+  margin: -4px -2px 8px !important;
+}
+
+.library-modal-sheet .modal-header h2 {
+  font-size: 22px !important;
+  line-height: 1.2 !important;
+}
+
+.library-modal-sheet .modal-header p {
+  color: #667a73 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+/* 弹窗里的筛选条 */
+.library-modal-sheet .filter-strip {
+  display: flex !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  padding: 2px 0 10px !important;
+  scrollbar-width: none !important;
+}
+
+.library-modal-sheet .filter-strip::-webkit-scrollbar {
+  display: none !important;
+}
+
+.library-modal-sheet .filter-strip button {
+  flex: 0 0 auto !important;
+  height: 32px !important;
+  min-width: 42px !important;
+  border-radius: 12px !important;
+  padding: 0 12px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #536b64 !important;
+  border: 1px solid rgba(91, 139, 124, 0.18) !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+}
+
+.library-modal-sheet .filter-strip button.active {
+  background: #0b9b87 !important;
+  color: #ffffff !important;
+  border-color: #0b9b87 !important;
+  box-shadow: 0 5px 12px rgba(11, 155, 135, 0.16) !important;
+}
+
+/* 弹窗里的搜索框 */
+.library-modal-sheet .field {
+  position: relative !important;
+}
+
+.library-modal-sheet .field input {
+  min-height: 46px !important;
+  border-radius: 16px !important;
+  border: 1.5px solid rgba(91, 139, 124, 0.18) !important;
+  background: #ffffff !important;
+  color: #203530 !important;
+  font-size: 14px !important;
+  padding-left: 42px !important;
+  padding-right: 14px !important;
+  box-shadow: 0 6px 18px rgba(36, 65, 56, 0.035) !important;
+}
+
+.library-modal-sheet .field::before {
+  content: "🔍";
+  position: absolute;
+  left: 15px;
+  bottom: 13px;
+  z-index: 2;
+  font-size: 14px;
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+/* 弹窗动作列表 */
+.modal-library-list {
+  max-height: none !important;
+  overflow: visible !important;
+  padding-bottom: 0 !important;
+}
+
+.library-modal-sheet .library-action-card {
+  border-radius: 16px !important;
+  padding: 11px !important;
+  box-shadow: 0 8px 18px rgba(36, 65, 56, 0.055) !important;
+}
+
+.library-modal-sheet .library-action-card strong {
+  font-size: 14px !important;
+}
+
+.library-modal-sheet .library-action-card span {
+  color: #667a73 !important;
+  font-size: 12px !important;
+}
+
+/* 去掉打标签/收藏前面的丑 emoji */
+.library-card-actions button::before,
+.library-card-actions button:first-child::before,
+.library-card-actions button:last-child::before,
+.library-card-actions button.active::before {
+  content: none !important;
+}
+
+/* 打标签 / 收藏按钮：轻量但不灰 */
+.library-card-actions button {
+  background: rgba(11, 155, 135, 0.07) !important;
+  color: #087d6f !important;
+  border: 1px solid rgba(11, 155, 135, 0.14) !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.library-card-actions button.active {
+  background: rgba(255, 91, 73, 0.08) !important;
+  color: #d85c46 !important;
+  border-color: rgba(216, 92, 70, 0.16) !important;
+}
+
+/* 轻化模板管理区 */
+.template-manager-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* 底部导航保持轻，不压内容 */
+.bottom-nav,
+.tab-bar,
+.bottom-tab-bar,
+.mobile-tabbar,
+nav[class*="bottom"],
+div[class*="bottom-nav"],
+div[class*="tab-bar"] {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  border-top: 1px solid rgba(91, 139, 124, 0.12) !important;
+  box-shadow: 0 -8px 24px rgba(36, 65, 56, 0.06) !important;
+}
+
+.settings-list {
+  padding-bottom: 132px !important;
+}
