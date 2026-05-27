@@ -156,7 +156,11 @@ function App() {
         )}
 
         {activeTab === "schedule" && (
-          <SchedulePage member={selectedMember} languagePreference={languagePreference} />
+        <SchedulePage
+  member={selectedMember}
+  members={members}
+  languagePreference={languagePreference}
+/>
         )}
 
         {activeTab === "members" && (
@@ -249,14 +253,29 @@ function HomePage({ members, onOpenSchedule }) {
   );
 }
 
-function SchedulePage({ member, languagePreference }) {
+function SchedulePage({ member, members = [], languagePreference }) {
   const searchInputRef = useRef(null);
   const apparatusPickerRef = useRef(null);
   const actionSearchAreaRef = useRef(null);
+  const memberPickerRef = useRef(null);
   const didAutoSaveOnceRef = useRef(false);
   const isRestoringLessonRef = useRef(false);
 
-  const initialLessonNumber = member ? member.lessons + 1 : 1;
+  const defaultThemePresets = [
+    "核心增强",
+    "脊柱灵活",
+    "肩背改善",
+    "髋膝踝",
+    "柔韧提升",
+    "平衡协调",
+    "体态调整",
+  ];
+
+  const initialSettings = useMemo(() => getAppData().settings || {}, []);
+  const [scheduleMember, setScheduleMember] = useState(member || null);
+  const currentMember = scheduleMember;
+
+  const initialLessonNumber = currentMember ? currentMember.lessons + 1 : 1;
 
   const [lessonNumber, setLessonNumber] = useState(initialLessonNumber);
   const [isLessonPickerOpen, setIsLessonPickerOpen] = useState(false);
@@ -265,6 +284,14 @@ function SchedulePage({ member, languagePreference }) {
   const [isApparatusOpen, setIsApparatusOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isRecommendationOpen, setIsRecommendationOpen] = useState(false);
+
+  const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
+  const [isThemeLinked, setIsThemeLinked] = useState(true);
+  const [themePresets, setThemePresets] = useState(
+    Array.isArray(initialSettings.courseThemes) && initialSettings.courseThemes.length
+      ? initialSettings.courseThemes
+      : defaultThemePresets
+  );
 
   const [isQuickPanelOpen, setIsQuickPanelOpen] = useState(false);
   const [quickMode, setQuickMode] = useState("templates");
@@ -275,8 +302,8 @@ function SchedulePage({ member, languagePreference }) {
 
   const [lessonForm, setLessonForm] = useState({
     weather: "晴 24℃",
-    studentName: member?.name || "",
-    lessonTheme: member ? "核心增强" : "",
+    studentName: currentMember?.name || "",
+    lessonTheme: currentMember ? "核心增强" : "",
     summary:
       "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
   });
@@ -285,7 +312,9 @@ function SchedulePage({ member, languagePreference }) {
 
   const templates = useMemo(() => getTemplates(), []);
 
-  const maxSelectableLesson = member ? member.lessons + 1 : Math.max(lessonNumber, 1);
+  const maxSelectableLesson = currentMember
+    ? currentMember.lessons + 1
+    : Math.max(lessonNumber, 1);
 
   const lessonOptions = useMemo(() => {
     const max = Math.max(maxSelectableLesson, lessonNumber, 1);
@@ -295,14 +324,30 @@ function SchedulePage({ member, languagePreference }) {
   const selectedApparatusLabel =
     apparatusOptions.find((item) => item.key === selectedApparatus)?.label || "全部";
 
+  const filteredMembers = useMemo(() => {
+    const keyword = lessonForm.studentName.trim().toLowerCase();
+
+    if (!keyword) return members;
+
+    return members.filter((item) =>
+      [item.name, item.phone, item.goal]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [members, lessonForm.studentName]);
+
   useEffect(() => {
-    const nextLessonNumber = member ? member.lessons + 1 : 1;
+    const nextMember = member || null;
+    const nextLessonNumber = nextMember ? nextMember.lessons + 1 : 1;
+
     didAutoSaveOnceRef.current = false;
+    setScheduleMember(nextMember);
     setLessonNumber(nextLessonNumber);
   }, [member]);
 
   useEffect(() => {
-    const memberName = member?.name || "";
+    const memberName = currentMember?.name || lessonForm.studentName || "";
 
     isRestoringLessonRef.current = true;
 
@@ -319,34 +364,36 @@ function SchedulePage({ member, languagePreference }) {
       });
 
       setActions(Array.isArray(existingLesson.actions) ? existingLesson.actions : []);
-    } else if (member && lessonNumber <= member.lessons) {
+    } else if (currentMember && lessonNumber <= currentMember.lessons) {
       setLessonForm({
         weather: "晴 24℃",
-        studentName: member.name,
+        studentName: currentMember.name,
         lessonTheme: `第${lessonNumber}节历史占位`,
         summary: "这节课是历史课次占位，用于保留课次顺序。",
       });
 
       setActions([
         {
-          id: `placeholder-${member.name}-${lessonNumber}`,
+          id: `placeholder-${currentMember.name}-${lessonNumber}`,
           name: "占位",
           rawName: "历史课次占位",
           cnName: "占位",
           apparatus: "M",
           benefit: "历史课次占位，用于保留课次顺序。",
           comment: "",
-          identityKey: `placeholder-${member.name}-${lessonNumber}`,
+          identityKey: `placeholder-${currentMember.name}-${lessonNumber}`,
         },
       ]);
     } else {
-      setLessonForm({
-        weather: "晴 24℃",
+      setLessonForm((current) => ({
+        ...current,
+        weather: current.weather || "晴 24℃",
         studentName: memberName,
-        lessonTheme: member ? "核心增强" : "",
+        lessonTheme: currentMember ? current.lessonTheme || "核心增强" : current.lessonTheme,
         summary:
+          current.summary ||
           "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
-      });
+      }));
 
       setActions([]);
     }
@@ -354,7 +401,7 @@ function SchedulePage({ member, languagePreference }) {
     setTimeout(() => {
       isRestoringLessonRef.current = false;
     }, 0);
-  }, [member, lessonNumber]);
+  }, [currentMember, lessonNumber]);
 
   useEffect(() => {
     if (isRestoringLessonRef.current) return;
@@ -394,6 +441,13 @@ function SchedulePage({ member, languagePreference }) {
       ) {
         setIsRecommendationOpen(false);
       }
+
+      if (
+        memberPickerRef.current &&
+        !memberPickerRef.current.contains(event.target)
+      ) {
+        setIsMemberPickerOpen(false);
+      }
     }
 
     document.addEventListener("mousedown", closeWhenClickOutside);
@@ -426,11 +480,73 @@ function SchedulePage({ member, languagePreference }) {
       .slice(0, 8);
   }, [searchKeyword, selectedApparatus, languagePreference, addedBaseActionIds, addedActionKeys]);
 
+  function openRecommendationPanel() {
+    setIsRecommendationOpen(true);
+
+    setTimeout(() => {
+      actionSearchAreaRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 50);
+  }
+
   function updateLessonField(fieldName, nextValue) {
     setLessonForm((current) => ({
       ...current,
       [fieldName]: nextValue,
     }));
+  }
+
+  function selectMemberFromPicker(nextMember) {
+    setScheduleMember(nextMember);
+    setLessonNumber(nextMember.lessons + 1);
+    setLessonForm((current) => ({
+      ...current,
+      studentName: nextMember.name,
+      lessonTheme: current.lessonTheme || "核心增强",
+    }));
+    setIsMemberPickerOpen(false);
+  }
+
+  function appendThemePreset(theme) {
+    setLessonForm((current) => {
+      const existing = current.lessonTheme || "";
+      const parts = existing
+        .split(/[、,，\s]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      if (parts.includes(theme)) return current;
+
+      return {
+        ...current,
+        lessonTheme: parts.length ? `${parts.join("、")}、${theme}` : theme,
+      };
+    });
+  }
+
+  function addThemePreset() {
+    const nextTheme = window.prompt("输入新的课程主题，例如：肩颈放松");
+
+    if (!nextTheme || !nextTheme.trim()) return;
+
+    const cleanTheme = nextTheme.trim();
+
+    setThemePresets((current) => {
+      if (current.includes(cleanTheme)) return current;
+
+      const next = [...current, cleanTheme];
+
+      saveSettings({
+        courseThemes: next,
+        languagePreference,
+      });
+
+      return next;
+    });
+
+    appendThemePreset(cleanTheme);
   }
 
   function addAction(action) {
@@ -487,7 +603,7 @@ function SchedulePage({ member, languagePreference }) {
 
     setLessonForm({
       weather: "晴 24℃",
-      studentName: member?.name || "",
+      studentName: currentMember?.name || "",
       lessonTheme: "",
       summary: "",
     });
@@ -583,7 +699,7 @@ function SchedulePage({ member, languagePreference }) {
   }
 
   return (
-    <section className="page">
+    <section className="page schedule-page">
       <header className="simple-header schedule-header">
         <div>
           <h1>
@@ -620,14 +736,38 @@ function SchedulePage({ member, languagePreference }) {
         </label>
 
         <div className="two-column">
-          <label className="field">
+          <div className="field member-picker-field" ref={memberPickerRef}>
             <span>学员</span>
             <input
               value={lessonForm.studentName}
-              onChange={(event) => updateLessonField("studentName", event.target.value)}
+              onFocus={() => setIsMemberPickerOpen(true)}
+              onChange={(event) => {
+                setScheduleMember(null);
+                updateLessonField("studentName", event.target.value);
+                setIsMemberPickerOpen(true);
+              }}
               placeholder="选择或输入学员姓名"
             />
-          </label>
+
+            {isMemberPickerOpen && (
+              <div className="member-picker-menu">
+                {filteredMembers.length > 0 ? (
+                  filteredMembers.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => selectMemberFromPicker(item)}
+                    >
+                      <strong>{item.name}</strong>
+                      <span>{item.goal || "暂无训练目标"} · 已上 {item.lessons || 0} 节</span>
+                    </button>
+                  ))
+                ) : (
+                  <p>没有匹配会员，可以直接输入新名字。</p>
+                )}
+              </div>
+            )}
+          </div>
 
           <label className="lesson-stepper">
             <span>课次</span>
@@ -663,14 +803,40 @@ function SchedulePage({ member, languagePreference }) {
           </label>
         </div>
 
-        <label className="field">
-          <span>课程主题</span>
+        <label className="field theme-field">
+          <div className="theme-label-row">
+            <span>课程主题</span>
+            <button
+              type="button"
+              className={isThemeLinked ? "theme-link active" : "theme-link"}
+              onClick={() => setIsThemeLinked((current) => !current)}
+            >
+              关联
+            </button>
+          </div>
+
           <input
             value={lessonForm.lessonTheme}
             onChange={(event) => updateLessonField("lessonTheme", event.target.value)}
             placeholder="例如：核心增强"
           />
         </label>
+
+        <div className="theme-preset-strip">
+          {themePresets.map((theme) => (
+            <button
+              key={theme}
+              type="button"
+              onClick={() => appendThemePreset(theme)}
+            >
+              {theme}
+            </button>
+          ))}
+
+          <button type="button" className="theme-add-button" onClick={addThemePreset}>
+            ＋新增
+          </button>
+        </div>
       </section>
 
       <section className="form-card">
@@ -698,7 +864,7 @@ function SchedulePage({ member, languagePreference }) {
                       onClick={() => {
                         setSelectedApparatus(item.key);
                         setIsApparatusOpen(false);
-                        setIsRecommendationOpen(true);
+                        openRecommendationPanel();
                       }}
                     >
                       <strong>{item.label}</strong>
@@ -712,10 +878,10 @@ function SchedulePage({ member, languagePreference }) {
             <input
               ref={searchInputRef}
               value={searchKeyword}
-              onFocus={() => setIsRecommendationOpen(true)}
+              onFocus={openRecommendationPanel}
               onChange={(event) => {
                 setSearchKeyword(event.target.value);
-                setIsRecommendationOpen(true);
+                openRecommendationPanel();
               }}
               placeholder="输入动作关键词"
             />
@@ -737,7 +903,7 @@ function SchedulePage({ member, languagePreference }) {
                 <span>点选后继续停留，可连续添加</span>
               </div>
 
-              <div className="search-results">
+              <div className="search-results recommendation-results">
                 {recommendedActions.map((action) => (
                   <button key={action.id} onClick={() => addAction(action)}>
                     <div>
