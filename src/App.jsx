@@ -389,7 +389,7 @@ function SchedulePage({ member, members = [], languagePreference }) {
         ...current,
         weather: current.weather || "晴 24℃",
         studentName: memberName,
-        lessonTheme: currentMember ? current.lessonTheme || "核心增强" : current.lessonTheme,
+        lessonTheme: currentMember ? "" : current.lessonTheme,
         summary:
           current.summary ||
           "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
@@ -498,16 +498,26 @@ function SchedulePage({ member, members = [], languagePreference }) {
     }));
   }
 
-  function selectMemberFromPicker(nextMember) {
-    setScheduleMember(nextMember);
-    setLessonNumber(nextMember.lessons + 1);
-    setLessonForm((current) => ({
-      ...current,
-      studentName: nextMember.name,
-      lessonTheme: current.lessonTheme || "核心增强",
-    }));
-    setIsMemberPickerOpen(false);
-  }
+ function selectMemberFromPicker(nextMember) {
+  const nextLessonNumber = nextMember.lessons + 1;
+
+  didAutoSaveOnceRef.current = false;
+  setScheduleMember(nextMember);
+  setLessonNumber(nextLessonNumber);
+
+  setLessonForm({
+    weather: "晴 24℃",
+    studentName: nextMember.name,
+    lessonTheme: "",
+    summary:
+      "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
+  });
+
+  setActions([]);
+  setSearchKeyword("");
+  setIsRecommendationOpen(false);
+  setIsMemberPickerOpen(false);
+}
 
   function appendThemePreset(theme) {
     setLessonForm((current) => {
