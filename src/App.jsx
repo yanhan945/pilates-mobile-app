@@ -9,8 +9,11 @@ import {
   searchActions,
 } from "./data/actionRepository";
 import {
+  clearLessonDraft,
   deleteTemplate,
   getAppData,
+  getLessonByMemberAndNumber,
+  getLessonDraftForMemberAndNumber,
   getTemplates,
   saveLesson,
   saveLessonDraft,
@@ -249,11 +252,20 @@ function HomePage({ members, onOpenSchedule }) {
 function SchedulePage({ member, languagePreference }) {
   const searchInputRef = useRef(null);
   const apparatusPickerRef = useRef(null);
+  const actionSearchAreaRef = useRef(null);
   const didAutoSaveOnceRef = useRef(false);
+  const isRestoringLessonRef = useRef(false);
+
+  const initialLessonNumber = member ? member.lessons + 1 : 1;
+
+  const [lessonNumber, setLessonNumber] = useState(initialLessonNumber);
+  const [isLessonPickerOpen, setIsLessonPickerOpen] = useState(false);
 
   const [selectedApparatus, setSelectedApparatus] = useState("all");
   const [isApparatusOpen, setIsApparatusOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [isRecommendationOpen, setIsRecommendationOpen] = useState(false);
+
   const [isQuickPanelOpen, setIsQuickPanelOpen] = useState(false);
   const [quickMode, setQuickMode] = useState("templates");
   const [pasteText, setPasteText] = useState("");
@@ -272,53 +284,124 @@ function SchedulePage({ member, languagePreference }) {
   const [actions, setActions] = useState([]);
 
   const templates = useMemo(() => getTemplates(), []);
-  const lessonNumber = member ? member.lessons + 1 : 1;
+
+  const maxSelectableLesson = member ? member.lessons + 1 : Math.max(lessonNumber, 1);
+
+  const lessonOptions = useMemo(() => {
+    const max = Math.max(maxSelectableLesson, lessonNumber, 1);
+    return Array.from({ length: max }, (_, index) => index + 1);
+  }, [maxSelectableLesson, lessonNumber]);
 
   const selectedApparatusLabel =
     apparatusOptions.find((item) => item.key === selectedApparatus)?.label || "全部";
 
   useEffect(() => {
-    setLessonForm((current) => ({
-      ...current,
-      studentName: member?.name || current.studentName,
-      lessonTheme: member ? current.lessonTheme || "核心增强" : current.lessonTheme,
-    }));
+    const nextLessonNumber = member ? member.lessons + 1 : 1;
+    didAutoSaveOnceRef.current = false;
+    setLessonNumber(nextLessonNumber);
   }, [member]);
-  useEffect(() => {
-  if (!didAutoSaveOnceRef.current) {
-    didAutoSaveOnceRef.current = true;
-    return;
-  }
-
-  const hasContent =
-    lessonForm.studentName.trim() ||
-    lessonForm.lessonTheme.trim() ||
-    lessonForm.summary.trim() ||
-    actions.length > 0;
-
-  if (!hasContent) return;
-
-  const timer = setTimeout(() => {
-    saveLessonDraft(buildLessonPayload());
-  }, 900);
-
-  return () => clearTimeout(timer);
-}, [lessonForm, actions, languagePreference, lessonNumber]);
 
   useEffect(() => {
-    function closeApparatusWhenClickOutside(event) {
-      if (!apparatusPickerRef.current) return;
-      if (!apparatusPickerRef.current.contains(event.target)) {
+    const memberName = member?.name || "";
+
+    isRestoringLessonRef.current = true;
+
+    const draft = getLessonDraftForMemberAndNumber(memberName, lessonNumber);
+    const savedLesson = getLessonByMemberAndNumber(memberName, lessonNumber);
+    const existingLesson = draft || savedLesson;
+
+    if (existingLesson) {
+      setLessonForm({
+        weather: existingLesson.weather || "晴 24℃",
+        studentName: existingLesson.memberName || memberName,
+        lessonTheme: existingLesson.lessonTheme || "",
+        summary: existingLesson.summary || "",
+      });
+
+      setActions(Array.isArray(existingLesson.actions) ? existingLesson.actions : []);
+    } else if (member && lessonNumber <= member.lessons) {
+      setLessonForm({
+        weather: "晴 24℃",
+        studentName: member.name,
+        lessonTheme: `第${lessonNumber}节历史占位`,
+        summary: "这节课是历史课次占位，用于保留课次顺序。",
+      });
+
+      setActions([
+        {
+          id: `placeholder-${member.name}-${lessonNumber}`,
+          name: "占位",
+          rawName: "历史课次占位",
+          cnName: "占位",
+          apparatus: "M",
+          benefit: "历史课次占位，用于保留课次顺序。",
+          comment: "",
+          identityKey: `placeholder-${member.name}-${lessonNumber}`,
+        },
+      ]);
+    } else {
+      setLessonForm({
+        weather: "晴 24℃",
+        studentName: memberName,
+        lessonTheme: member ? "核心增强" : "",
+        summary:
+          "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
+      });
+
+      setActions([]);
+    }
+
+    setTimeout(() => {
+      isRestoringLessonRef.current = false;
+    }, 0);
+  }, [member, lessonNumber]);
+
+  useEffect(() => {
+    if (isRestoringLessonRef.current) return;
+
+    if (!didAutoSaveOnceRef.current) {
+      didAutoSaveOnceRef.current = true;
+      return;
+    }
+
+    const hasContent =
+      lessonForm.studentName.trim() ||
+      lessonForm.lessonTheme.trim() ||
+      lessonForm.summary.trim() ||
+      actions.length > 0;
+
+    if (!hasContent) return;
+
+    const timer = setTimeout(() => {
+      saveLessonDraft(buildLessonPayload());
+    }, 900);
+
+    return () => clearTimeout(timer);
+  }, [lessonForm, actions, languagePreference, lessonNumber]);
+
+  useEffect(() => {
+    function closeWhenClickOutside(event) {
+      if (
+        apparatusPickerRef.current &&
+        !apparatusPickerRef.current.contains(event.target)
+      ) {
         setIsApparatusOpen(false);
+      }
+
+      if (
+        actionSearchAreaRef.current &&
+        !actionSearchAreaRef.current.contains(event.target)
+      ) {
+        setIsRecommendationOpen(false);
       }
     }
 
-    document.addEventListener("mousedown", closeApparatusWhenClickOutside);
-    document.addEventListener("touchstart", closeApparatusWhenClickOutside);
+    document.addEventListener("mousedown", closeWhenClickOutside);
+    document.addEventListener("touchstart", closeWhenClickOutside);
 
     return () => {
-      document.removeEventListener("mousedown", closeApparatusWhenClickOutside);
-      document.removeEventListener("touchstart", closeApparatusWhenClickOutside);
+      document.removeEventListener("mousedown", closeWhenClickOutside);
+      document.removeEventListener("touchstart", closeWhenClickOutside);
     };
   }, []);
 
@@ -352,9 +435,15 @@ function SchedulePage({ member, languagePreference }) {
 
   function addAction(action) {
     const nextAction = createSelectedLessonAction(action);
+
     setActions((currentActions) => [...currentActions, nextAction]);
     setSearchKeyword("");
+    setIsRecommendationOpen(true);
     setAddMessage(`已添加：${action.displayName || action.cnName || action.name}`);
+
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 0);
 
     setTimeout(() => {
       setAddMessage("");
@@ -387,45 +476,31 @@ function SchedulePage({ member, languagePreference }) {
     };
   }
 
-  function saveCurrentDraft() {
-    saveLessonDraft(buildLessonPayload());
-    setSaveMessage("已保存草稿");
-    setTimeout(() => setSaveMessage(""), 1600);
-  }
-
   function saveCurrentLesson() {
     saveLesson(buildLessonPayload());
     setSaveMessage("课程已保存");
     setTimeout(() => setSaveMessage(""), 1600);
   }
+
   function clearCurrentDraft() {
-  const nextForm = {
-    weather: "晴 24℃",
-    studentName: member?.name || "",
-    lessonTheme: "",
-    summary: "",
-  };
+    clearLessonDraft();
 
-  setLessonForm(nextForm);
-  setActions([]);
-  setPasteText("");
-  setParsedRows([]);
+    setLessonForm({
+      weather: "晴 24℃",
+      studentName: member?.name || "",
+      lessonTheme: "",
+      summary: "",
+    });
 
-  saveLessonDraft({
-    id: `draft-${nextForm.studentName || "guest"}-${lessonNumber}`,
-    memberName: nextForm.studentName,
-    lessonNumber,
-    lessonDate: getTodayLabel(),
-    weather: nextForm.weather,
-    lessonTheme: nextForm.lessonTheme,
-    actions: [],
-    summary: "",
-    languagePreference,
-  });
+    setActions([]);
+    setPasteText("");
+    setParsedRows([]);
+    setSearchKeyword("");
+    setIsRecommendationOpen(false);
 
-  setSaveMessage("已清空当前草稿");
-  setTimeout(() => setSaveMessage(""), 1600);
-}
+    setSaveMessage("已清空当前草稿");
+    setTimeout(() => setSaveMessage(""), 1600);
+  }
 
   function buildActionFromKeyword(item) {
     if (item.baseActionId) {
@@ -557,9 +632,33 @@ function SchedulePage({ member, languagePreference }) {
           <label className="lesson-stepper">
             <span>课次</span>
             <div>
-              <button type="button">-</button>
-              <strong>{lessonNumber}</strong>
-              <button type="button">+</button>
+              <button
+                type="button"
+                disabled={lessonNumber <= 1}
+                onClick={() => setLessonNumber((current) => Math.max(1, current - 1))}
+              >
+                -
+              </button>
+
+              <button
+                type="button"
+                className="lesson-number-button"
+                onClick={() => setIsLessonPickerOpen(true)}
+              >
+                {lessonNumber}
+              </button>
+
+              <button
+                type="button"
+                disabled={lessonNumber >= maxSelectableLesson}
+                onClick={() =>
+                  setLessonNumber((current) =>
+                    Math.min(maxSelectableLesson, current + 1)
+                  )
+                }
+              >
+                +
+              </button>
             </div>
           </label>
         </div>
@@ -580,69 +679,80 @@ function SchedulePage({ member, languagePreference }) {
           <span>{actions.length} 个动作</span>
         </div>
 
-        <div className="action-toolbar">
-          <div className="apparatus-picker" ref={apparatusPickerRef}>
-            <button
-              className="filter-button"
-              onClick={() => setIsApparatusOpen((current) => !current)}
-            >
-              {selectedApparatusLabel} ▾
-            </button>
+        <div className="action-search-area" ref={actionSearchAreaRef}>
+          <div className="action-toolbar">
+            <div className="apparatus-picker" ref={apparatusPickerRef}>
+              <button
+                className="filter-button"
+                onClick={() => setIsApparatusOpen((current) => !current)}
+              >
+                {selectedApparatusLabel} ▾
+              </button>
 
-            {isApparatusOpen && (
-              <div className="apparatus-menu">
-                {apparatusOptions.map((item) => (
-                  <button
-                    key={item.key}
-                    className={selectedApparatus === item.key ? "selected" : ""}
-                    onClick={() => {
-                      setSelectedApparatus(item.key);
-                      setIsApparatusOpen(false);
-                    }}
-                  >
-                    <strong>{item.label}</strong>
-                    <span>{item.desc}</span>
-                  </button>
-                ))}
-              </div>
-            )}
+              {isApparatusOpen && (
+                <div className="apparatus-menu">
+                  {apparatusOptions.map((item) => (
+                    <button
+                      key={item.key}
+                      className={selectedApparatus === item.key ? "selected" : ""}
+                      onClick={() => {
+                        setSelectedApparatus(item.key);
+                        setIsApparatusOpen(false);
+                        setIsRecommendationOpen(true);
+                      }}
+                    >
+                      <strong>{item.label}</strong>
+                      <span>{item.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <input
+              ref={searchInputRef}
+              value={searchKeyword}
+              onFocus={() => setIsRecommendationOpen(true)}
+              onChange={(event) => {
+                setSearchKeyword(event.target.value);
+                setIsRecommendationOpen(true);
+              }}
+              placeholder="输入动作关键词"
+            />
+
+            <button
+              className="add-button"
+              onClick={() => {
+                if (recommendedActions[0]) addAction(recommendedActions[0]);
+              }}
+            >
+              ＋
+            </button>
           </div>
 
-          <input
-            ref={searchInputRef}
-            value={searchKeyword}
-            onChange={(event) => setSearchKeyword(event.target.value)}
-            placeholder="输入动作关键词"
-          />
-
-          <button
-            className="add-button"
-            onClick={() => {
-              if (recommendedActions[0]) addAction(recommendedActions[0]);
-            }}
-          >
-            ＋
-          </button>
-        </div>
-
-        <div className="quick-recommend-title">
-          <strong>推荐动作</strong>
-          <span>切换器械后自动刷新，直接点选加入</span>
-        </div>
-
-        <div className="search-results always-visible">
-          {recommendedActions.map((action) => (
-            <button key={action.id} onClick={() => addAction(action)}>
-              <div>
-                <strong>{action.displayName}</strong>
-                <span>{action.defaultBenefit}</span>
+          {isRecommendationOpen && (
+            <>
+              <div className="quick-recommend-title">
+                <strong>推荐动作</strong>
+                <span>点选后继续停留，可连续添加</span>
               </div>
-              <em>{action.apparatus}</em>
-            </button>
-          ))}
 
-          {recommendedActions.length === 0 && (
-            <p className="empty-result">没有找到动作，可以之后做“临时新增动作”。</p>
+              <div className="search-results">
+                {recommendedActions.map((action) => (
+                  <button key={action.id} onClick={() => addAction(action)}>
+                    <div>
+                      <strong>{action.displayName}</strong>
+                      <span>{action.defaultBenefit}</span>
+                    </div>
+                    <em>{action.apparatus}</em>
+                  </button>
+                ))}
+
+                {recommendedActions.length === 0 && (
+                  <p className="empty-result">没有找到动作，可以之后做“临时新增动作”。</p>
+                )}
+              </div>
+            </>
           )}
         </div>
 
@@ -692,20 +802,51 @@ function SchedulePage({ member, languagePreference }) {
         />
       </section>
 
-     <div className="floating-actions course-save-actions">
-  <button className="danger-action" onClick={clearCurrentDraft}>
-    清空草稿
-  </button>
-  <button className="dark-action" onClick={saveCurrentDraft}>
-    保存草稿
-  </button>
-  <button className="light-action" onClick={saveCurrentLesson}>
-    保存课程
-  </button>
-  <button className="main-action">
-    生成海报
-  </button>
-</div>
+      <div className="lesson-bottom-actions course-save-actions">
+        <button className="danger-action" onClick={clearCurrentDraft}>
+          清空草稿
+        </button>
+
+        <button className="light-action" onClick={saveCurrentLesson}>
+          保存课程
+        </button>
+
+        <button className="main-action">
+          生成海报
+        </button>
+      </div>
+
+      {isLessonPickerOpen && (
+        <div className="modal-backdrop" onClick={() => setIsLessonPickerOpen(false)}>
+          <div
+            className="modal-sheet small-modal-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div>
+                <h2>选择课次</h2>
+                <p>可快速切换已上过的历史课次和当前新课。</p>
+              </div>
+              <button onClick={() => setIsLessonPickerOpen(false)}>×</button>
+            </div>
+
+            <div className="lesson-picker-grid">
+              {lessonOptions.map((number) => (
+                <button
+                  key={number}
+                  className={lessonNumber === number ? "active" : ""}
+                  onClick={() => {
+                    setLessonNumber(number);
+                    setIsLessonPickerOpen(false);
+                  }}
+                >
+                  第{number}节
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {isQuickPanelOpen && (
         <div className="modal-backdrop">
