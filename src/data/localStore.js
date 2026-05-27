@@ -189,6 +189,38 @@ export function saveLessonDraft(lessonDraft) {
 export function getLessonDraft() {
   return readState().lessonDraft;
 }
+export function getLessonDraftForMemberAndNumber(memberName, lessonNumber) {
+  const draft = readState().lessonDraft;
+
+  if (!draft) return null;
+
+  const sameMember = (draft.memberName || "") === (memberName || "");
+  const sameLesson = Number(draft.lessonNumber) === Number(lessonNumber);
+
+  return sameMember && sameLesson ? draft : null;
+}
+
+export function getLessonByMemberAndNumber(memberName, lessonNumber) {
+  const current = readState();
+
+  return current.lessons.find((lesson) => {
+    const sameMember = (lesson.memberName || "") === (memberName || "");
+    const sameLesson = Number(lesson.lessonNumber) === Number(lessonNumber);
+    return sameMember && sameLesson;
+  });
+}
+
+export function clearLessonDraft() {
+  const current = readState();
+
+  const nextState = {
+    ...current,
+    lessonDraft: null,
+  };
+
+  writeState(nextState);
+  return nextState;
+}
 
 export function saveLesson(lesson) {
   const current = readState();
