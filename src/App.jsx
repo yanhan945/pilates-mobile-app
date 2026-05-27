@@ -1082,20 +1082,69 @@ async function generatePoster() {
         />
       </section>
 
+      <div className="poster-theme-panel">
+  <div className="poster-theme-title">
+    <strong>海报主题</strong>
+    <span>生成前选择海报风格</span>
+  </div>
+
+  <div className="poster-theme-strip">
+    {posterThemeOptions.map((theme) => (
+      <button
+        key={theme.key}
+        type="button"
+        className={selectedPosterTheme === theme.key ? "active" : ""}
+        onClick={() => setSelectedPosterTheme(theme.key)}
+      >
+        {theme.label}
+      </button>
+    ))}
+  </div>
+</div>
       <div className="lesson-bottom-actions course-save-actions">
-        <button className="danger-action" onClick={clearCurrentDraft}>
-          清空草稿
-        </button>
+  <button className="danger-action" onClick={clearCurrentDraft}>
+    清空草稿
+  </button>
 
-        <button className="light-action" onClick={saveCurrentLesson}>
-          保存课程
-        </button>
+  <button className="light-action" onClick={saveCurrentLesson}>
+    保存课程
+  </button>
 
-        <button className="main-action">
-          生成海报
-        </button>
+  <button className="light-action" onClick={() => setIsPosterPreviewOpen(true)}>
+    预览
+  </button>
+
+  <button className="main-action" onClick={generatePoster}>
+    生成海报
+  </button>
+</div>
+
+      {isPosterPreviewOpen && (
+  <div className="modal-backdrop" onClick={() => setIsPosterPreviewOpen(false)}>
+    <div
+      className="modal-sheet small-modal-sheet"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="modal-header">
+        <div>
+          <h2>海报预览</h2>
+          <p>
+            当前主题：
+            {posterThemeOptions.find((item) => item.key === selectedPosterTheme)?.label}
+          </p>
+        </div>
+        <button onClick={() => setIsPosterPreviewOpen(false)}>×</button>
       </div>
 
+      <div className="poster-preview-placeholder">
+        <strong>预览图待添加</strong>
+        <p>
+          后面放入 5 张假人示例图后，这里会根据当前主题显示对应预览。
+        </p>
+      </div>
+    </div>
+  </div>
+)}
       {isLessonPickerOpen && (
         <div className="modal-backdrop" onClick={() => setIsLessonPickerOpen(false)}>
           <div
