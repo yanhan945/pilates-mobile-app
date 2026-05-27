@@ -1252,13 +1252,19 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     </button>
   </div>
 )}
-            <strong>动作库管理</strong>
-            <small>当前动作池 {allActions.length} 个，可按器械和关键词搜索</small>
-          </div>
-          <span>{openPanel === "library" ? "⌃" : "›"}</span>
-        </button>
 
-        {openPanel === "library" && (
+<button
+  className="settings-row-with-subtitle"
+  onClick={() => togglePanel("library")}
+>
+  <div>
+    <strong>动作库管理</strong>
+    <small>当前动作池 {allActions.length} 个，可按器械和关键词搜索</small>
+  </div>
+  <span>{openPanel === "library" ? "⌃" : "›"}</span>
+</button>
+
+{openPanel === "library" && (
   <div className="settings-panel-card action-library-entry">
     <div className="library-combined-card">
       <div className="library-combined-main">
@@ -1284,61 +1290,61 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     </div>
   </div>
 )}
-            <strong>课程模板管理</strong>
-            <small>在设置页创建模板，排课页直接套用</small>
-          </div>
-          <span>{openPanel === "templates" ? "⌃" : "›"}</span>
-        </button>
 
-        {openPanel === "templates" && (
-          <div className="settings-panel-card template-manager-panel">
-            <div className="template-manager-head">
-              <div>
-                <strong>已有模板</strong>
-                <span>{templates.length} 个模板</span>
-              </div>
+<button
+  className="settings-row-with-subtitle"
+  onClick={() => togglePanel("templates")}
+>
+  <div>
+    <strong>课程模板管理</strong>
+    <small>在设置页创建模板，排课页直接套用</small>
+  </div>
+  <span>{openPanel === "templates" ? "⌃" : "›"}</span>
+</button>
 
-              <button onClick={openNewTemplateModal}>
-                {hasTemplateDraft() ? "继续编辑" : "+ 新建模板"}
+{openPanel === "templates" && (
+  <div className="settings-panel-card template-manager-panel">
+    <div className="template-manager-head">
+      <div>
+        <strong>已有模板</strong>
+        <span>{templates.length} 个模板</span>
+      </div>
+
+      <button onClick={openNewTemplateModal}>
+        {hasTemplateDraft() ? "继续编辑" : "+ 新建模板"}
+      </button>
+    </div>
+
+    <div className="template-card-list">
+      {templates.length > 0 ? (
+        templates.map((template) => (
+          <div key={template.id} className="template-card">
+            <div>
+              <strong>{template.name}</strong>
+              <span>
+                {template.actions?.length || 0} 个动作
+                {template.desc ? ` · ${template.desc}` : ""}
+              </span>
+            </div>
+
+            <div className="template-card-actions">
+              <button onClick={() => openEditTemplateModal(template)}>
+                编辑
+              </button>
+              <button onClick={() => removeTemplate(template.id)}>
+                删除
               </button>
             </div>
-
-            <div className="template-card-list">
-              {templates.length > 0 ? (
-                templates.map((template) => (
-                  <div key={template.id} className="template-card">
-                    <div>
-                      <strong>{template.name}</strong>
-                      <span>
-                        {template.actions?.length || 0} 个动作
-                        {template.desc ? ` · ${template.desc}` : ""}
-                      </span>
-                    </div>
-
-                    <div className="template-card-actions">
-                      <button onClick={() => openEditTemplateModal(template)}>
-                        编辑
-                      </button>
-                      <button onClick={() => removeTemplate(template.id)}>
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="empty-template-text">
-                  暂无模板，点击“新建模板”创建第一个模板。
-                </p>
-              )}
-            </div>
           </div>
-        )}
-
-        <button
-          className="settings-row-with-subtitle"
-          onClick={() => togglePanel("language")}
-        >
-          <div>
+        ))
+      ) : (
+        <p className="empty-template-text">
+          暂无模板，点击“新建模板”创建第一个模板。
+        </p>
+      )}
+    </div>
+  </div>
+)}
             <strong>动作语言偏好</strong>
             <small>{languageLabelMap[languagePreference]}</small>
           </div>
