@@ -3337,3 +3337,130 @@ div[class*="tab-bar"] {
   font-size: 13px;
   line-height: 1.6;
 }
+/* ===== 海报区压缩优化版：小主题条 + 一排操作按钮 ===== */
+
+.poster-theme-panel {
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 0 2px !important;
+  margin: -2px 0 12px !important;
+  box-shadow: none !important;
+}
+
+.poster-theme-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px !important;
+  padding: 0 2px;
+}
+
+.poster-theme-title strong {
+  color: #21332f;
+  font-size: 14px !important;
+  font-weight: 900;
+}
+
+.poster-theme-title span {
+  color: #9aa9a4;
+  font-size: 12px !important;
+}
+
+.poster-theme-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 2px 4px !important;
+  scrollbar-width: none;
+}
+
+.poster-theme-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.poster-theme-strip button {
+  flex: 0 0 auto;
+  height: 34px !important;
+  min-width: auto !important;
+  border-radius: 999px;
+  padding: 0 13px !important;
+  background: rgba(255, 255, 255, 0.76) !important;
+  color: #78908a !important;
+  font-size: 13px !important;
+  font-weight: 800;
+  box-shadow: none !important;
+  border: 1px solid rgba(126, 178, 160, 0.12);
+  transform: none !important;
+  transition: none !important;
+}
+
+.poster-theme-strip button.active {
+  background: #079b87 !important;
+  color: #ffffff !important;
+  border-color: #079b87 !important;
+  box-shadow: 0 6px 14px rgba(7, 155, 135, 0.16) !important;
+  transform: none !important;
+}
+
+.lesson-bottom-actions.course-save-actions {
+  display: grid;
+  grid-template-columns: 0.78fr 0.78fr 0.78fr 1.15fr !important;
+  gap: 8px !important;
+  margin: 10px 0 24px !important;
+}
+
+.lesson-bottom-actions.course-save-actions button {
+  height: 46px !important;
+  border-radius: 16px !important;
+  font-size: 14px !important;
+  font-weight: 900;
+  box-shadow: none !important;
+}
+
+.lesson-bottom-actions.course-save-actions .main-action {
+  background: #079b87;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(7, 155, 135, 0.18) !important;
+}
+
+.lesson-bottom-actions.course-save-actions .light-action {
+  background: rgba(255, 255, 255, 0.78);
+  color: #0c8f7c;
+  border: 1px solid rgba(126, 210, 184, 0.32);
+}
+
+.lesson-bottom-actions.course-save-actions .danger-action {
+  background: rgba(255, 248, 244, 0.9);
+  color: #d86555;
+  border: 1px solid rgba(235, 175, 155, 0.3);
+}
+
+/* 生成后的真实海报弹窗 */
+.poster-result-sheet {
+  max-height: 92vh !important;
+  padding-bottom: 20px !important;
+}
+
+.poster-result-image-wrap {
+  width: 100%;
+  max-height: 68vh;
+  overflow: auto;
+  border-radius: 22px;
+  background: #eef5f1;
+  border: 1px solid rgba(126, 178, 160, 0.16);
+}
+
+.poster-result-image-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 22px;
+}
+
+.poster-preview-placeholder {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border-radius: 18px !important;
+  padding: 22px 16px !important;
+  text-align: center;
+  border: 1px dashed #c8ddd6;
+}
