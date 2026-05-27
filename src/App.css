@@ -2647,3 +2647,345 @@ div[class*="tab-bar"] {
 .settings-list {
   padding-bottom: 132px !important;
 }
+/* ===== v1.4C Logo 缩略上传 + 动作库弹窗固定头部 ===== */
+
+/* 工作室 Logo：正方形上传框，不再显示横向文件按钮 */
+.studio-settings-panel {
+  gap: 14px !important;
+}
+
+.logo-upload-card {
+  display: grid !important;
+  grid-template-columns: 92px 1fr !important;
+  gap: 14px !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(91, 139, 124, 0.14) !important;
+  border-radius: 20px !important;
+  padding: 14px !important;
+  box-shadow: 0 8px 20px rgba(36, 65, 56, 0.055) !important;
+}
+
+.logo-square-uploader {
+  width: 92px !important;
+  height: 92px !important;
+  border-radius: 22px !important;
+  border: 1.5px dashed rgba(11, 155, 135, 0.35) !important;
+  background: linear-gradient(135deg, #e8f5ef, #ffffff) !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  position: relative !important;
+  flex-shrink: 0 !important;
+}
+
+.logo-square-uploader img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.logo-square-uploader input {
+  display: none !important;
+}
+
+.logo-placeholder-content {
+  display: grid !important;
+  place-items: center !important;
+  gap: 4px !important;
+  color: #0b8f7b !important;
+  text-align: center !important;
+}
+
+.logo-placeholder-content strong {
+  font-size: 18px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+.logo-placeholder-content span {
+  font-size: 11px !important;
+  color: #667a73 !important;
+  font-weight: 800 !important;
+}
+
+.logo-upload-info {
+  display: grid !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+
+.logo-upload-info strong {
+  color: #203530 !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+}
+
+.logo-upload-info span {
+  color: #667a73 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.logo-text-button {
+  width: fit-content !important;
+  background: transparent !important;
+  border: none !important;
+  color: #d85c46 !important;
+  padding: 0 !important;
+  margin-top: 4px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  box-shadow: none !important;
+}
+
+/* 兜底：如果浏览器原生文件选择框还显示，强行隐藏 */
+.studio-settings-panel input[type="file"] {
+  display: none !important;
+}
+
+/* 动作库入口：摘要和查看动作合并成一个卡片 */
+.action-library-entry {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.library-combined-card {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 8px 12px !important;
+  align-items: center !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(91, 139, 124, 0.14) !important;
+  border-radius: 20px !important;
+  padding: 15px 14px !important;
+  box-shadow: 0 8px 20px rgba(36, 65, 56, 0.055) !important;
+}
+
+.library-combined-main {
+  display: grid !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+}
+
+.library-combined-main strong {
+  color: #203530 !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  line-height: 1.25 !important;
+}
+
+.library-combined-main span {
+  color: #667a73 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.library-open-button {
+  grid-column: 2 !important;
+  grid-row: 1 / span 2 !important;
+  align-self: center !important;
+  min-width: 64px !important;
+  height: 36px !important;
+  border-radius: 999px !important;
+  background: rgba(11, 155, 135, 0.08) !important;
+  color: #087d6f !important;
+  border: 1px solid rgba(11, 155, 135, 0.16) !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  box-shadow: none !important;
+}
+
+.library-combined-tip {
+  grid-column: 1 / 2 !important;
+  margin: 0 !important;
+  color: #667a73 !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+/* 动作库弹窗：外框固定高度，里面分成固定头部 + 滚动列表 */
+.library-modal-sheet {
+  width: calc(100vw - 34px) !important;
+  max-width: 420px !important;
+  height: min(78vh, 720px) !important;
+  max-height: 78vh !important;
+  border-radius: 24px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #f8fffb !important;
+}
+
+.library-modal-fixed-head {
+  flex: 0 0 auto !important;
+  padding: 16px 14px 10px !important;
+  background: rgba(250, 255, 252, 0.98) !important;
+  border-bottom: 1px solid rgba(91, 139, 124, 0.1) !important;
+  z-index: 5 !important;
+}
+
+.library-modal-fixed-head .modal-header {
+  margin: 0 0 10px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  position: static !important;
+  backdrop-filter: none !important;
+}
+
+.library-modal-fixed-head .modal-header h2 {
+  font-size: 22px !important;
+  line-height: 1.2 !important;
+}
+
+.library-modal-fixed-head .modal-header p {
+  color: #667a73 !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.library-modal-fixed-head .modal-header button {
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 999px !important;
+  background: rgba(91, 139, 124, 0.08) !important;
+  color: #536b64 !important;
+  box-shadow: none !important;
+}
+
+/* 顶部筛选保持横向滑动，不跟列表一起滚走 */
+.library-modal-fixed-head .filter-strip {
+  display: flex !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  padding: 0 0 10px !important;
+  margin: 0 !important;
+  scrollbar-width: none !important;
+}
+
+.library-modal-fixed-head .filter-strip::-webkit-scrollbar {
+  display: none !important;
+}
+
+.library-modal-fixed-head .filter-strip button {
+  flex: 0 0 auto !important;
+  height: 32px !important;
+  min-width: 42px !important;
+  border-radius: 12px !important;
+  padding: 0 12px !important;
+  background: #ffffff !important;
+  color: #536b64 !important;
+  border: 1px solid rgba(91, 139, 124, 0.18) !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  box-shadow: none !important;
+}
+
+.library-modal-fixed-head .filter-strip button.active {
+  background: #0b9b87 !important;
+  color: #ffffff !important;
+  border-color: #0b9b87 !important;
+  box-shadow: 0 5px 12px rgba(11, 155, 135, 0.16) !important;
+}
+
+/* 搜索框固定在顶部区域 */
+.library-search-field {
+  position: relative !important;
+  display: grid !important;
+  gap: 6px !important;
+}
+
+.library-search-field span {
+  color: #667a73 !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.library-search-field input {
+  min-height: 46px !important;
+  border-radius: 16px !important;
+  border: 1.5px solid rgba(91, 139, 124, 0.18) !important;
+  background: #ffffff !important;
+  color: #203530 !important;
+  font-size: 14px !important;
+  padding-left: 42px !important;
+  padding-right: 14px !important;
+  box-shadow: 0 6px 18px rgba(36, 65, 56, 0.035) !important;
+}
+
+.library-search-field::before {
+  content: "🔍";
+  position: absolute;
+  left: 15px;
+  bottom: 13px;
+  z-index: 2;
+  font-size: 14px;
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+/* 只有动作列表滚动 */
+.library-modal-scroll-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: 12px 14px 16px !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.modal-library-list {
+  display: grid !important;
+  gap: 10px !important;
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+.library-modal-scroll-body .library-action-card {
+  border-radius: 16px !important;
+  padding: 11px !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(91, 139, 124, 0.12) !important;
+  box-shadow: 0 8px 18px rgba(36, 65, 56, 0.055) !important;
+}
+
+.library-modal-scroll-body .library-action-card strong {
+  font-size: 14px !important;
+}
+
+.library-modal-scroll-body .library-action-card span {
+  color: #667a73 !important;
+  font-size: 12px !important;
+}
+
+/* 去掉之前丑的 emoji 图标 */
+.library-card-actions button::before,
+.library-card-actions button:first-child::before,
+.library-card-actions button:last-child::before,
+.library-card-actions button.active::before {
+  content: none !important;
+}
+
+.library-card-actions button {
+  background: rgba(11, 155, 135, 0.07) !important;
+  color: #087d6f !important;
+  border: 1px solid rgba(11, 155, 135, 0.14) !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+
+.library-card-actions button.active {
+  background: rgba(255, 91, 73, 0.08) !important;
+  color: #d85c46 !important;
+  border-color: rgba(216, 92, 70, 0.16) !important;
+}
+
+/* 弹窗底部分页固定在滚动区底部内容后，不影响顶部 */
+.library-modal-scroll-body .pagination-row {
+  margin-top: 12px !important;
+}
