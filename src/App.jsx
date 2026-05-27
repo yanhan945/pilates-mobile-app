@@ -770,7 +770,7 @@ function MembersPage({ members, onOpenSchedule }) {
 function SettingsPage({ languagePreference, setLanguagePreference }) {
   const initialData = useMemo(() => getAppData(), []);
 
-  const [openPanel, setOpenPanel] = useState("library");
+  const [openPanel, setOpenPanel] = useState("studio");
 
   const [settingsForm, setSettingsForm] = useState({
     studioNameCn: initialData.settings?.studioNameCn || "北极星普拉提",
@@ -796,6 +796,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
 
   const [tagTarget, setTagTarget] = useState(null);
   const [tagInput, setTagInput] = useState("");
+  const [settingsSavedMessage, setSettingsSavedMessage] = useState("");
 
   const [favoriteIds, setFavoriteIds] = useState(() => {
     try {
@@ -935,11 +936,64 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     }));
   }
 
+  function handleLogoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setSettingsSavedMessage("请上传图片格式的 Logo");
+      setTimeout(() => setSettingsSavedMessage(""), 1600);
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const logoDataUrl = reader.result;
+
+      setSettingsForm((current) => ({
+        ...current,
+        logoDataUrl,
+      }));
+
+      saveSettings({
+        ...settingsForm,
+        logoDataUrl,
+        languagePreference,
+      });
+
+      setSettingsSavedMessage("Logo 已上传");
+      setTimeout(() => setSettingsSavedMessage(""), 1600);
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function clearLogo() {
+    const nextSettings = {
+      ...settingsForm,
+      logoDataUrl: "",
+    };
+
+    setSettingsForm(nextSettings);
+
+    saveSettings({
+      ...nextSettings,
+      languagePreference,
+    });
+
+    setSettingsSavedMessage("Logo 已清除");
+    setTimeout(() => setSettingsSavedMessage(""), 1600);
+  }
+
   function saveStudioInfo() {
     saveSettings({
       ...settingsForm,
       languagePreference,
     });
+
+    setSettingsSavedMessage("工作室信息已保存");
+    setTimeout(() => setSettingsSavedMessage(""), 1600);
   }
 
   function toggleFavorite(action) {
@@ -987,22 +1041,22 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     setSelectedTemplateActions([]);
   }
 
- function hasTemplateDraft() {
-  return (
-    templateName.trim() ||
-    templateDesc.trim() ||
-    templateKeyword.trim() ||
-    selectedTemplateActions.length > 0
-  );
-}
-
-function openNewTemplateModal() {
-  if (editingTemplateId) {
-    resetTemplateEditor();
+  function hasTemplateDraft() {
+    return (
+      templateName.trim() ||
+      templateDesc.trim() ||
+      templateKeyword.trim() ||
+      selectedTemplateActions.length > 0
+    );
   }
 
-  setTemplateModalOpen(true);
-}
+  function openNewTemplateModal() {
+    if (editingTemplateId) {
+      resetTemplateEditor();
+    }
+
+    setTemplateModalOpen(true);
+  }
 
   function openEditTemplateModal(template) {
     const loadedActions = (template.actions || []).map((item) => {
@@ -1112,6 +1166,10 @@ function openNewTemplateModal() {
         <h1>设置</h1>
       </header>
 
+      {settingsSavedMessage && (
+        <div className="save-toast">{settingsSavedMessage}</div>
+      )}
+
       <div className="settings-list">
         <button
           className="settings-row-with-subtitle"
@@ -1125,10 +1183,38 @@ function openNewTemplateModal() {
         </button>
 
         {openPanel === "studio" && (
-          <div className="settings-panel-card">
-            <p className="settings-tip">
-              这里下一版会做 Logo 上传、中文名、英文名、教练称呼和 AI 老师形象设置。
-            </p>
+          <div className="settings-panel-card studio-settings-panel">
+            <div className="studio-logo-row">
+              <div className="studio-logo-preview">
+                {settingsForm.logoDataUrl ? (
+                  <img src={settingsForm.logoDataUrl} alt="工作室 Logo" />
+                ) : (
+                  <span>Logo</span>
+                )}
+              </div>
+
+              <div className="studio-logo-actions">
+                <strong>工作室 Logo</strong>
+                <small>第一版先保存在本机浏览器，后面接云端同步。</small>
+
+                <div>
+                  <label className="logo-upload-button">
+                    上传 Logo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                    />
+                  </label>
+
+                  {settingsForm.logoDataUrl && (
+                    <button className="logo-clear-button" onClick={clearLogo}>
+                      清除
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
 
             <label className="field">
               <span>中文名称</span>
@@ -1181,29 +1267,35 @@ function openNewTemplateModal() {
         </button>
 
         {openPanel === "library" && (
-  <div className="settings-panel-card action-library-entry">
-    <div className="library-summary compact-stats">
-      <strong>动作库 {allActions.length} 个</strong>
-      <span>
-        M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
-        {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
-        {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
-        {actionStats.P || 0}
-      </span>
-    </div>
+          <div className="settings-panel-card action-library-entry">
+            <div className="library-summary compact-stats">
+              <strong>动作库 {allActions.length} 个</strong>
+              <span>
+                M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
+                {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
+                {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
+                {actionStats.P || 0}
+              </span>
+            </div>
 
-    <button
-      className="clean-entry-button"
-      onClick={() => setLibraryModalOpen(true)}
-    >
-      <div>
-        <strong>查看动作</strong>
-        <span>筛选、搜索、打标签、收藏</span>
-      </div>
-      <em>打开</em>
-    </button>
-  </div>
-)}
+            <button
+              className="clean-entry-button"
+              onClick={() => setLibraryModalOpen(true)}
+            >
+              <div>
+                <strong>查看动作</strong>
+                <span>筛选、搜索、打标签、收藏</span>
+              </div>
+              <em>打开</em>
+            </button>
+          </div>
+        )}
+
+        <button
+          className="settings-row-with-subtitle"
+          onClick={() => togglePanel("templates")}
+        >
+          <div>
             <strong>课程模板管理</strong>
             <small>在设置页创建模板，排课页直接套用</small>
           </div>
@@ -1217,9 +1309,10 @@ function openNewTemplateModal() {
                 <strong>已有模板</strong>
                 <span>{templates.length} 个模板</span>
               </div>
+
               <button onClick={openNewTemplateModal}>
-  {hasTemplateDraft() ? "继续编辑" : "+ 新建模板"}
-</button>
+                {hasTemplateDraft() ? "继续编辑" : "+ 新建模板"}
+              </button>
             </div>
 
             <div className="template-card-list">
@@ -1233,6 +1326,7 @@ function openNewTemplateModal() {
                         {template.desc ? ` · ${template.desc}` : ""}
                       </span>
                     </div>
+
                     <div className="template-card-actions">
                       <button onClick={() => openEditTemplateModal(template)}>
                         编辑
@@ -1303,102 +1397,106 @@ function openNewTemplateModal() {
           账户管理 <span>›</span>
         </button>
       </div>
-  
-{libraryModalOpen && (
-  <div className="modal-backdrop" onClick={() => setLibraryModalOpen(false)}>
-    <div
-      className="modal-sheet library-modal-sheet"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <div className="modal-header">
-        <div>
-          <h2>查看动作</h2>
-          <p>共 {filteredLibraryActions.length} 个动作，可按器械或关键词筛选。</p>
-        </div>
-        <button onClick={() => setLibraryModalOpen(false)}>×</button>
-      </div>
 
-      <div className="filter-strip modal-filter-strip">
-        {filterOptions.map((item) => (
-          <button
-            key={item.key}
-            className={libraryApparatus === item.key ? "active" : ""}
-            onClick={() => updateLibraryFilter(item.key)}
+      {libraryModalOpen && (
+        <div className="modal-backdrop" onClick={() => setLibraryModalOpen(false)}>
+          <div
+            className="modal-sheet library-modal-sheet"
+            onClick={(event) => event.stopPropagation()}
           >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      <label className="field">
-        <span>搜索动作</span>
-        <input
-          value={libraryKeyword}
-          onChange={(event) => updateLibraryKeyword(event.target.value)}
-          placeholder="输入中文、英文或好处关键词"
-        />
-      </label>
-
-      <div className="library-list paged-library-list modal-library-list">
-        {pagedLibraryActions.map((action) => {
-          const tags = actionTags[action.id] || [];
-          const isFavorite = favoriteIds.includes(action.id);
-
-          return (
-            <div key={action.id} className="library-action-card">
-              <em>{action.apparatus}</em>
+            <div className="modal-header">
               <div>
-                <strong>
-                  {action.cnName || action.name}
-                  {action.cnName && action.name ? ` / ${action.name}` : ""}
-                </strong>
-
-                <span>{action.defaultBenefit || "暂无动作好处"}</span>
-
-                {tags.length > 0 && (
-                  <div className="tag-row">
-                    {tags.map((tag) => (
-                      <b key={tag}>{tag}</b>
-                    ))}
-                  </div>
-                )}
-
-                <div className="library-card-actions">
-                  <button onClick={() => openTagEditor(action)}>打标签</button>
-                  <button
-                    className={isFavorite ? "active" : ""}
-                    onClick={() => toggleFavorite(action)}
-                  >
-                    {isFavorite ? "已收藏" : "收藏"}
-                  </button>
-                </div>
+                <h2>查看动作</h2>
+                <p>共 {filteredLibraryActions.length} 个动作，可按器械或关键词筛选。</p>
               </div>
+              <button onClick={() => setLibraryModalOpen(false)}>×</button>
             </div>
-          );
-        })}
-      </div>
 
-      <div className="pagination-row">
-        <button onClick={previousLibraryPage} disabled={libraryPage <= 1}>
-          上一页
-        </button>
-        <span>
-          第 {Math.min(libraryPage, libraryTotalPages)} / {libraryTotalPages} 页
-          （{filteredLibraryActions.length} 个动作）
-        </span>
-        <button
-          onClick={nextLibraryPage}
-          disabled={libraryPage >= libraryTotalPages}
-        >
-          下一页
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="filter-strip modal-filter-strip">
+              {filterOptions.map((item) => (
+                <button
+                  key={item.key}
+                  className={libraryApparatus === item.key ? "active" : ""}
+                  onClick={() => updateLibraryFilter(item.key)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <label className="field">
+              <span>搜索动作</span>
+              <input
+                value={libraryKeyword}
+                onChange={(event) => updateLibraryKeyword(event.target.value)}
+                placeholder="输入中文、英文或好处关键词"
+              />
+            </label>
+
+            <div className="library-list paged-library-list modal-library-list">
+              {pagedLibraryActions.map((action) => {
+                const tags = actionTags[action.id] || [];
+                const isFavorite = favoriteIds.includes(action.id);
+
+                return (
+                  <div key={action.id} className="library-action-card">
+                    <em>{action.apparatus}</em>
+                    <div>
+                      <strong>
+                        {action.cnName || action.name}
+                        {action.cnName && action.name ? ` / ${action.name}` : ""}
+                      </strong>
+
+                      <span>{action.defaultBenefit || "暂无动作好处"}</span>
+
+                      {tags.length > 0 && (
+                        <div className="tag-row">
+                          {tags.map((tag) => (
+                            <b key={tag}>{tag}</b>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="library-card-actions">
+                        <button onClick={() => openTagEditor(action)}>打标签</button>
+                        <button
+                          className={isFavorite ? "active" : ""}
+                          onClick={() => toggleFavorite(action)}
+                        >
+                          {isFavorite ? "已收藏" : "收藏"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pagination-row">
+              <button onClick={previousLibraryPage} disabled={libraryPage <= 1}>
+                上一页
+              </button>
+              <span>
+                第 {Math.min(libraryPage, libraryTotalPages)} / {libraryTotalPages} 页
+                （{filteredLibraryActions.length} 个动作）
+              </span>
+              <button
+                onClick={nextLibraryPage}
+                disabled={libraryPage >= libraryTotalPages}
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {templateModalOpen && (
         <div className="modal-backdrop" onClick={() => setTemplateModalOpen(false)}>
-          <div className="modal-sheet template-editor-sheet" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="modal-sheet template-editor-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="modal-header">
               <div>
                 <h2>{editingTemplateId ? "编辑模板" : "新建模板"}</h2>
