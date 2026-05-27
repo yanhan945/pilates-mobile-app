@@ -3014,3 +3014,24 @@ div[class*="tab-bar"] {
 .library-open-button:active {
   opacity: 0.65 !important;
 }
+/* ===== v1.5A 保存课程稳定版：清空草稿 + 底部按钮布局 ===== */
+
+.course-save-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+}
+
+.course-save-actions button {
+  min-height: 42px !important;
+  border-radius: 16px !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+.danger-action {
+  background: rgba(255, 91, 73, 0.08) !important;
+  color: #d85c46 !important;
+  border: 1px solid rgba(216, 92, 70, 0.16) !important;
+  box-shadow: none !important;
+}
