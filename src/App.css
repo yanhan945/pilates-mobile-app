@@ -939,3 +939,285 @@ textarea {
   box-shadow: 0 10px 24px rgba(7, 155, 135, 0.2);
   pointer-events: none;
 }
+/* ===== v1.3A 动作库管理 UI 整理版：只改样式，不动逻辑 ===== */
+
+.settings-panel-card {
+  display: grid;
+  gap: 14px;
+  margin: 8px 0 14px;
+  padding: 14px;
+  border-radius: 22px;
+  background: #f5faf7;
+  border: 1px solid rgba(130, 178, 162, 0.16);
+  box-shadow: 0 10px 26px rgba(36, 65, 56, 0.06);
+}
+
+/* 动作库统计卡片 */
+.library-summary {
+  display: grid;
+  gap: 6px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 14px;
+  border: 1px solid rgba(131, 180, 165, 0.14);
+}
+
+.library-summary strong {
+  display: block;
+  color: #203530;
+  font-size: 16px !important;
+  line-height: 1.35 !important;
+  font-weight: 900;
+}
+
+.library-summary span {
+  display: block;
+  color: #7b928a;
+  font-size: 12px !important;
+  line-height: 1.65 !important;
+  word-break: normal;
+}
+
+/* 器械筛选按钮 */
+.apparatus-chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 6px;
+  scrollbar-width: none;
+}
+
+.apparatus-chip-row::-webkit-scrollbar {
+  display: none;
+}
+
+.apparatus-chip-row button {
+  flex: 0 0 auto;
+  min-width: 48px;
+  height: 36px;
+  border-radius: 999px;
+  padding: 0 13px;
+  background: #ffffff;
+  color: #5f7770;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  font-weight: 800;
+  border: 1px solid rgba(131, 180, 165, 0.16);
+  box-shadow: none;
+}
+
+.apparatus-chip-row button.active {
+  background: #7eb2a0;
+  color: #ffffff;
+  border-color: #7eb2a0;
+  box-shadow: 0 8px 18px rgba(126, 178, 160, 0.22);
+}
+
+/* 搜索框 */
+.settings-panel-card .field {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-panel-card .field span {
+  color: #617870;
+  font-size: 13px !important;
+  font-weight: 800;
+}
+
+.settings-panel-card input,
+.settings-panel-card textarea,
+.settings-panel-card select {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 16px;
+  border: 1px solid rgba(130, 178, 162, 0.18);
+  background: #ffffff;
+  color: #203530;
+  font-size: 15px !important;
+  padding: 0 13px;
+  outline: none;
+  box-shadow: none;
+}
+
+.settings-panel-card input::placeholder,
+.settings-panel-card textarea::placeholder {
+  color: #a7b8b2;
+}
+
+/* 动作列表整体 */
+.library-list {
+  display: grid;
+  gap: 10px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-bottom: 88px;
+}
+
+/* 动作卡片：普通动作库和模板选择器都兼容 */
+.library-list > div,
+.library-list > button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 10px;
+  align-items: flex-start;
+  text-align: left;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 12px;
+  border: 1px solid rgba(130, 178, 162, 0.13);
+  box-shadow: 0 8px 18px rgba(36, 65, 56, 0.045);
+}
+
+.library-list > button {
+  cursor: pointer;
+}
+
+.library-list > div:active,
+.library-list > button:active {
+  transform: scale(0.99);
+}
+
+/* 器械小标签 */
+.library-list em {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #e8f5ef;
+  color: #0b8f7b;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-style: normal;
+  font-weight: 900;
+}
+
+/* 动作名称 */
+.library-list strong {
+  display: block;
+  color: #213530;
+  font-size: 15px !important;
+  line-height: 1.42 !important;
+  font-weight: 900;
+  margin: 0 0 5px;
+  word-break: break-word;
+}
+
+/* 动作好处 */
+.library-list span {
+  display: block;
+  color: #7b928a;
+  font-size: 12px !important;
+  line-height: 1.55 !important;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* 模板选择区域压缩一点 */
+.compact-library-list {
+  max-height: 340px;
+}
+
+/* 已选模板动作 */
+.selected-template-actions {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scrollbar-width: none;
+}
+
+.selected-template-actions::-webkit-scrollbar {
+  display: none;
+}
+
+.selected-template-actions button {
+  flex: 0 0 auto;
+  min-height: 38px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid rgba(130, 178, 162, 0.16);
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #203530;
+  font-size: 13px !important;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.selected-template-actions em {
+  font-style: normal;
+  color: #0b8f7b;
+  background: #e8f5ef;
+  border-radius: 999px;
+  padding: 3px 7px;
+  font-size: 11px !important;
+  font-weight: 900;
+}
+
+.selected-template-actions strong {
+  color: #d85c46;
+  font-size: 14px !important;
+}
+
+/* 已有模板列表 */
+.template-mini-list {
+  display: grid;
+  gap: 9px;
+}
+
+.template-mini-list div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid rgba(130, 178, 162, 0.13);
+}
+
+.template-mini-list strong {
+  color: #213530;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+}
+
+.template-mini-list span {
+  grid-column: 1 / -1;
+  color: #7b928a;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+.template-mini-list button {
+  min-height: 30px;
+  border-radius: 999px;
+  background: #fff1ef;
+  color: #d85c46;
+  padding: 0 11px;
+  font-size: 12px !important;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+/* 保存模板按钮 */
+.main-wide-button {
+  width: 100%;
+  min-height: 50px;
+  border-radius: 16px;
+  background: #0b9b87;
+  color: #ffffff;
+  font-size: 15px !important;
+  font-weight: 900;
+  box-shadow: 0 10px 22px rgba(7, 155, 135, 0.18);
+}
+
+/* 设置页底部留出导航空间 */
+.settings-list {
+  padding-bottom: 110px;
+}
