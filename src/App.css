@@ -3035,3 +3035,87 @@ div[class*="tab-bar"] {
   border: 1px solid rgba(216, 92, 70, 0.16) !important;
   box-shadow: none !important;
 }
+/* ===== v1.5B 排课页保存与课次稳定版 ===== */
+
+/* 底部操作按钮不再悬浮，跟着页面正常滚动 */
+.lesson-bottom-actions {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: auto !important;
+  margin: 14px 0 132px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+
+.lesson-bottom-actions button {
+  min-height: 46px !important;
+  border-radius: 18px !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+}
+
+.lesson-bottom-actions .main-action {
+  grid-column: 1 / -1 !important;
+}
+
+/* 课次数字可点击 */
+.lesson-number-button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-width: 40px !important;
+  color: #203530 !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+}
+
+/* 课次选择弹窗 */
+.lesson-picker-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 8px !important;
+  max-height: 50vh !important;
+  overflow-y: auto !important;
+  padding: 4px 0 8px !important;
+}
+
+.lesson-picker-grid button {
+  min-height: 42px !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(91, 139, 124, 0.16) !important;
+  background: #ffffff !important;
+  color: #536b64 !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+}
+
+.lesson-picker-grid button.active {
+  background: #0b9b87 !important;
+  color: #ffffff !important;
+  border-color: #0b9b87 !important;
+}
+
+/* 推荐动作只在搜索时展开，不再常驻 */
+.action-search-area {
+  position: relative !important;
+}
+
+.action-search-area .search-results {
+  margin-top: 10px !important;
+}
+
+.action-search-area .quick-recommend-title {
+  margin-top: 10px !important;
+}
+
+/* 课次加减禁用时弱化 */
+.lesson-stepper button:disabled {
+  opacity: 0.35 !important;
+}
