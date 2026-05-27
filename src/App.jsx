@@ -21,6 +21,15 @@ import {
   saveTemplate,
 } from "./data/localStore";
 
+const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
+
+const posterThemeOptions = [
+  { key: "vitalityOrange", label: "活力橙" },
+  { key: "freshGreen", label: "清新绿" },
+  { key: "softLightWhite", label: "柔光白" },
+  { key: "obsidianBlack", label: "曜石黑" },
+  { key: "lakeBlue", label: "静海蓝" },
+];
 const apparatusOptions = [
   { key: "all", label: "全部", desc: "全部动作" },
   { key: "M", label: "M", desc: "垫上" },
@@ -294,6 +303,8 @@ function SchedulePage({ member, members = [], languagePreference }) {
   );
 
   const [isQuickPanelOpen, setIsQuickPanelOpen] = useState(false);
+  const [selectedPosterTheme, setSelectedPosterTheme] = useState("vitalityOrange");
+const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false);
   const [quickMode, setQuickMode] = useState("templates");
   const [pasteText, setPasteText] = useState("");
   const [parsedRows, setParsedRows] = useState([]);
@@ -603,10 +614,103 @@ function SchedulePage({ member, members = [], languagePreference }) {
   }
 
   function saveCurrentLesson() {
-    saveLesson(buildLessonPayload());
-    setSaveMessage("课程已保存");
-    setTimeout(() => setSaveMessage(""), 1600);
+  saveLesson(buildLessonPayload());
+  setSaveMessage("课程已保存");
+  setTimeout(() => setSaveMessage(""), 1600);
+}
+
+function getPosterActionName(action) {
+  const cnName = action.cnName || action.name || "";
+  const enName = action.rawName || action.name || "";
+
+  if (languagePreference === "english") {
+    return enName || cnName;
   }
+
+  if (languagePreference === "mixed") {
+    if (cnName && enName && cnName !== enName) {
+      return `${cnName} / ${enName}`;
+    }
+
+    return cnName || enName;
+  }
+
+  return cnName || enName;
+}
+
+function buildPosterPayload() {
+  const latestSettings = getAppData().settings || {};
+
+  return {
+    posterTheme: selectedPosterTheme,
+
+    studentName: lessonForm.studentName || "未命名学员",
+    studentNameSlug: lessonForm.studentName || "student",
+    date: getTodayLabel(),
+    weather: lessonForm.weather || "晴",
+    lessonNumber: `第${lessonNumber}课`,
+    courseTheme: lessonForm.lessonTheme || "",
+
+    studioName: latestSettings.studioNameCn || "",
+    studioSubName: latestSettings.studioNameEn || "",
+    logo: latestSettings.logoDataUrl || "",
+
+    summary: lessonForm.summary || "",
+    actions: actions.map((action, index) => ({
+      number: index + 1,
+      equipment: action.apparatus || "",
+      name: getPosterActionName(action),
+      benefit: action.benefit || "",
+      comment: action.comment || "",
+    })),
+  };
+}
+
+async function generatePoster() {
+  if (!lessonForm.studentName.trim()) {
+    setSaveMessage("请先填写学员姓名");
+    setTimeout(() => setSaveMessage(""), 1600);
+    return;
+  }
+
+  if (actions.length === 0) {
+    setSaveMessage("请先添加至少一个动作");
+    setTimeout(() => setSaveMessage(""), 1600);
+    return;
+  }
+
+  try {
+    setSaveMessage("正在生成海报...");
+
+    saveLesson(buildLessonPayload());
+
+    const response = await fetch(POSTER_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(buildPosterPayload()),
+    });
+
+    if (!response.ok) {
+      throw new Error(`生成失败：${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !result.imageUrl) {
+      throw new Error(result.message || "后端没有返回海报图片地址");
+    }
+
+    setSaveMessage("海报已生成");
+    window.open(result.imageUrl, "_blank");
+    setTimeout(() => setSaveMessage(""), 1600);
+  } catch (error) {
+    console.error("生成海报失败", error);
+    setSaveMessage("生成海报失败，请检查后端接口");
+    setTimeout(() => setSaveMessage(""), 2200);
+  }
+}
 
   function clearCurrentDraft() {
     clearLessonDraft(lessonForm.studentName, lessonNumber);
