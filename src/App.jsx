@@ -785,6 +785,8 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
   const [libraryKeyword, setLibraryKeyword] = useState("");
   const [libraryPage, setLibraryPage] = useState(1);
 
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState("");
   const [templateName, setTemplateName] = useState("");
   const [templateDesc, setTemplateDesc] = useState("");
   const [templateApparatus, setTemplateApparatus] = useState("all");
@@ -826,6 +828,17 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
 
     return stats;
   }, [allActions]);
+
+  const filterOptions = [
+    { key: "all", label: "全部" },
+    { key: "M", label: "M" },
+    { key: "R", label: "R" },
+    { key: "TT", label: "TT" },
+    { key: "C", label: "C" },
+    { key: "LB", label: "LB" },
+    { key: "SC", label: "SC" },
+    { key: "P", label: "P" },
+  ];
 
   const filteredLibraryActions = useMemo(() => {
     const keyword = libraryKeyword.trim().toLowerCase();
@@ -875,7 +888,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
           .toLowerCase()
           .includes(keyword);
       })
-      .slice(0, 18);
+      .slice(0, 30);
   }, [allActions, templateApparatus, templateKeyword]);
 
   const languageLabelMap = {
@@ -883,10 +896,6 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     english: "英文优先",
     mixed: "中英对照",
   };
-
-  const visibleApparatusOptions = apparatusOptions.filter((item) =>
-    ["all", "M", "R", "TT", "C", "LB", "SC", "P"].includes(item.key)
-  );
 
   function togglePanel(panelName) {
     setOpenPanel((current) => (current === panelName ? "" : panelName));
@@ -968,6 +977,61 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     setTagInput("");
   }
 
+  function resetTemplateEditor() {
+    setEditingTemplateId("");
+    setTemplateName("");
+    setTemplateDesc("");
+    setTemplateApparatus("all");
+    setTemplateKeyword("");
+    setSelectedTemplateActions([]);
+  }
+
+  function openNewTemplateModal() {
+    resetTemplateEditor();
+    setTemplateModalOpen(true);
+  }
+
+  function openEditTemplateModal(template) {
+    const loadedActions = (template.actions || []).map((item) => {
+      const foundById = item.actionId
+        ? allActions.find((action) => action.id === item.actionId)
+        : null;
+
+      const foundByKeyword = !foundById
+        ? allActions.find(
+            (action) =>
+              action.apparatus === item.apparatus &&
+              [action.cnName, action.name, action.displayName]
+                .join(" ")
+                .includes(item.keyword || "")
+          )
+        : null;
+
+      const found = foundById || foundByKeyword;
+
+      return {
+        id: found?.id || item.actionId || `${item.apparatus}-${item.keyword}`,
+        apparatus: found?.apparatus || item.apparatus || "M",
+        cnName: found?.cnName || item.keyword || "",
+        name: found?.name || "",
+        keyword: found?.cnName || found?.name || item.keyword || "",
+      };
+    });
+
+    setEditingTemplateId(template.id);
+    setTemplateName(template.name || "");
+    setTemplateDesc(template.desc || "");
+    setTemplateApparatus("all");
+    setTemplateKeyword("");
+    setSelectedTemplateActions(loadedActions);
+    setTemplateModalOpen(true);
+  }
+
+  function closeTemplateModal() {
+    setTemplateModalOpen(false);
+    resetTemplateEditor();
+  }
+
   function addActionToTemplate(action) {
     const exists = selectedTemplateActions.some((item) => item.id === action.id);
     if (exists) return;
@@ -1011,6 +1075,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     if (!templateName.trim() || selectedTemplateActions.length === 0) return;
 
     const nextTemplates = saveTemplate({
+      id: editingTemplateId || undefined,
       name: templateName.trim(),
       desc: templateDesc.trim(),
       actions: selectedTemplateActions.map((action) => ({
@@ -1021,10 +1086,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     });
 
     setTemplates(nextTemplates);
-    setTemplateName("");
-    setTemplateDesc("");
-    setTemplateKeyword("");
-    setSelectedTemplateActions([]);
+    closeTemplateModal();
   }
 
   function removeTemplate(templateId) {
@@ -1122,8 +1184,8 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
               <span>按器械或关键词快速定位</span>
             </div>
 
-            <div className="apparatus-chip-row">
-              {visibleApparatusOptions.map((item) => (
+            <div className="filter-strip">
+              {filterOptions.map((item) => (
                 <button
                   key={item.key}
                   className={libraryApparatus === item.key ? "active" : ""}
@@ -1212,34 +1274,106 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
         </button>
 
         {openPanel === "templates" && (
-          <div className="settings-panel-card template-builder-panel">
-            <div className="sub-section-title">
-              <strong>已有模板</strong>
-              <span>{templates.length} 个模板</span>
+          <div className="settings-panel-card template-manager-panel">
+            <div className="template-manager-head">
+              <div>
+                <strong>已有模板</strong>
+                <span>{templates.length} 个模板</span>
+              </div>
+              <button onClick={openNewTemplateModal}>+ 新建模板</button>
             </div>
 
-            <div className="template-mini-list">
+            <div className="template-card-list">
               {templates.length > 0 ? (
                 templates.map((template) => (
-                  <div key={template.id}>
-                    <strong>{template.name}</strong>
-                    <span>
-                      {template.actions?.length || 0} 个动作 ·{" "}
-                      {template.desc || "无说明"}
-                    </span>
-                    <button onClick={() => removeTemplate(template.id)}>删除</button>
+                  <div key={template.id} className="template-card">
+                    <div>
+                      <strong>{template.name}</strong>
+                      <span>
+                        {template.actions?.length || 0} 个动作
+                        {template.desc ? ` · ${template.desc}` : ""}
+                      </span>
+                    </div>
+                    <div className="template-card-actions">
+                      <button onClick={() => openEditTemplateModal(template)}>
+                        编辑
+                      </button>
+                      <button onClick={() => removeTemplate(template.id)}>
+                        删除
+                      </button>
+                    </div>
                   </div>
                 ))
               ) : (
                 <p className="empty-template-text">
-                  暂无模板，先在下面新建一个。
+                  暂无模板，点击“新建模板”创建第一个模板。
                 </p>
               )}
             </div>
+          </div>
+        )}
 
-            <div className="sub-section-title">
-              <strong>新建模板</strong>
-              <span>从动作库点选动作，不需要填写动作好处</span>
+        <button
+          className="settings-row-with-subtitle"
+          onClick={() => togglePanel("language")}
+        >
+          <div>
+            <strong>动作语言偏好</strong>
+            <small>{languageLabelMap[languagePreference]}</small>
+          </div>
+          <span>{openPanel === "language" ? "⌃" : "›"}</span>
+        </button>
+
+        {openPanel === "language" && (
+          <div className="language-preference-panel">
+            <button
+              className={languagePreference === "chinese" ? "active" : ""}
+              onClick={() => chooseLanguagePreference("chinese")}
+            >
+              <strong>中文优先</strong>
+              <small>排课和海报优先中文；没有中文时显示英文。</small>
+            </button>
+
+            <button
+              className={languagePreference === "english" ? "active" : ""}
+              onClick={() => chooseLanguagePreference("english")}
+            >
+              <strong>英文优先</strong>
+              <small>排课端英文在前；海报只发英文。</small>
+            </button>
+
+            <button
+              className={languagePreference === "mixed" ? "active" : ""}
+              onClick={() => chooseLanguagePreference("mixed")}
+            >
+              <strong>中英对照</strong>
+              <small>排课和海报尽量显示中英对照。</small>
+            </button>
+          </div>
+        )}
+
+        <button>
+          导出数据 <span>›</span>
+        </button>
+
+        <button>
+          导入数据 <span>›</span>
+        </button>
+
+        <button>
+          账户管理 <span>›</span>
+        </button>
+      </div>
+
+      {templateModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-sheet template-editor-sheet">
+            <div className="modal-header">
+              <div>
+                <h2>{editingTemplateId ? "编辑模板" : "新建模板"}</h2>
+                <p>从动作库点选动作，保存后可在排课页套用。</p>
+              </div>
+              <button onClick={closeTemplateModal}>×</button>
             </div>
 
             <label className="field">
@@ -1260,8 +1394,8 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
               />
             </label>
 
-            <div className="apparatus-chip-row">
-              {visibleApparatusOptions.map((item) => (
+            <div className="filter-strip mini-filter-strip">
+              {filterOptions.map((item) => (
                 <button
                   key={item.key}
                   className={templateApparatus === item.key ? "active" : ""}
@@ -1328,59 +1462,8 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
               保存模板
             </button>
           </div>
-        )}
-
-        <button
-          className="settings-row-with-subtitle"
-          onClick={() => togglePanel("language")}
-        >
-          <div>
-            <strong>动作语言偏好</strong>
-            <small>{languageLabelMap[languagePreference]}</small>
-          </div>
-          <span>{openPanel === "language" ? "⌃" : "›"}</span>
-        </button>
-
-        {openPanel === "language" && (
-          <div className="language-preference-panel">
-            <button
-              className={languagePreference === "chinese" ? "active" : ""}
-              onClick={() => chooseLanguagePreference("chinese")}
-            >
-              <strong>中文优先</strong>
-              <small>排课和海报优先中文；没有中文时显示英文。</small>
-            </button>
-
-            <button
-              className={languagePreference === "english" ? "active" : ""}
-              onClick={() => chooseLanguagePreference("english")}
-            >
-              <strong>英文优先</strong>
-              <small>排课端英文在前；海报只发英文。</small>
-            </button>
-
-            <button
-              className={languagePreference === "mixed" ? "active" : ""}
-              onClick={() => chooseLanguagePreference("mixed")}
-            >
-              <strong>中英对照</strong>
-              <small>排课和海报尽量显示中英对照。</small>
-            </button>
-          </div>
-        )}
-
-        <button>
-          导出数据 <span>›</span>
-        </button>
-
-        <button>
-          导入数据 <span>›</span>
-        </button>
-
-        <button>
-          账户管理 <span>›</span>
-        </button>
-      </div>
+        </div>
+      )}
 
       {tagTarget && (
         <div className="modal-backdrop">
