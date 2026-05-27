@@ -1366,8 +1366,8 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
       </div>
 
       {templateModalOpen && (
-        <div className="modal-backdrop">
-          <div className="modal-sheet template-editor-sheet">
+        <div className="modal-backdrop" onClick={() => setTemplateModalOpen(false)}>
+          <div className="modal-sheet template-editor-sheet" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h2>{editingTemplateId ? "编辑模板" : "新建模板"}</h2>
