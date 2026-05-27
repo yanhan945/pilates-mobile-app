@@ -1,14 +1,20 @@
 import { starterActions } from "./starterActions";
 import { baseActionsFull } from "./baseActionsFull";
 
-// 临时模拟：以后这些会来自 Supabase 或本地账号数据
 const userCustomActions = [];
 const userActionOverrides = {};
 const userActionUsage = {};
 const userFavorites = new Set();
 
 function normalizeText(value) {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function compactText(value) {
+  return normalizeText(value).replace(/[\/\-\s（）()·+＋]/g, "");
 }
 
 function createSafeId(prefix = "selected") {
@@ -17,6 +23,37 @@ function createSafeId(prefix = "selected") {
   }
 
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+export function getActionIdentityKey(action) {
+  return [
+    action?.apparatus || "",
+    compactText(action?.cnName || ""),
+    compactText(action?.name || ""),
+  ].join("|");
+}
+
+function cleanAction(action) {
+  const benefits = Array.isArray(action?.benefits)
+    ? action.benefits
+    : action?.defaultBenefit
+      ? String(action.defaultBenefit).split("；").filter(Boolean)
+      : [];
+
+  return {
+    id:
+      action?.id ||
+      `${action?.source || "action"}-${action?.apparatus || "other"}-${compactText(
+        action?.cnName || action?.name || ""
+      )}`,
+    source: action?.source || "full",
+    apparatus: action?.apparatus || "",
+    name: action?.name?.trim() || "",
+    cnName: action?.cnName?.trim() || "",
+    level: action?.level || "",
+    benefits,
+    defaultBenefit: action?.defaultBenefit || benefits.join("；") || "",
+  };
 }
 
 function getPrimaryName(action, languagePreference = "mixed") {
@@ -50,10 +87,6 @@ function getSearchDisplayName(action, languagePreference = "mixed") {
   if (!primaryName) return secondaryName;
   if (!secondaryName) return primaryName;
   if (primaryName === secondaryName) return primaryName;
-
-  if (languagePreference === "english") {
-    return `${primaryName} / ${secondaryName}`;
-  }
 
   return `${primaryName} / ${secondaryName}`;
 }
@@ -90,17 +123,12 @@ function applyUserOverride(action) {
 function mergeActionsWithoutDuplicates(actions) {
   const map = new Map();
 
-  actions.forEach((action) => {
-    const normalizedName = normalizeText(action.name);
-    const normalizedCnName = normalizeText(action.cnName);
-    const key = `${action.apparatus}-${normalizedName}-${normalizedCnName}`;
+  actions.forEach((rawAction) => {
+    const action = cleanAction(rawAction);
+    const key = `${action.apparatus}-${compactText(action.name)}-${compactText(action.cnName)}`;
 
     if (!map.has(key)) {
-      map.set(key, {
-        ...action,
-        name: action.name?.trim() || "",
-        cnName: action.cnName?.trim() || "",
-      });
+      map.set(key, action);
       return;
     }
 
@@ -127,17 +155,29 @@ function getRecommendationScore(action) {
   const usageScore = getUsageScore(action) * 100;
   const favoriteScore = userFavorites.has(action.id) || action.isFavorite ? 1000 : 0;
   const customScore = action.source === "custom" ? 800 : 0;
-  const starterScore = action.source === "starter" ? 200 : 0;
+  const starterScore = action.source === "starter" ? 300 : 0;
 
   return favoriteScore + customScore + usageScore + starterScore;
 }
 
-export function getAllActions() {
+function attachDisplayFields(action, languagePreference = "mixed") {
+  return {
+    ...action,
+    identityKey: getActionIdentityKey(action),
+    displayName: getSearchDisplayName(action, languagePreference),
+    lessonName: getLessonDisplayName(action, languagePreference),
+    posterName: getPosterDisplayName(action, languagePreference),
+  };
+}
+
+export function getAllActions(languagePreference = "mixed") {
   return mergeActionsWithoutDuplicates([
     ...userCustomActions,
     ...starterActions,
     ...baseActionsFull,
-  ]).map(applyUserOverride);
+  ])
+    .map(applyUserOverride)
+    .map((action) => attachDisplayFields(action, languagePreference));
 }
 
 export function searchActions({
@@ -146,8 +186,9 @@ export function searchActions({
   languagePreference = "mixed",
 } = {}) {
   const normalizedKeyword = normalizeText(keyword);
+  const compactKeyword = compactText(keyword);
 
-  return getAllActions()
+  return getAllActions(languagePreference)
     .filter((action) => {
       if (apparatus === "all") return true;
 
@@ -160,71 +201,100 @@ export function searchActions({
     .filter((action) => {
       if (!normalizedKeyword) return true;
 
+      const searchableText = [
+        action.name,
+        action.cnName,
+        action.displayName,
+        action.defaultBenefit,
+        ...(action.benefits || []),
+      ].join(" ");
+
       return (
-        normalizeText(action.name).includes(normalizedKeyword) ||
-        normalizeText(action.cnName).includes(normalizedKeyword) ||
-        normalizeText(action.defaultBenefit).includes(normalizedKeyword)
+        normalizeText(searchableText).includes(normalizedKeyword) ||
+        compactText(searchableText).includes(compactKeyword)
       );
     })
-    .sort((a, b) => getRecommendationScore(b) - getRecommendationScore(a))
-    .map((action) => ({
-      ...action,
-      displayName: getSearchDisplayName(action, languagePreference),
-      lessonName: getLessonDisplayName(action, languagePreference),
-      posterName: getPosterDisplayName(action, languagePreference),
-    }));
+    .sort((a, b) => getRecommendationScore(b) - getRecommendationScore(a));
 }
 
-export function findBestActionMatch({ apparatus = "all", keyword = "", languagePreference = "mixed" }) {
+export function findBestActionMatch({
+  apparatus = "all",
+  keyword = "",
+  languagePreference = "mixed",
+}) {
   const normalizedKeyword = normalizeText(keyword);
+  const compactKeyword = compactText(keyword);
 
   if (!normalizedKeyword) return null;
 
-  const candidates = searchActions({
-    keyword: "",
-    apparatus,
-    languagePreference,
+  const candidates = getAllActions(languagePreference).filter((action) => {
+    if (apparatus === "all") return true;
+    return action.apparatus === apparatus;
   });
 
   const exactMatch = candidates.find((action) => {
     return (
       normalizeText(action.cnName) === normalizedKeyword ||
       normalizeText(action.name) === normalizedKeyword ||
-      normalizeText(action.displayName) === normalizedKeyword
+      normalizeText(action.displayName) === normalizedKeyword ||
+      compactText(action.cnName) === compactKeyword ||
+      compactText(action.name) === compactKeyword ||
+      compactText(action.displayName) === compactKeyword
     );
   });
 
   if (exactMatch) return exactMatch;
 
   const includesMatch = candidates.find((action) => {
-    return (
-      normalizeText(action.cnName).includes(normalizedKeyword) ||
-      normalizeText(action.name).includes(normalizedKeyword) ||
-      normalizeText(action.displayName).includes(normalizedKeyword) ||
-      normalizedKeyword.includes(normalizeText(action.cnName)) ||
-      normalizedKeyword.includes(normalizeText(action.name))
-    );
+    const names = [action.cnName, action.name, action.displayName].filter(Boolean);
+
+    return names.some((name) => {
+      const compactName = compactText(name);
+
+      return (
+        normalizeText(name).includes(normalizedKeyword) ||
+        normalizedKeyword.includes(normalizeText(name)) ||
+        compactName.includes(compactKeyword) ||
+        compactKeyword.includes(compactName)
+      );
+    });
   });
 
   if (includesMatch) return includesMatch;
 
-  const benefitMatch = candidates.find((action) =>
-    normalizeText(action.defaultBenefit).includes(normalizedKeyword)
-  );
+  const looseMatch = candidates.find((action) => {
+    const searchableText = [
+      action.name,
+      action.cnName,
+      action.displayName,
+      action.defaultBenefit,
+      ...(action.benefits || []),
+    ].join(" ");
 
-  return benefitMatch || null;
+    return compactText(searchableText).includes(compactKeyword);
+  });
+
+  return looseMatch || null;
 }
 
 export function createSelectedLessonAction(action) {
+  const cleanedAction = attachDisplayFields(cleanAction(action), "mixed");
+
   return {
     id: createSafeId("selected-action"),
-    baseActionId: action.id,
-    name: action.lessonName || action.cnName || action.name,
-    posterName: action.posterName || action.lessonName || action.cnName || action.name,
-    rawName: action.name,
-    cnName: action.cnName,
-    apparatus: action.apparatus,
-    benefit: action.defaultBenefit || "",
+    baseActionId: cleanedAction.id,
+    identityKey: getActionIdentityKey(cleanedAction),
+    name: action.lessonName || cleanedAction.lessonName || cleanedAction.cnName || cleanedAction.name,
+    posterName:
+      action.posterName ||
+      cleanedAction.posterName ||
+      cleanedAction.lessonName ||
+      cleanedAction.cnName ||
+      cleanedAction.name,
+    rawName: cleanedAction.name,
+    cnName: cleanedAction.cnName,
+    apparatus: cleanedAction.apparatus,
+    benefit: cleanedAction.defaultBenefit || "",
     comment: action.comment || "",
   };
 }
@@ -237,6 +307,7 @@ export function createTemporaryLessonAction({
   return {
     id: createSafeId("temporary-action"),
     baseActionId: "",
+    identityKey: `${apparatus}|${compactText(name)}|temporary`,
     name,
     posterName: name,
     rawName: name,
