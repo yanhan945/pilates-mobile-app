@@ -1109,7 +1109,7 @@ setTimeout(() => setSaveMessage(""), 1600);
     ))}
   </div>
 </div>
-     <div className="lesson-bottom-actions course-save-actions">
+    <div className="lesson-bottom-actions course-save-actions">
   <button className="danger-action" onClick={clearCurrentDraft}>
     清空
   </button>
@@ -1118,12 +1118,8 @@ setTimeout(() => setSaveMessage(""), 1600);
     保存
   </button>
 
-  <button className="light-action" onClick={() => setIsPosterPreviewOpen(true)}>
-    预览
-  </button>
-
   <button className="main-action" onClick={generatePoster}>
-    生成海报
+    生成
   </button>
 </div>
 
