@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import {
+import {
   HomeIcon,
   CalendarIcon,
   UsersIcon,
   SettingsIcon,
+  MailIcon,
+  LockIcon,
+  LogInIcon,
+  LogOutIcon,
 } from "./components/AppIcons";
 import {
   createSelectedLessonAction,
@@ -26,6 +31,7 @@ import {
   saveSettings,
   saveTemplate,
 } from "./data/localStore";
+import { supabase } from "./data/supabaseClient";
 
 const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
 
@@ -1362,6 +1368,38 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
   const [tagTarget, setTagTarget] = useState(null);
   const [tagInput, setTagInput] = useState("");
   const [settingsSavedMessage, setSettingsSavedMessage] = useState("");
+  const [authUser, setAuthUser] = useState(null);
+const [authEmail, setAuthEmail] = useState("");
+const [authPassword, setAuthPassword] = useState("");
+const [authLoading, setAuthLoading] = useState(false);
+const [authMessage, setAuthMessage] = useState("");
+
+useEffect(() => {
+  let mounted = true;
+
+  async function loadSession() {
+    const { data } = await supabase.auth.getSession();
+
+    if (mounted) {
+      setAuthUser(data.session?.user || null);
+      setAuthEmail(data.session?.user?.email || "");
+    }
+  }
+
+  loadSession();
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    setAuthUser(session?.user || null);
+    setAuthEmail(session?.user?.email || "");
+  });
+
+  return () => {
+    mounted = false;
+    subscription.unsubscribe();
+  };
+}, []);
 
   const [favoriteIds, setFavoriteIds] = useState(() => {
     try {
@@ -1464,6 +1502,97 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     mixed: "中英对照",
   };
 
+ function getCleanAuthInput() {
+  return {
+    email: authEmail.trim(),
+    password: authPassword.trim(),
+  };
+}
+
+async function handleEmailSignUp() {
+  const { email, password } = getCleanAuthInput();
+
+  if (!email || !password) {
+    setAuthMessage("请先填写邮箱和密码");
+    return;
+  }
+
+  if (password.length < 6) {
+    setAuthMessage("密码至少需要 6 位");
+    return;
+  }
+
+  try {
+    setAuthLoading(true);
+    setAuthMessage("正在注册...");
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    if (data.session) {
+      setAuthUser(data.user);
+      setAuthMessage("注册成功，已登录");
+    } else {
+      setAuthMessage("注册成功，请去邮箱确认后再登录");
+    }
+  } catch (error) {
+    setAuthMessage(error.message || "注册失败，请稍后再试");
+  } finally {
+    setAuthLoading(false);
+  }
+}
+
+async function handleEmailSignIn() {
+  const { email, password } = getCleanAuthInput();
+
+  if (!email || !password) {
+    setAuthMessage("请先填写邮箱和密码");
+    return;
+  }
+
+  try {
+    setAuthLoading(true);
+    setAuthMessage("正在登录...");
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    setAuthUser(data.user);
+    setAuthMessage("登录成功");
+    setAuthPassword("");
+  } catch (error) {
+    setAuthMessage(error.message || "登录失败，请检查邮箱或密码");
+  } finally {
+    setAuthLoading(false);
+  }
+}
+
+async function handleEmailSignOut() {
+  try {
+    setAuthLoading(true);
+    setAuthMessage("正在退出...");
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) throw error;
+
+    setAuthUser(null);
+    setAuthPassword("");
+    setAuthMessage("已退出登录");
+  } catch (error) {
+    setAuthMessage(error.message || "退出失败，请稍后再试");
+  } finally {
+    setAuthLoading(false);
+  }
+}
   function togglePanel(panelName) {
     setOpenPanel((current) => (current === panelName ? "" : panelName));
   }
@@ -1960,9 +2089,104 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     导入数据 <span>›</span>
   </button>
 
-  <button>
-    账户管理 <span>›</span>
-  </button>
+  <button
+  className="settings-row-with-subtitle"
+  onClick={() => togglePanel("account")}
+>
+  <div>
+    <strong>账户管理</strong>
+    <small>{authUser ? authUser.email : "邮箱注册 / 登录 / 后续云端同步"}</small>
+  </div>
+  <span>{openPanel === "account" ? "⌃" : "›"}</span>
+</button>
+
+{openPanel === "account" && (
+  <div className="settings-panel-card account-settings-panel">
+    <div className="account-status-card">
+      <div className="account-status-icon">
+        {authUser ? <UsersIcon size={20} /> : <MailIcon size={20} />}
+      </div>
+
+      <div>
+        <strong>{authUser ? "已登录" : "未登录"}</strong>
+        <span>
+          {authUser
+            ? authUser.email
+            : "先用邮箱注册或登录，下一步再同步工作室、会员和课程。"}
+        </span>
+      </div>
+    </div>
+
+    {!authUser && (
+      <>
+        <label className="field icon-field">
+          <span>邮箱</span>
+          <div className="input-with-icon">
+            <MailIcon size={18} />
+            <input
+              value={authEmail}
+              onChange={(event) => setAuthEmail(event.target.value)}
+              placeholder="输入邮箱"
+              type="email"
+              autoComplete="email"
+            />
+          </div>
+        </label>
+
+        <label className="field icon-field">
+          <span>密码</span>
+          <div className="input-with-icon">
+            <LockIcon size={18} />
+            <input
+              value={authPassword}
+              onChange={(event) => setAuthPassword(event.target.value)}
+              placeholder="至少 6 位密码"
+              type="password"
+              autoComplete="current-password"
+            />
+          </div>
+        </label>
+
+        <div className="account-action-row">
+          <button
+            className="light-action account-auth-button"
+            onClick={handleEmailSignIn}
+            disabled={authLoading}
+          >
+            <LogInIcon size={17} />
+            登录
+          </button>
+
+          <button
+            className="main-action account-auth-button"
+            onClick={handleEmailSignUp}
+            disabled={authLoading}
+          >
+            <MailIcon size={17} />
+            注册
+          </button>
+        </div>
+      </>
+    )}
+
+    {authUser && (
+      <button
+        className="danger-action account-signout-button"
+        onClick={handleEmailSignOut}
+        disabled={authLoading}
+      >
+        <LogOutIcon size={17} />
+        退出登录
+      </button>
+    )}
+
+    {authMessage && <p className="account-auth-message">{authMessage}</p>}
+
+    <p className="settings-tip">
+      第一版只做账号注册和登录。确认账号能用后，再同步工作室信息、会员、课程和模板。
+    </p>
+  </div>
+)}
 </div>
 
       {libraryModalOpen && (
