@@ -3688,3 +3688,98 @@ button,
 .bottom-tabs .tab.active {
   transform: none !important;
 }
+/* ===== 账户管理：邮箱注册 / 登录 ===== */
+
+.account-settings-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.account-status-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(126, 178, 160, 0.16);
+}
+
+.account-status-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #079b87;
+  background: rgba(7, 155, 135, 0.08);
+}
+
+.account-status-card strong {
+  display: block;
+  color: #21332f;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.account-status-card span {
+  display: block;
+  margin-top: 3px;
+  color: #7b8f89;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #f7fbf8;
+  border-radius: 16px;
+  padding: 0 12px;
+  border: 1px solid rgba(126, 178, 160, 0.12);
+}
+
+.input-with-icon svg {
+  color: #7f938d;
+  flex: 0 0 auto;
+}
+
+.input-with-icon input {
+  flex: 1;
+  border: 0 !important;
+  background: transparent !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-shadow: none !important;
+}
+
+.account-action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.account-auth-button,
+.account-signout-button {
+  height: 44px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.account-auth-button:disabled,
+.account-signout-button:disabled {
+  opacity: 0.62;
+}
+
+.account-auth-message {
+  margin: -2px 2px 0;
+  color: #0c8f7c;
+  font-size: 13px;
+  line-height: 1.5;
+}
