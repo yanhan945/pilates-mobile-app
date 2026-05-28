@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import {
+  HomeIcon,
+  CalendarIcon,
+  UsersIcon,
+  SettingsIcon,
+} from "./components/AppIcons";
+import {
   createSelectedLessonAction,
   createTemporaryLessonAction,
   findBestActionMatch,
@@ -189,28 +195,28 @@ function App() {
           className={activeTab === "home" ? "tab active" : "tab"}
           onClick={() => setActiveTab("home")}
         >
-          <span>⌂</span>
+          <span><HomeIcon /></span>
           首页
         </button>
         <button
           className={activeTab === "schedule" ? "tab active" : "tab"}
           onClick={() => setActiveTab("schedule")}
         >
-          <span>▣</span>
+          <span><CalendarIcon /></span>
           排课
         </button>
         <button
           className={activeTab === "members" ? "tab active" : "tab"}
           onClick={() => setActiveTab("members")}
         >
-          <span>♧</span>
+          <span><UsersIcon /></span>
           会员
         </button>
         <button
           className={activeTab === "settings" ? "tab active" : "tab"}
           onClick={() => setActiveTab("settings")}
         >
-          <span>⚙</span>
+          <span><SettingsIcon /></span>
           设置
         </button>
       </nav>
