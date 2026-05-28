@@ -3617,3 +3617,51 @@ div[class*="tab-bar"] {
   font-size: 13px !important;
   line-height: 1.15 !important;
 }
+/* ===== Tab 切换丝滑优化：减少白屏闪烁感 ===== */
+
+html,
+body,
+#root {
+  background: #eef8f3 !important;
+  min-height: 100%;
+}
+
+.app-shell,
+.mobile-app,
+.app-container,
+.page-shell,
+.page-content {
+  background: transparent;
+}
+
+.home-page,
+.schedule-page,
+.members-page,
+.settings-page {
+  animation: softPageIn 180ms ease-out both;
+  will-change: opacity, transform;
+}
+
+@keyframes softPageIn {
+  from {
+    opacity: 0.72;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bottom-tabs,
+.bottom-nav {
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+button,
+.tab,
+.bottom-tabs .tab {
+  -webkit-tap-highlight-color: transparent;
+}
