@@ -3587,3 +3587,33 @@ div[class*="tab-bar"] {
   color: #ffffff !important;
   box-shadow: 0 8px 18px rgba(7, 155, 135, 0.16) !important;
 }
+/* ===== 底部 Tab 图标间距修正：不再上跳，图标文字更紧凑 ===== */
+
+.bottom-tabs .tab {
+  transform: none !important;
+  gap: 4px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.bottom-tabs .tab.active {
+  transform: none !important;
+}
+
+.bottom-tabs .tab span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 22px !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+}
+
+.bottom-tabs .tab span svg {
+  display: block !important;
+}
+
+.bottom-tabs .tab {
+  font-size: 13px !important;
+  line-height: 1.15 !important;
+}
