@@ -1083,10 +1083,17 @@ setTimeout(() => setSaveMessage(""), 1600);
         />
       </section>
 
-      <div className="poster-theme-panel">
-  <div className="poster-theme-title">
+     <div className="poster-theme-panel">
+  <div className="poster-theme-topline">
     <strong>海报主题</strong>
-    <span>生成前选择海报风格</span>
+
+    <button
+      type="button"
+      className="poster-preview-mini"
+      onClick={() => setIsPosterPreviewOpen(true)}
+    >
+      预览
+    </button>
   </div>
 
   <div className="poster-theme-strip">
