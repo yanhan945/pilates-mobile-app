@@ -3657,11 +3657,34 @@ body,
 .bottom-tabs,
 .bottom-nav {
   backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 button,
 .tab,
 .bottom-tabs .tab {
   -webkit-tap-highlight-color: transparent;
+}
+/* ===== 修复 Tab 切换优化后底部导航偏移 ===== */
+
+.bottom-tabs,
+.bottom-nav {
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  transform: none !important;
+  translate: none !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.bottom-tabs {
+  position: fixed !important;
+  z-index: 50 !important;
+}
+
+.bottom-tabs .tab,
+.bottom-tabs .tab.active {
+  transform: none !important;
 }
