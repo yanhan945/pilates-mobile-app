@@ -30,6 +30,10 @@ import {
   saveSettings,
   saveTemplate,
 } from "./data/localStore";
+import {
+  loadCloudStudioSettings,
+  saveCloudStudioSettings,
+} from "./data/studioCloudStore";
 import { supabase } from "./data/supabaseClient";
 
 const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
@@ -1373,6 +1377,22 @@ const [authPassword, setAuthPassword] = useState("");
 const [authLoading, setAuthLoading] = useState(false);
 const [authMessage, setAuthMessage] = useState("");
 
+function applyStudioSettings(settings) {
+  if (!settings) return;
+
+  setSettingsForm((current) => ({
+    ...current,
+    studioNameCn: settings.studioNameCn ?? current.studioNameCn,
+    studioNameEn: settings.studioNameEn ?? current.studioNameEn,
+    coachName: settings.coachName ?? current.coachName,
+    logoDataUrl: settings.logoDataUrl ?? current.logoDataUrl,
+  }));
+
+  if (settings.languagePreference) {
+    setLanguagePreference(settings.languagePreference);
+  }
+}
+
 useEffect(() => {
   let mounted = true;
 
@@ -1399,6 +1419,26 @@ useEffect(() => {
     subscription.unsubscribe();
   };
 }, []);
+
+useEffect(() => {
+  if (!authUser) return undefined;
+
+  let mounted = true;
+
+  async function syncStudioSettingsFromCloud() {
+    const result = await loadCloudStudioSettings();
+
+    if (!mounted || result.source !== "cloud") return;
+
+    applyStudioSettings(result.settings);
+  }
+
+  syncStudioSettingsFromCloud();
+
+  return () => {
+    mounted = false;
+  };
+}, [authUser?.id]);
 
   const [favoriteIds, setFavoriteIds] = useState(() => {
     try {
@@ -1679,13 +1719,20 @@ async function handleEmailSignOut() {
     setTimeout(() => setSettingsSavedMessage(""), 1600);
   }
 
-  function saveStudioInfo() {
-    saveSettings({
+  async function saveStudioInfo() {
+    const result = await saveCloudStudioSettings({
       ...settingsForm,
       languagePreference,
     });
 
-    setSettingsSavedMessage("工作室信息已保存");
+    if (result.status === "cloud") {
+      setSettingsSavedMessage("工作室信息已同步");
+    } else if (result.status === "cloud-error") {
+      setSettingsSavedMessage("本机已保存，云端同步失败");
+    } else {
+      setSettingsSavedMessage("工作室信息已保存到本机");
+    }
+
     setTimeout(() => setSettingsSavedMessage(""), 1600);
   }
 
@@ -1864,6 +1911,105 @@ async function handleEmailSignOut() {
       )}
 
      <div className="settings-list">
+  <button
+  className="settings-row-with-subtitle"
+  onClick={() => togglePanel("account")}
+>
+  <div>
+    <strong>账户管理</strong>
+    <small>{authUser ? authUser.email : "邮箱注册 / 登录 / 后续云端同步"}</small>
+  </div>
+  <span>{openPanel === "account" ? "⌃" : "›"}</span>
+</button>
+
+{openPanel === "account" && (
+  <div className="settings-panel-card account-settings-panel">
+    <div className="account-status-card">
+      <div className="account-status-icon">
+        {authUser ? <UsersIcon size={20} /> : <MailIcon size={20} />}
+      </div>
+
+      <div>
+        <strong>{authUser ? "已登录" : "未登录"}</strong>
+        <span>
+          {authUser
+            ? authUser.email
+            : "登录后可同步工作室信息，后续再同步会员和课程。"}
+        </span>
+      </div>
+    </div>
+
+    {!authUser && (
+      <>
+        <label className="field icon-field">
+          <span>邮箱</span>
+          <div className="input-with-icon">
+            <MailIcon size={18} />
+            <input
+              value={authEmail}
+              onChange={(event) => setAuthEmail(event.target.value)}
+              placeholder="输入邮箱"
+              type="email"
+              autoComplete="email"
+            />
+          </div>
+        </label>
+
+        <label className="field icon-field">
+          <span>密码</span>
+          <div className="input-with-icon">
+            <LockIcon size={18} />
+            <input
+              value={authPassword}
+              onChange={(event) => setAuthPassword(event.target.value)}
+              placeholder="至少 6 位密码"
+              type="password"
+              autoComplete="current-password"
+            />
+          </div>
+        </label>
+
+        <div className="account-action-row">
+          <button
+            className="light-action account-auth-button"
+            onClick={handleEmailSignIn}
+            disabled={authLoading}
+          >
+            <LogInIcon size={17} />
+            登录
+          </button>
+
+          <button
+            className="main-action account-auth-button"
+            onClick={handleEmailSignUp}
+            disabled={authLoading}
+          >
+            <MailIcon size={17} />
+            注册
+          </button>
+        </div>
+      </>
+    )}
+
+    {authUser && (
+      <button
+        className="danger-action account-signout-button"
+        onClick={handleEmailSignOut}
+        disabled={authLoading}
+      >
+        <LogOutIcon size={17} />
+        退出登录
+      </button>
+    )}
+
+    {authMessage && <p className="account-auth-message">{authMessage}</p>}
+
+    <p className="settings-tip">
+      当前已支持账号登录后的工作室信息云端同步。
+    </p>
+  </div>
+)}
+
   <button
     className="settings-row-with-subtitle"
     onClick={() => togglePanel("studio")}
@@ -2088,104 +2234,6 @@ async function handleEmailSignOut() {
     导入数据 <span>›</span>
   </button>
 
-  <button
-  className="settings-row-with-subtitle"
-  onClick={() => togglePanel("account")}
->
-  <div>
-    <strong>账户管理</strong>
-    <small>{authUser ? authUser.email : "邮箱注册 / 登录 / 后续云端同步"}</small>
-  </div>
-  <span>{openPanel === "account" ? "⌃" : "›"}</span>
-</button>
-
-{openPanel === "account" && (
-  <div className="settings-panel-card account-settings-panel">
-    <div className="account-status-card">
-      <div className="account-status-icon">
-        {authUser ? <UsersIcon size={20} /> : <MailIcon size={20} />}
-      </div>
-
-      <div>
-        <strong>{authUser ? "已登录" : "未登录"}</strong>
-        <span>
-          {authUser
-            ? authUser.email
-            : "先用邮箱注册或登录，下一步再同步工作室、会员和课程。"}
-        </span>
-      </div>
-    </div>
-
-    {!authUser && (
-      <>
-        <label className="field icon-field">
-          <span>邮箱</span>
-          <div className="input-with-icon">
-            <MailIcon size={18} />
-            <input
-              value={authEmail}
-              onChange={(event) => setAuthEmail(event.target.value)}
-              placeholder="输入邮箱"
-              type="email"
-              autoComplete="email"
-            />
-          </div>
-        </label>
-
-        <label className="field icon-field">
-          <span>密码</span>
-          <div className="input-with-icon">
-            <LockIcon size={18} />
-            <input
-              value={authPassword}
-              onChange={(event) => setAuthPassword(event.target.value)}
-              placeholder="至少 6 位密码"
-              type="password"
-              autoComplete="current-password"
-            />
-          </div>
-        </label>
-
-        <div className="account-action-row">
-          <button
-            className="light-action account-auth-button"
-            onClick={handleEmailSignIn}
-            disabled={authLoading}
-          >
-            <LogInIcon size={17} />
-            登录
-          </button>
-
-          <button
-            className="main-action account-auth-button"
-            onClick={handleEmailSignUp}
-            disabled={authLoading}
-          >
-            <MailIcon size={17} />
-            注册
-          </button>
-        </div>
-      </>
-    )}
-
-    {authUser && (
-      <button
-        className="danger-action account-signout-button"
-        onClick={handleEmailSignOut}
-        disabled={authLoading}
-      >
-        <LogOutIcon size={17} />
-        退出登录
-      </button>
-    )}
-
-    {authMessage && <p className="account-auth-message">{authMessage}</p>}
-
-    <p className="settings-tip">
-      第一版只做账号注册和登录。确认账号能用后，再同步工作室信息、会员、课程和模板。
-    </p>
-  </div>
-)}
 </div>
 
       {libraryModalOpen && (
