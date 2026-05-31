@@ -1,3785 +1,2475 @@
-:root {
-  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  color: #21332f;
-  background: #eef5f1;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(185, 224, 209, 0.45), transparent 34%),
-    #eef5f1;
-}
-
-button,
-input,
-textarea {
-  font: inherit;
-}
-
-button {
-  border: none;
-  cursor: pointer;
-}
-
-input,
-textarea {
-  width: 100%;
-  border: none;
-  outline: none;
-  color: #21332f;
-}
-
-.app-shell {
-  width: 100%;
-  max-width: 430px;
-  min-height: 100vh;
-  margin: 0 auto;
-  background: #f7faf7;
-  position: relative;
-  box-shadow: 0 0 40px rgba(44, 78, 68, 0.12);
-}
-
-.phone-page {
-  min-height: 100vh;
-  padding-bottom: 88px;
-}
-
-.page {
-  min-height: 100vh;
-  padding: 18px 16px 110px;
-}
-
-.hero {
-  margin: -18px -16px 18px;
-  padding: 34px 18px 22px;
-  background: linear-gradient(145deg, #8db8aa, #a8cabd);
-  color: white;
-  border-bottom-left-radius: 28px;
-  border-bottom-right-radius: 28px;
-}
-
-.hero p {
-  margin: 0 0 4px;
-  opacity: 0.9;
-  font-size: 14px;
-}
-
-.hero h1 {
-  margin: 0 0 18px;
-  font-size: 28px;
-}
-
-.search-box {
-  height: 48px;
-  border-radius: 16px;
-  background: white;
-  color: #9aa9a4;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  box-shadow: 0 8px 20px rgba(55, 86, 77, 0.12);
-}
-
-.section-block {
-  margin-top: 18px;
-}
-
-.section-title {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.section-title h2 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.section-title p {
-  margin: 8px 0 0;
-  color: #71827d;
-  font-size: 13px;
-}
-
-.section-title.compact {
-  align-items: center;
-}
-
-.section-title.compact span {
-  color: #0c9b86;
-  font-weight: 700;
-}
-
-.text-button {
-  background: transparent;
-  color: #5c8e7f;
-  white-space: nowrap;
-  padding: 4px 0;
-}
-
-.card-list {
-  display: grid;
-  gap: 12px;
-}
-
-.member-card {
-  width: 100%;
-  min-height: 82px;
-  background: white;
-  border-radius: 18px;
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  text-align: left;
-  gap: 12px;
-  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
-}
-
-.avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #8db8aa;
-  color: white;
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  flex: 0 0 auto;
-}
-
-.member-info {
-  flex: 1;
-}
-
-.member-info strong {
-  display: block;
-  font-size: 17px;
-  margin-bottom: 5px;
-}
-
-.member-info p {
-  margin: 2px 0;
-  color: #668178;
-  font-size: 13px;
-}
-
-.member-meta {
-  text-align: right;
-  color: #f97316;
-  font-size: 13px;
-}
-
-.member-meta strong {
-  display: block;
-  font-size: 16px;
-}
-
-.member-meta span {
-  display: block;
-  color: #8fa09b;
-  margin-top: 5px;
-}
-
-.simple-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.simple-header h1 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.simple-header p {
-  margin: 6px 0 0;
-  color: #7c8e88;
-}
-
-.small-button,
-.round-button {
-  background: #e4f4ee;
-  color: #0c8f7c;
-  border-radius: 14px;
-  padding: 10px 14px;
-  font-weight: 700;
-}
-
-.round-button {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  padding: 0;
-  font-size: 24px;
-}
-
-.form-card {
-  background: white;
-  border-radius: 22px;
-  padding: 16px;
-  margin-bottom: 14px;
-  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
-}
-
-.form-card h2 {
-  margin: 0 0 14px;
-  font-size: 17px;
-}
-
-.field {
-  display: block;
-  margin-bottom: 12px;
-}
-
-.field span,
-.lesson-stepper span {
-  display: block;
-  color: #6f827c;
-  font-size: 13px;
-  margin-bottom: 6px;
-}
-
-.field input,
-.action-toolbar input,
-.action-card textarea,
-.summary-box {
-  background: #f5f8f6;
-  border-radius: 14px;
-  padding: 13px 14px;
-}
-
-.two-column {
-  display: grid;
-  grid-template-columns: 1fr 118px;
-  gap: 12px;
-}
-
-.lesson-stepper {
-  display: block;
-}
-
-.lesson-stepper div {
-  height: 45px;
-  background: #f5f8f6;
-  border-radius: 14px;
-  display: grid;
-  grid-template-columns: 34px 1fr 34px;
-  align-items: center;
-  text-align: center;
-}
-
-.lesson-stepper button {
-  background: transparent;
-  color: #759288;
-  font-size: 20px;
-}
-
-.lesson-stepper strong {
-  color: #21332f;
-}
-
-.action-toolbar {
-  display: grid;
-  grid-template-columns: 88px 1fr 52px;
-  gap: 10px;
-  margin-bottom: 12px;
-  position: relative;
-}
-
-.apparatus-picker {
-  position: relative;
-}
-
-.filter-button {
-  width: 100%;
-  height: 47px;
-  border-radius: 16px;
-  background: #f5f8f6;
-  color: #415852;
-  font-weight: 800;
-}
-
-.apparatus-menu {
-  position: absolute;
-  top: 54px;
-  left: 0;
-  width: 238px;
-  z-index: 20;
-  background: white;
-  border: 1px solid #e5eee9;
-  border-radius: 18px;
-  padding: 8px;
-  box-shadow: 0 18px 38px rgba(31, 60, 52, 0.16);
-}
-
-.apparatus-menu button {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 54px 1fr;
-  align-items: center;
-  text-align: left;
-  background: transparent;
-  color: #233631;
-  padding: 10px;
-  border-radius: 13px;
-}
-
-.apparatus-menu button.selected {
-  background: #e7f8f1;
-  color: #078d7b;
-}
-
-.apparatus-menu strong {
-  font-size: 15px;
-}
-
-.apparatus-menu span {
-  color: #7d918b;
-  font-size: 13px;
-}
-
-.add-button {
-  border-radius: 16px;
-  background: #079b87;
-  color: white;
-  font-size: 28px;
-  box-shadow: 0 10px 20px rgba(7, 155, 135, 0.25);
-}
-
-.search-results {
-  display: grid;
-  gap: 8px;
-  margin: 0 0 14px;
-  padding: 8px;
-  border-radius: 18px;
-  background: #f4faf7;
-  border: 1px solid #e7f0ec;
-}
-
-.search-results button {
-  min-height: 54px;
-  border-radius: 14px;
-  background: white;
-  color: #21332f;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  text-align: left;
-  padding: 10px 12px;
-}
-
-.search-results strong {
-  display: block;
-  font-size: 15px;
-}
-
-.search-results span {
-  display: block;
-  color: #78908a;
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-.search-results em {
-  font-style: normal;
-  color: #079b87;
-  background: #e3f7f0;
-  border-radius: 999px;
-  padding: 5px 9px;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.empty-result {
-  margin: 8px;
-  color: #849690;
-  font-size: 13px;
-}
-
-.action-list {
-  display: grid;
-  gap: 12px;
-}
-
-.action-card {
-  background: #fbfdfb;
-  border: 1px solid #edf3ef;
-  border-radius: 18px;
-  padding: 11px;
-}
-
-.action-card-top {
-  display: grid;
-  grid-template-columns: 30px 1fr 26px;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.action-number {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #c9fbec;
-  color: #06917e;
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  font-size: 14px;
-}
-
-.action-name {
-  color: #21332f;
-  font-size: 15px;
-  line-height: 1.25;
-  word-break: break-word;
-}
-
-.delete-mini {
-  background: transparent;
-  color: #b5c2bd;
-  font-size: 24px;
-  line-height: 1;
-}
-
-.action-line {
-  display: grid;
-  grid-template-columns: 42px 1fr;
-  gap: 8px;
-  align-items: start;
-  margin-top: 7px;
-}
-
-.action-line span {
-  color: #079b87;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 34px;
-}
-
-.action-line textarea {
-  min-height: 36px;
-  max-height: 80px;
-  resize: vertical;
-  background: #f5f8f6;
-  border-radius: 12px;
-  padding: 8px 10px;
-  color: #526962;
-  line-height: 1.45;
-  font-size: 13px;
-}
-
-.summary-box {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.bottom-space {
-  margin-bottom: 90px;
-}
-
-.floating-actions {
-  position: fixed;
-  left: 50%;
-  bottom: 74px;
-  width: min(398px, calc(100% - 32px));
-  transform: translateX(-50%);
-  display: grid;
-  grid-template-columns: 1.1fr 0.8fr 1.3fr;
-  gap: 10px;
-  background: rgba(247, 250, 247, 0.92);
-  backdrop-filter: blur(12px);
-  padding: 10px;
-  border-radius: 22px;
-  box-shadow: 0 -8px 24px rgba(46, 76, 68, 0.08);
-}
-
-.dark-action,
-.light-action,
-.main-action {
-  height: 54px;
-  border-radius: 16px;
-  font-weight: 800;
-}
-
-.dark-action {
-  background: #172338;
-  color: white;
-}
-
-.light-action {
-  background: #effaf5;
-  color: #0c8f7c;
-  border: 1px solid #c9f1e4;
-}
-
-.main-action {
-  background: #079b87;
-  color: white;
-  box-shadow: 0 10px 20px rgba(7, 155, 135, 0.25);
-}
-
-.members-search {
-  margin-bottom: 16px;
-}
-
-.arrow {
-  color: #91a29c;
-  font-size: 26px;
-}
-
-.settings-list {
-  display: grid;
-  gap: 12px;
-}
-
-.settings-list button {
-  width: 100%;
-  min-height: 62px;
-  border-radius: 18px;
-  background: white;
-  color: #21332f;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  font-weight: 700;
-  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
-}
-
-.settings-list span {
-  color: #91a29c;
-  font-size: 24px;
-}
-.settings-row-with-subtitle {
-  text-align: left;
-}
-
-.settings-row-with-subtitle div {
-  display: grid;
-  gap: 4px;
-}
-
-.settings-row-with-subtitle strong {
-  font-size: 16px;
-}
-
-.settings-row-with-subtitle small {
-  color: #7a8f88;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.language-preference-panel {
-  display: grid;
-  gap: 8px;
-  margin: -4px 0 4px;
-  padding: 10px;
-  border-radius: 18px;
-  background: #eef7f3;
-}
-
-.language-preference-panel button {
-  width: 100%;
-  border-radius: 14px;
-  background: white;
-  color: #21332f;
-  padding: 12px;
-  display: grid;
-  gap: 4px;
-  text-align: left;
-  box-shadow: none;
-  min-height: auto;
-}
-
-.language-preference-panel button.active {
-  background: #dff8ef;
-  color: #078d7b;
-  border: 1px solid #a9ead6;
-}
-
-.language-preference-panel strong {
-  font-size: 15px;
-}
-
-.language-preference-panel small {
-  color: #7a8f88;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.bottom-tabs {
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  width: min(430px, 100%);
-  transform: translateX(-50%);
-  height: 72px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  background: #8db8aa;
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-.tab {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.78);
-  display: grid;
-  place-items: center;
-  gap: 2px;
-  font-size: 12px;
-}
-
-.tab span {
-  font-size: 20px;
-  line-height: 1;
-}
-
-.tab.active {
-  color: white;
-  font-weight: 800;
-}
-
-.tab.active::after {
-  content: "";
-  width: 18px;
-  height: 3px;
-  border-radius: 999px;
-  background: white;
-  margin-top: -4px;
-}
-
-@media (min-width: 700px) {
-  body {
-    padding: 24px 0;
+import { useEffect, useMemo, useRef, useState } from "react";
+import "./App.css";
+import {
+  HomeIcon,
+  CalendarIcon,
+  UsersIcon,
+  SettingsIcon,
+  MailIcon,
+  LockIcon,
+  LogInIcon,
+  LogOutIcon,
+} from "./components/AppIcons";
+import {
+  createSelectedLessonAction,
+  createTemporaryLessonAction,
+  findBestActionMatch,
+  getActionIdentityKey,
+  getAllActions,
+  searchActions,
+} from "./data/actionRepository";
+import {
+  clearLessonDraft,
+  deleteTemplate,
+  getAppData,
+  getLessonByMemberAndNumber,
+  getLessonDraftForMemberAndNumber,
+  getTemplates,
+  saveLesson,
+  saveLessonDraft,
+  saveSettings,
+  saveTemplate,
+} from "./data/localStore";
+import {
+  loadCloudStudioSettings,
+  saveCloudStudioSettings,
+} from "./data/studioCloudStore";
+import { supabase } from "./data/supabaseClient";
+
+const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
+
+const posterThemeOptions = [
+  { key: "vitalityOrange", label: "活力橙" },
+  { key: "freshGreen", label: "清新绿" },
+  { key: "softLightWhite", label: "柔光白" },
+  { key: "obsidianBlack", label: "曜石黑" },
+  { key: "lakeBlue", label: "静海蓝" },
+];
+const apparatusOptions = [
+  { key: "all", label: "全部", desc: "全部动作" },
+  { key: "M", label: "M", desc: "垫上" },
+  { key: "R", label: "R", desc: "核心床" },
+  { key: "TT", label: "TT", desc: "卡迪拉克 / 秋千床" },
+  { key: "LB", label: "LB", desc: "梯桶 / Ladder Barrel" },
+  { key: "C", label: "C", desc: "椅子 / 稳踏椅" },
+  { key: "SC", label: "SC", desc: "脊柱矫正器" },
+  { key: "P", label: "P", desc: "小工具" },
+  { key: "favorite", label: "收藏", desc: "常用收藏动作" },
+  { key: "dumbbell", label: "哑铃", desc: "哑铃类小工具" },
+  { key: "kettlebell", label: "壶铃", desc: "壶铃类小工具" },
+  { key: "bosu", label: "波速球", desc: "BOSU / 平衡训练" },
+];
+
+const apparatusAliases = {
+  M: "M",
+  MAT: "M",
+  R: "R",
+  TT: "TT",
+  T: "TT",
+  LB: "LB",
+  L: "LB",
+  C: "C",
+  SC: "SC",
+  P: "P",
+  哑铃: "dumbbell",
+  壶铃: "kettlebell",
+  波速球: "bosu",
+};
+
+function getTodayLabel() {
+  const now = new Date();
+  const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+  return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(
+    now.getDate()
+  ).padStart(2, "0")} · ${weekdays[now.getDay()]}`;
+}
+
+function getApparatusLabel(apparatus) {
+  return apparatusOptions.find((item) => item.key === apparatus)?.label || apparatus || "";
+}
+
+function parseActionLine(line) {
+  const apparatusMatch = line.match(/^([A-Za-z]{1,3}|哑铃|壶铃|波速球)\s*[-—:：]?\s*(.+)$/);
+  if (!apparatusMatch) return null;
+
+  const rawApparatus = apparatusMatch[1];
+  const normalizedApparatus =
+    apparatusAliases[rawApparatus.toUpperCase()] || apparatusAliases[rawApparatus];
+
+  if (!normalizedApparatus) return null;
+
+  return {
+    apparatus: normalizedApparatus,
+    keyword: apparatusMatch[2].trim(),
+  };
+}
+
+function parsePasteCourseText(rawText) {
+  return rawText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => {
+      const summaryMatch = line.match(/^(课后总结|总结)\s*[:：]\s*(.*)$/);
+
+      if (summaryMatch) {
+        return {
+          id: `parsed-${index}`,
+          rawText: line,
+          type: "summary",
+          apparatus: "",
+          keyword: summaryMatch[2].trim(),
+        };
+      }
+
+      const actionLine = parseActionLine(line);
+
+      if (actionLine) {
+        return {
+          id: `parsed-${index}`,
+          rawText: line,
+          type: "action",
+          apparatus: actionLine.apparatus,
+          keyword: actionLine.keyword,
+        };
+      }
+
+      return {
+        id: `parsed-${index}`,
+        rawText: line,
+        type: "comment",
+        apparatus: "",
+        keyword: line,
+      };
+    });
+}
+
+function normalizeTemplateItemFromAction(action) {
+  return {
+    apparatus: action.apparatus,
+    keyword: action.cnName || action.name,
+    baseActionId: action.id,
+    displayName: action.displayName,
+  };
+}
+
+function App() {
+  const initialData = useMemo(() => getAppData(), []);
+
+  const [activeTab, setActiveTab] = useState("home");
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [members] = useState(initialData.members);
+  const [languagePreference, setLanguagePreference] = useState(
+    initialData.settings.languagePreference || "chinese"
+  );
+
+  useEffect(() => {
+    saveSettings({ languagePreference });
+  }, [languagePreference]);
+
+  function openSchedule(member) {
+    setSelectedMember(member);
+    setActiveTab("schedule");
   }
 
-  .app-shell {
-    min-height: calc(100vh - 48px);
-    border-radius: 30px;
-    overflow: hidden;
-  }
-}
-.schedule-header h1 {
-  font-size: 22px;
-}
-
-.save-toast {
-  position: fixed;
-  left: 50%;
-  top: 18px;
-  transform: translateX(-50%);
-  z-index: 50;
-  background: #17352f;
-  color: white;
-  border-radius: 999px;
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 800;
-  box-shadow: 0 10px 24px rgba(23, 53, 47, 0.18);
-}
-
-.quick-recommend-title {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-  margin: 4px 0 8px;
-}
-
-.quick-recommend-title strong {
-  color: #21332f;
-  font-size: 14px;
-}
-
-.quick-recommend-title span {
-  color: #8ba09a;
-  font-size: 12px;
-}
-
-.search-results.always-visible {
-  margin-bottom: 14px;
-  max-height: 300px;
-  overflow: auto;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  background: rgba(19, 32, 28, 0.36);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.modal-sheet {
-  width: min(430px, 100%);
-  max-height: 88vh;
-  overflow: auto;
-  background: #f7faf7;
-  border-top-left-radius: 28px;
-  border-top-right-radius: 28px;
-  padding: 18px 16px 28px;
-  box-shadow: 0 -18px 42px rgba(19, 32, 28, 0.18);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
-  margin-bottom: 14px;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.modal-header p {
-  margin: 6px 0 0;
-  color: #7c8e88;
-  font-size: 13px;
-}
-
-.modal-header button {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #edf5f1;
-  color: #4d6960;
-  font-size: 24px;
-}
-
-.quick-mode-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 14px;
-  padding: 6px;
-  border-radius: 18px;
-  background: #edf6f2;
-}
-
-.quick-mode-tabs button {
-  height: 42px;
-  border-radius: 14px;
-  background: transparent;
-  color: #71827d;
-  font-weight: 800;
-}
-
-.quick-mode-tabs button.active {
-  background: white;
-  color: #078d7b;
-  box-shadow: 0 8px 18px rgba(47, 75, 68, 0.08);
-}
-
-.template-list {
-  display: grid;
-  gap: 10px;
-}
-
-.template-list button {
-  width: 100%;
-  min-height: 84px;
-  border-radius: 18px;
-  background: white;
-  color: #21332f;
-  text-align: left;
-  padding: 14px;
-  display: grid;
-  gap: 6px;
-  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
-}
-
-.template-list strong {
-  font-size: 17px;
-}
-
-.template-list span {
-  color: #6f827c;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.template-list em {
-  width: fit-content;
-  font-style: normal;
-  color: #078d7b;
-  background: #e5f8f1;
-  border-radius: 999px;
-  padding: 5px 9px;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.paste-panel textarea {
-  min-height: 160px;
-  resize: vertical;
-  background: white;
-  border-radius: 18px;
-  padding: 14px;
-  line-height: 1.55;
-  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
-}
-
-.main-wide-button {
-  width: 100%;
-  height: 52px;
-  border-radius: 16px;
-  background: #079b87;
-  color: white;
-  font-weight: 900;
-  margin-top: 12px;
-  box-shadow: 0 10px 20px rgba(7, 155, 135, 0.22);
-}
-
-.parsed-list {
-  margin-top: 14px;
-  display: grid;
-  gap: 10px;
-}
-
-.parsed-list h3 {
-  margin: 0;
-  font-size: 16px;
-}
-
-.parsed-row {
-  display: grid;
-  grid-template-columns: 30px 1fr;
-  gap: 10px;
-  background: white;
-  border-radius: 16px;
-  padding: 12px;
-  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.06);
-}
-
-.parsed-index {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #dff8ef;
-  color: #078d7b;
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-}
-
-.parsed-content strong {
-  display: block;
-  color: #21332f;
-  font-size: 14px;
-  line-height: 1.45;
-  margin-bottom: 8px;
-}
-
-.type-switch {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.type-switch button {
-  height: 30px;
-  border-radius: 999px;
-  padding: 0 10px;
-  background: #f1f6f3;
-  color: #72877f;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.type-switch button.active {
-  background: #079b87;
-  color: white;
-}
-
-.empty-quick-panel {
-  background: white;
-  border-radius: 18px;
-  padding: 18px;
-  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
-}
-
-.empty-quick-panel strong {
-  display: block;
-  font-size: 17px;
-  margin-bottom: 8px;
-}
-
-.empty-quick-panel p {
-  margin: 0;
-  color: #6f827c;
-  line-height: 1.55;
-  font-size: 14px;
-}
-.add-toast {
-  position: fixed;
-  left: 50%;
-  top: 64px;
-  transform: translateX(-50%);
-  z-index: 50;
-  background: #079b87;
-  color: white;
-  border-radius: 999px;
-  padding: 9px 15px;
-  font-size: 13px;
-  font-weight: 900;
-  box-shadow: 0 10px 24px rgba(7, 155, 135, 0.2);
-  pointer-events: none;
-}
-/* ===== v1.3A 动作库管理 UI 整理版：只改样式，不动逻辑 ===== */
-
-.settings-panel-card {
-  display: grid;
-  gap: 14px;
-  margin: 8px 0 14px;
-  padding: 14px;
-  border-radius: 22px;
-  background: #f5faf7;
-  border: 1px solid rgba(130, 178, 162, 0.16);
-  box-shadow: 0 10px 26px rgba(36, 65, 56, 0.06);
-}
-
-/* 动作库统计卡片 */
-.library-summary {
-  display: grid;
-  gap: 6px;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 14px;
-  border: 1px solid rgba(131, 180, 165, 0.14);
-}
-
-.library-summary strong {
-  display: block;
-  color: #203530;
-  font-size: 16px !important;
-  line-height: 1.35 !important;
-  font-weight: 900;
-}
-
-.library-summary span {
-  display: block;
-  color: #7b928a;
-  font-size: 12px !important;
-  line-height: 1.65 !important;
-  word-break: normal;
-}
-
-/* 器械筛选按钮 */
-.apparatus-chip-row {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 2px 6px;
-  scrollbar-width: none;
-}
-
-.apparatus-chip-row::-webkit-scrollbar {
-  display: none;
-}
-
-.apparatus-chip-row button {
-  flex: 0 0 auto;
-  min-width: 48px;
-  height: 36px;
-  border-radius: 999px;
-  padding: 0 13px;
-  background: #ffffff;
-  color: #5f7770;
-  font-size: 13px !important;
-  line-height: 1 !important;
-  font-weight: 800;
-  border: 1px solid rgba(131, 180, 165, 0.16);
-  box-shadow: none;
-}
-
-.apparatus-chip-row button.active {
-  background: #7eb2a0;
-  color: #ffffff;
-  border-color: #7eb2a0;
-  box-shadow: 0 8px 18px rgba(126, 178, 160, 0.22);
-}
-
-/* 搜索框 */
-.settings-panel-card .field {
-  display: grid;
-  gap: 8px;
-}
-
-.settings-panel-card .field span {
-  color: #617870;
-  font-size: 13px !important;
-  font-weight: 800;
-}
-
-.settings-panel-card input,
-.settings-panel-card textarea,
-.settings-panel-card select {
-  width: 100%;
-  min-height: 46px;
-  border-radius: 16px;
-  border: 1px solid rgba(130, 178, 162, 0.18);
-  background: #ffffff;
-  color: #203530;
-  font-size: 15px !important;
-  padding: 0 13px;
-  outline: none;
-  box-shadow: none;
-}
-
-.settings-panel-card input::placeholder,
-.settings-panel-card textarea::placeholder {
-  color: #a7b8b2;
-}
-
-/* 动作列表整体 */
-.library-list {
-  display: grid;
-  gap: 10px;
-  max-height: 520px;
-  overflow-y: auto;
-  padding-bottom: 88px;
-}
-
-/* 动作卡片：普通动作库和模板选择器都兼容 */
-.library-list > div,
-.library-list > button {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: 10px;
-  align-items: flex-start;
-  text-align: left;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 12px;
-  border: 1px solid rgba(130, 178, 162, 0.13);
-  box-shadow: 0 8px 18px rgba(36, 65, 56, 0.045);
-}
-
-.library-list > button {
-  cursor: pointer;
-}
-
-.library-list > div:active,
-.library-list > button:active {
-  transform: scale(0.99);
-}
-
-/* 器械小标签 */
-.library-list em {
-  width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: #e8f5ef;
-  color: #0b8f7b;
-  font-size: 12px !important;
-  line-height: 1 !important;
-  font-style: normal;
-  font-weight: 900;
-}
-
-/* 动作名称 */
-.library-list strong {
-  display: block;
-  color: #213530;
-  font-size: 15px !important;
-  line-height: 1.42 !important;
-  font-weight: 900;
-  margin: 0 0 5px;
-  word-break: break-word;
-}
-
-/* 动作好处 */
-.library-list span {
-  display: block;
-  color: #7b928a;
-  font-size: 12px !important;
-  line-height: 1.55 !important;
-  font-weight: 500;
-  word-break: break-word;
-}
-
-/* 模板选择区域压缩一点 */
-.compact-library-list {
-  max-height: 340px;
-}
-
-/* 已选模板动作 */
-.selected-template-actions {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 2px 8px;
-  scrollbar-width: none;
-}
-
-.selected-template-actions::-webkit-scrollbar {
-  display: none;
-}
-
-.selected-template-actions button {
-  flex: 0 0 auto;
-  min-height: 38px;
-  border-radius: 999px;
-  background: #ffffff;
-  border: 1px solid rgba(130, 178, 162, 0.16);
-  padding: 6px 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #203530;
-  font-size: 13px !important;
-  font-weight: 800;
-  box-shadow: none;
-}
-
-.selected-template-actions em {
-  font-style: normal;
-  color: #0b8f7b;
-  background: #e8f5ef;
-  border-radius: 999px;
-  padding: 3px 7px;
-  font-size: 11px !important;
-  font-weight: 900;
-}
-
-.selected-template-actions strong {
-  color: #d85c46;
-  font-size: 14px !important;
-}
-
-/* 已有模板列表 */
-.template-mini-list {
-  display: grid;
-  gap: 9px;
-}
-
-.template-mini-list div {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 4px 10px;
-  align-items: center;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 12px;
-  border: 1px solid rgba(130, 178, 162, 0.13);
-}
-
-.template-mini-list strong {
-  color: #213530;
-  font-size: 14px !important;
-  line-height: 1.35 !important;
-}
-
-.template-mini-list span {
-  grid-column: 1 / -1;
-  color: #7b928a;
-  font-size: 12px !important;
-  line-height: 1.45 !important;
-}
-
-.template-mini-list button {
-  min-height: 30px;
-  border-radius: 999px;
-  background: #fff1ef;
-  color: #d85c46;
-  padding: 0 11px;
-  font-size: 12px !important;
-  font-weight: 800;
-  box-shadow: none;
-}
-
-/* 保存模板按钮 */
-.main-wide-button {
-  width: 100%;
-  min-height: 50px;
-  border-radius: 16px;
-  background: #0b9b87;
-  color: #ffffff;
-  font-size: 15px !important;
-  font-weight: 900;
-  box-shadow: 0 10px 22px rgba(7, 155, 135, 0.18);
-}
-
-/* 设置页底部留出导航空间 */
-.settings-list {
-  padding-bottom: 110px;
-}
-/* ===== v1.3B 动作库分页 + 模板选择器功能版 ===== */
-
-.compact-stats {
-  padding: 14px 15px;
-}
-
-.compact-stats strong {
-  font-size: 16px !important;
-}
-
-.compact-stats span {
-  font-size: 12px !important;
-  line-height: 1.6 !important;
-}
-
-.sub-section-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 12px;
-  margin-top: 2px;
-}
-
-.sub-section-title strong {
-  color: #203530;
-  font-size: 16px !important;
-  font-weight: 900;
-}
-
-.sub-section-title span {
-  color: #7d938b;
-  font-size: 12px !important;
-  line-height: 1.35;
-}
-
-.paged-library-list {
-  max-height: none;
-  overflow: visible;
-  padding-bottom: 0;
-}
-
-.library-action-card {
-  position: relative;
-}
-
-.library-action-card .tag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.library-action-card .tag-row b {
-  font-size: 11px;
-  color: #0b8f7b;
-  background: #e8f5ef;
-  border-radius: 999px;
-  padding: 4px 8px;
-  font-weight: 800;
-}
-
-.library-card-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.library-card-actions button {
-  min-height: 30px;
-  border-radius: 999px;
-  padding: 0 10px;
-  background: #f3f8f5;
-  color: #5e7970;
-  font-size: 12px !important;
-  font-weight: 800;
-  box-shadow: none;
-  border: 1px solid rgba(126, 178, 160, 0.12);
-}
-
-.library-card-actions button.active {
-  background: #fff1ef;
-  color: #dd5b49;
-  border-color: rgba(221, 91, 73, 0.16);
-}
-
-.pagination-row {
-  display: grid;
-  grid-template-columns: 76px 1fr 76px;
-  gap: 8px;
-  align-items: center;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 10px;
-  border: 1px solid rgba(130, 178, 162, 0.13);
-}
-
-.pagination-row button {
-  min-height: 38px;
-  border-radius: 12px;
-  background: #eef7f3;
-  color: #0b8f7b;
-  font-size: 12px !important;
-  font-weight: 900;
-  box-shadow: none;
-}
-
-.pagination-row button:disabled {
-  color: #bdcbc6;
-  background: #f5f7f6;
-}
-
-.pagination-row span {
-  text-align: center;
-  color: #728880;
-  font-size: 12px !important;
-  line-height: 1.35;
-}
-
-.empty-template-text {
-  margin: 0;
-  padding: 18px;
-  text-align: center;
-  color: #92a59e;
-  background: #ffffff;
-  border-radius: 16px;
-  font-size: 13px;
-}
-
-.selected-template-list {
-  display: grid;
-  gap: 8px;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 10px;
-  border: 1px solid rgba(130, 178, 162, 0.13);
-}
-
-.selected-template-list div {
-  display: grid;
-  grid-template-columns: 1fr 32px 32px 32px;
-  gap: 6px;
-  align-items: center;
-}
-
-.selected-template-list span {
-  color: #203530;
-  font-size: 13px !important;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.selected-template-list button {
-  height: 32px;
-  border-radius: 10px;
-  background: #f3f8f5;
-  color: #0b8f7b;
-  font-size: 13px !important;
-  font-weight: 900;
-  box-shadow: none;
-}
-
-.selected-template-list button:last-child {
-  background: #fff1ef;
-  color: #d85c46;
-}
-
-.template-action-picker {
-  display: grid;
-  gap: 8px;
-  max-height: 360px;
-  overflow-y: auto;
-  padding-bottom: 4px;
-}
-
-.template-action-picker button {
-  display: grid;
-  grid-template-columns: 34px 1fr auto;
-  gap: 9px;
-  align-items: center;
-  min-height: 54px;
-  border-radius: 16px;
-  padding: 10px;
-  background: #ffffff;
-  border: 1px solid rgba(130, 178, 162, 0.13);
-  text-align: left;
-  box-shadow: none;
-}
-
-.template-action-picker button.selected {
-  background: #e8f5ef;
-  border-color: rgba(11, 143, 123, 0.22);
-}
-
-.template-action-picker em {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: #e8f5ef;
-  color: #0b8f7b;
-  font-size: 11px !important;
-  font-style: normal;
-  font-weight: 900;
-}
-
-.template-action-picker span {
-  display: block;
-  color: #203530;
-  font-size: 14px !important;
-  font-weight: 900;
-  line-height: 1.25;
-}
-
-.template-action-picker small {
-  grid-column: 2 / 3;
-  color: #8ca099;
-  font-size: 12px !important;
-  line-height: 1.25;
-  margin-top: -4px;
-}
-
-.template-action-picker strong {
-  grid-row: 1 / span 2;
-  grid-column: 3;
-  color: #0b8f7b;
-  font-size: 16px !important;
-  font-weight: 900;
-}
-
-.small-modal-sheet {
-  max-height: 70vh;
-}
-/* ===== v1.3C 模板管理交互整理版 ===== */
-
-.filter-strip {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 2px 2px 8px;
-  scrollbar-width: none;
-}
-
-.filter-strip::-webkit-scrollbar {
-  display: none;
-}
-
-.filter-strip button {
-  flex: 0 0 auto;
-  min-width: 44px;
-  height: 36px;
-  border-radius: 999px;
-  padding: 0 14px;
-  background: #ffffff;
-  color: #5f7770;
-  font-size: 13px !important;
-  font-weight: 900;
-  border: 1px solid rgba(131, 180, 165, 0.18);
-  box-shadow: none;
-}
-
-.filter-strip button.active {
-  background: #7eb2a0;
-  color: #ffffff;
-  border-color: #7eb2a0;
-  box-shadow: 0 8px 16px rgba(126, 178, 160, 0.2);
-}
-
-.mini-filter-strip {
-  margin-top: 2px;
-}
-
-.template-manager-panel {
-  gap: 14px;
-}
-
-.template-manager-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.template-manager-head div {
-  display: grid;
-  gap: 4px;
-}
-
-.template-manager-head strong {
-  color: #203530;
-  font-size: 17px !important;
-  font-weight: 900;
-}
-
-.template-manager-head span {
-  color: #7d938b;
-  font-size: 12px !important;
-}
-
-.template-manager-head button {
-  flex: 0 0 auto;
-  height: 38px;
-  border-radius: 999px;
-  padding: 0 14px;
-  background: #0b9b87;
-  color: #ffffff;
-  font-size: 13px !important;
-  font-weight: 900;
-  box-shadow: 0 8px 16px rgba(7, 155, 135, 0.16);
-}
-
-.template-card-list {
-  display: grid;
-  gap: 10px;
-}
-
-.template-card {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 10px;
-  align-items: center;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 13px;
-  border: 1px solid rgba(130, 178, 162, 0.13);
-  box-shadow: 0 8px 18px rgba(36, 65, 56, 0.045);
-}
-
-.template-card > div:first-child {
-  display: grid;
-  gap: 5px;
-}
-
-.template-card strong {
-  color: #203530;
-  font-size: 15px !important;
-  font-weight: 900;
-  line-height: 1.35;
-}
-
-.template-card span {
-  color: #7d938b;
-  font-size: 12px !important;
-  line-height: 1.45;
-}
-
-.template-card-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.template-card-actions button {
-  width: 42px;
-  height: 32px;
-  border-radius: 999px;
-  font-size: 12px !important;
-  font-weight: 900;
-  box-shadow: none;
-  padding: 0;
-}
-
-.template-card-actions button:first-child {
-  background: #e8f5ef;
-  color: #0b8f7b;
-}
-
-.template-card-actions button:last-child {
-  background: #fff1ef;
-  color: #d85c46;
-}
-
-.template-editor-sheet {
-  max-height: 88vh;
-  overflow-y: auto;
-  padding-bottom: 22px;
-}
-
-.template-editor-sheet .field {
-  margin-top: 8px;
-}
-
-.template-action-picker {
-  display: grid;
-  gap: 8px;
-  max-height: 320px;
-  overflow-y: auto;
-  padding: 2px 0 6px;
-}
-
-.template-action-picker button {
-  display: grid;
-  grid-template-columns: 34px 1fr auto;
-  gap: 9px;
-  align-items: center;
-  min-height: 54px;
-  border-radius: 16px;
-  padding: 10px;
-  background: #ffffff;
-  border: 1px solid rgba(130, 178, 162, 0.13);
-  text-align: left;
-  box-shadow: none;
-}
-
-.template-action-picker button.selected {
-  background: #e8f5ef;
-  border-color: rgba(11, 143, 123, 0.22);
-}
-
-.template-action-picker em {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: #e8f5ef;
-  color: #0b8f7b;
-  font-size: 11px !important;
-  font-style: normal;
-  font-weight: 900;
-}
-
-.template-action-picker span {
-  display: block;
-  color: #203530;
-  font-size: 14px !important;
-  font-weight: 900;
-  line-height: 1.25;
-}
-
-.template-action-picker small {
-  grid-column: 2 / 3;
-  color: #8ca099;
-  font-size: 12px !important;
-  line-height: 1.25;
-  margin-top: -4px;
-}
-
-.template-action-picker strong {
-  grid-row: 1 / span 2;
-  grid-column: 3;
-  color: #0b8f7b;
-  font-size: 16px !important;
-  font-weight: 900;
-}
-
-.selected-template-list {
-  display: grid;
-  gap: 8px;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 10px;
-  border: 1px solid rgba(130, 178, 162, 0.13);
-  margin-top: 8px;
-}
-
-.selected-template-list div {
-  display: grid;
-  grid-template-columns: 1fr 32px 32px 32px;
-  gap: 6px;
-  align-items: center;
-}
-
-.selected-template-list span {
-  color: #203530;
-  font-size: 13px !important;
-  font-weight: 800;
-  line-height: 1.35;
-}
-
-.selected-template-list button {
-  height: 32px;
-  border-radius: 10px;
-  background: #f3f8f5;
-  color: #0b8f7b;
-  font-size: 13px !important;
-  font-weight: 900;
-  box-shadow: none;
-}
-
-.selected-template-list button:last-child {
-  background: #fff1ef;
-  color: #d85c46;
-}
-
-.empty-template-text {
-  margin: 0;
-  padding: 18px;
-  text-align: center;
-  color: #92a59e;
-  background: #ffffff;
-  border-radius: 16px;
-  font-size: 13px;
-}
-/* ===== v1.3D 动作库筛选条 + 模板弹窗 UI 修复 ===== */
-
-/* 修复“全部”按钮被撑成整行的问题 */
-.action-library-panel .filter-strip,
-.template-editor-sheet .filter-strip {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 8px !important;
-  overflow-x: auto !important;
-  padding: 4px 2px 10px !important;
-  scrollbar-width: none;
-}
-
-.action-library-panel .filter-strip::-webkit-scrollbar,
-.template-editor-sheet .filter-strip::-webkit-scrollbar {
-  display: none;
-}
-
-.action-library-panel .filter-strip button,
-.template-editor-sheet .filter-strip button {
-  flex: 0 0 auto !important;
-  width: auto !important;
-  min-width: 46px !important;
-  max-width: none !important;
-  height: 36px !important;
-  border-radius: 999px !important;
-  padding: 0 14px !important;
-  background: #ffffff !important;
-  color: #5f7770 !important;
-  font-size: 13px !important;
-  font-weight: 900 !important;
-  border: 1px solid rgba(131, 180, 165, 0.2) !important;
-  box-shadow: none !important;
-}
-
-.action-library-panel .filter-strip button.active,
-.template-editor-sheet .filter-strip button.active {
-  background: #7eb2a0 !important;
-  color: #ffffff !important;
-  border-color: #7eb2a0 !important;
-  box-shadow: 0 8px 16px rgba(126, 178, 160, 0.2) !important;
-}
-
-/* 输入框边框更明显一点 */
-.template-editor-sheet input,
-.template-editor-sheet textarea,
-.settings-panel-card input,
-.settings-panel-card textarea {
-  border: 1.5px solid rgba(126, 178, 160, 0.26) !important;
-  background: #ffffff !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
-}
-
-.template-editor-sheet input:focus,
-.template-editor-sheet textarea:focus,
-.settings-panel-card input:focus,
-.settings-panel-card textarea:focus {
-  border-color: rgba(11, 143, 123, 0.5) !important;
-  box-shadow: 0 0 0 3px rgba(11, 143, 123, 0.08) !important;
-}
-
-/* 模板弹窗缩小，不再撑满整个屏幕 */
-.template-editor-sheet {
-  width: calc(100vw - 28px) !important;
-  max-width: 430px !important;
-  max-height: 78vh !important;
-  margin: 0 auto !important;
-  border-radius: 26px !important;
-  overflow-y: auto !important;
-  padding: 18px 16px 20px !important;
-}
-
-/* 弹窗标题固定，滚动时右上角叉不会跑丢 */
-.template-editor-sheet .modal-header {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: rgba(250, 255, 252, 0.96);
-  backdrop-filter: blur(10px);
-  padding-bottom: 10px;
-  margin: -4px -2px 8px;
-}
-
-/* 模板管理标题区域重新排版 */
-.template-manager-panel .template-manager-head {
-  display: grid !important;
-  grid-template-columns: 1fr auto !important;
-  align-items: center !important;
-  gap: 12px !important;
-}
-
-.template-manager-panel .template-manager-head > div {
-  display: grid !important;
-  gap: 4px !important;
-  min-width: 0 !important;
-}
-
-.template-manager-panel .template-manager-head strong {
-  writing-mode: horizontal-tb !important;
-  white-space: nowrap !important;
-  font-size: 17px !important;
-  line-height: 1.3 !important;
-}
-
-.template-manager-panel .template-manager-head span {
-  writing-mode: horizontal-tb !important;
-  white-space: nowrap !important;
-  font-size: 12px !important;
-}
-
-.template-manager-panel .template-manager-head button {
-  width: auto !important;
-  min-width: 102px !important;
-  height: 38px !important;
-  border-radius: 999px !important;
-  padding: 0 14px !important;
-  white-space: nowrap !important;
-}
-
-/* 模板卡片：避免文字竖排、按钮巨大 */
-.template-card {
-  display: grid !important;
-  grid-template-columns: 1fr auto !important;
-  align-items: center !important;
-  gap: 10px !important;
-}
-
-.template-card > div:first-child {
-  min-width: 0 !important;
-}
-
-.template-card strong,
-.template-card span {
-  writing-mode: horizontal-tb !important;
-}
-
-.template-card strong {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-.template-card span {
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
-}
-
-.template-card-actions {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 6px !important;
-  flex-shrink: 0 !important;
-}
-
-.template-card-actions button {
-  width: 42px !important;
-  height: 32px !important;
-  min-height: 32px !important;
-  border-radius: 999px !important;
-  padding: 0 !important;
-  font-size: 12px !important;
-  line-height: 1 !important;
-}
-
-/* 模板动作选择列表压缩一点，让一个屏幕能看到更多内容 */
-.template-action-picker {
-  max-height: 260px !important;
-}
-
-.template-action-picker button {
-  min-height: 50px !important;
-  padding: 9px 10px !important;
-}
-
-/* 已选动作区域别太高 */
-.selected-template-list {
-  max-height: 150px !important;
-  overflow-y: auto !important;
-}
-
-/* 防止底部导航挡住设置内容 */
-.settings-list {
-  padding-bottom: 130px !important;
-}
-/* ===== v1.3E 模板 UI 和弹窗草稿修复版 ===== */
-
-/* 动作库筛选条：改成轻量小标签，不要大药丸 */
-.action-library-panel .filter-strip,
-.template-editor-sheet .filter-strip {
-  display: flex !important;
-  gap: 7px !important;
-  overflow-x: auto !important;
-  padding: 2px 0 8px !important;
-  margin: 0 !important;
-  scrollbar-width: none !important;
-}
-
-.action-library-panel .filter-strip::-webkit-scrollbar,
-.template-editor-sheet .filter-strip::-webkit-scrollbar {
-  display: none !important;
-}
-
-.action-library-panel .filter-strip button,
-.template-editor-sheet .filter-strip button {
-  flex: 0 0 auto !important;
-  width: auto !important;
-  min-width: 42px !important;
-  height: 32px !important;
-  border-radius: 12px !important;
-  padding: 0 12px !important;
-  background: rgba(255, 255, 255, 0.82) !important;
-  color: #5f7770 !important;
-  border: 1px solid rgba(126, 178, 160, 0.18) !important;
-  box-shadow: none !important;
-  font-size: 13px !important;
-  font-weight: 800 !important;
-}
-
-.action-library-panel .filter-strip button.active,
-.template-editor-sheet .filter-strip button.active {
-  background: #0b9b87 !important;
-  color: #ffffff !important;
-  border-color: #0b9b87 !important;
-  box-shadow: 0 6px 14px rgba(11, 155, 135, 0.18) !important;
-}
-
-/* 模板管理区：去掉笨重外框，变成轻后台区域 */
-.template-manager-panel {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 2px 0 8px !important;
-  gap: 12px !important;
-}
-
-.template-manager-head {
-  background: transparent !important;
-  padding: 0 2px 2px !important;
-}
-
-.template-manager-head strong {
-  font-size: 18px !important;
-  line-height: 1.25 !important;
-}
-
-.template-manager-head span {
-  color: #789088 !important;
-}
-
-.template-manager-head button {
-  min-width: 92px !important;
-  height: 36px !important;
-  border-radius: 14px !important;
-  padding: 0 12px !important;
-  background: #0b9b87 !important;
-  color: #ffffff !important;
-  font-size: 13px !important;
-  font-weight: 900 !important;
-  box-shadow: 0 8px 18px rgba(11, 155, 135, 0.16) !important;
-}
-
-/* 模板卡片：按钮放右上角，小一点 */
-.template-card {
-  position: relative !important;
-  display: block !important;
-  background: #ffffff !important;
-  border-radius: 18px !important;
-  padding: 14px 92px 14px 14px !important;
-  min-height: 82px !important;
-  border: 1px solid rgba(126, 178, 160, 0.12) !important;
-  box-shadow: 0 8px 18px rgba(36, 65, 56, 0.045) !important;
-}
-
-.template-card > div:first-child {
-  display: grid !important;
-  gap: 6px !important;
-  min-width: 0 !important;
-}
-
-.template-card strong {
-  display: block !important;
-  font-size: 16px !important;
-  line-height: 1.3 !important;
-  color: #203530 !important;
-  font-weight: 900 !important;
-  white-space: normal !important;
-}
-
-.template-card span {
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
-  color: #7d938b !important;
-  font-size: 12px !important;
-  line-height: 1.45 !important;
-}
-
-.template-card-actions {
-  position: absolute !important;
-  top: 12px !important;
-  right: 12px !important;
-  display: flex !important;
-  gap: 6px !important;
-}
-
-.template-card-actions button {
-  width: 36px !important;
-  height: 28px !important;
-  min-height: 28px !important;
-  border-radius: 999px !important;
-  padding: 0 !important;
-  font-size: 11px !important;
-  font-weight: 900 !important;
-  line-height: 1 !important;
-  box-shadow: none !important;
-}
-
-.template-card-actions button:first-child {
-  background: #e8f5ef !important;
-  color: #0b8f7b !important;
-}
-
-.template-card-actions button:last-child {
-  background: #fff1ef !important;
-  color: #d85c46 !important;
-}
-
-/* 新建模板弹窗再收紧一点 */
-.template-editor-sheet {
-  width: calc(100vw - 34px) !important;
-  max-width: 420px !important;
-  max-height: 76vh !important;
-  border-radius: 24px !important;
-  padding: 16px 14px 18px !important;
-}
-
-.template-editor-sheet .modal-header h2 {
-  font-size: 22px !important;
-  line-height: 1.2 !important;
-}
-
-.template-editor-sheet .modal-header p {
-  font-size: 12px !important;
-  line-height: 1.45 !important;
-}
-
-.template-editor-sheet .field span {
-  font-size: 12px !important;
-  margin-bottom: 4px !important;
-}
-
-.template-editor-sheet input {
-  min-height: 44px !important;
-  border-radius: 14px !important;
-  font-size: 14px !important;
-}
-
-/* 模板内动作选择：更紧凑 */
-.template-action-picker {
-  max-height: 250px !important;
-}
-
-.template-action-picker button {
-  min-height: 48px !important;
-  border-radius: 14px !important;
-  padding: 8px 10px !important;
-}
-
-.template-action-picker span {
-  font-size: 13px !important;
-}
-
-.template-action-picker small {
-  font-size: 11px !important;
-}
-
-/* 已选动作列表更轻 */
-.selected-template-list {
-  max-height: 132px !important;
-  padding: 8px !important;
-  border-radius: 14px !important;
-}
-
-.selected-template-list div {
-  grid-template-columns: 1fr 28px 28px 28px !important;
-}
-
-.selected-template-list button {
-  height: 28px !important;
-  border-radius: 9px !important;
-}
-
-/* 空模板提示别太大 */
-.empty-template-text {
-  padding: 14px !important;
-  border-radius: 14px !important;
-  font-size: 12px !important;
-}
-/* ===== v1.3G 视觉统一修正版：颜色、卡片、按钮、筛选、底部导航 ===== */
-
-/* 统一颜色变量，后续都围绕这一套走 */
-:root {
-  --pilates-bg: #f3faf6;
-  --pilates-card: #ffffff;
-  --pilates-text: #203530;
-  --pilates-muted: #667a73;
-  --pilates-soft-muted: #7d918a;
-  --pilates-border: rgba(91, 139, 124, 0.16);
-  --pilates-green: #0b9b87;
-  --pilates-green-dark: #087d6f;
-  --pilates-green-soft: rgba(11, 155, 135, 0.08);
-  --pilates-shadow: 0 10px 28px rgba(36, 65, 56, 0.07);
-  --pilates-shadow-soft: 0 6px 18px rgba(36, 65, 56, 0.045);
-}
-
-/* 页面整体：减少过绿、过雾的感觉 */
-.page {
-  background: linear-gradient(180deg, #f7fbf8 0%, #eef7f2 100%) !important;
-}
-
-/* 副文本颜色加深：动作库统计、说明文字、模板说明 */
-.library-summary span,
-.compact-stats span,
-.settings-row-with-subtitle small,
-.template-card span,
-.clean-entry-button span,
-.sub-section-title span,
-.pagination-row span,
-.settings-tip,
-.library-action-card span,
-.template-action-picker small {
-  color: var(--pilates-muted) !important;
-}
-
-/* 白色卡片统一浮起来一点 */
-.settings-row-with-subtitle,
-.settings-panel-card,
-.library-summary,
-.clean-entry-button,
-.library-action-card,
-.template-card,
-.template-action-picker button,
-.selected-template-list,
-.pagination-row,
-.language-preference-panel button,
-.logo-upload-box,
-.field input,
-.field textarea,
-.field select {
-  box-shadow: var(--pilates-shadow-soft) !important;
-}
-
-/* 主要内容卡片更统一 */
-.settings-row-with-subtitle,
-.library-summary,
-.clean-entry-button,
-.library-action-card,
-.template-card {
-  background: var(--pilates-card) !important;
-  border: 1px solid var(--pilates-border) !important;
-  border-radius: 20px !important;
-}
-
-/* 设置页面板不要太厚重 */
-.settings-panel-card {
-  background: rgba(255, 255, 255, 0.58) !important;
-  border: 1px solid rgba(91, 139, 124, 0.1) !important;
-  box-shadow: none !important;
-}
-
-/* 搜索框：做成标准搜索组件，左侧加放大镜 */
-.action-library-panel .field,
-.library-modal-sheet .field,
-.template-editor-sheet .field,
-.settings-panel-card .field {
-  position: relative !important;
-}
-
-.action-library-panel .field input,
-.library-modal-sheet .field input,
-.template-editor-sheet .field input,
-.settings-panel-card .field input {
-  min-height: 46px !important;
-  border-radius: 16px !important;
-  border: 1.5px solid rgba(91, 139, 124, 0.18) !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  color: var(--pilates-text) !important;
-  font-size: 14px !important;
-  padding-left: 42px !important;
-  padding-right: 14px !important;
-  box-shadow: 0 6px 18px rgba(36, 65, 56, 0.035) !important;
-}
-
-.action-library-panel .field input:focus,
-.library-modal-sheet .field input:focus,
-.template-editor-sheet .field input:focus,
-.settings-panel-card .field input:focus {
-  border-color: rgba(11, 155, 135, 0.45) !important;
-  box-shadow: 0 0 0 3px rgba(11, 155, 135, 0.08) !important;
-}
-
-.action-library-panel .field::before,
-.library-modal-sheet .field::before,
-.template-editor-sheet .field::before,
-.settings-panel-card .field::before {
-  content: "🔍";
-  position: absolute;
-  left: 15px;
-  bottom: 13px;
-  z-index: 2;
-  font-size: 14px;
-  opacity: 0.62;
-  pointer-events: none;
-}
-
-/* 不是搜索用途的普通输入框，避免所有表单都带放大镜 */
-.template-editor-sheet .field:first-of-type::before,
-.template-editor-sheet .field:nth-of-type(2)::before,
-.settings-panel-card .field:first-of-type::before,
-.settings-panel-card .field:nth-of-type(2)::before,
-.settings-panel-card .field:nth-of-type(3)::before {
-  content: none;
-}
-
-.template-editor-sheet .field:first-of-type input,
-.template-editor-sheet .field:nth-of-type(2) input,
-.settings-panel-card .field:first-of-type input,
-.settings-panel-card .field:nth-of-type(2) input,
-.settings-panel-card .field:nth-of-type(3) input {
-  padding-left: 14px !important;
-}
-
-/* 筛选项按钮：统一尺寸，不要 active 比别人胖一圈 */
-.filter-strip {
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 3px 0 10px !important;
-}
-
-.filter-strip button,
-.action-library-panel .filter-strip button,
-.template-editor-sheet .filter-strip button,
-.library-modal-sheet .filter-strip button {
-  height: 32px !important;
-  min-width: 42px !important;
-  border-radius: 12px !important;
-  padding: 0 12px !important;
-  background: rgba(255, 255, 255, 0.92) !important;
-  color: #536b64 !important;
-  border: 1px solid rgba(91, 139, 124, 0.18) !important;
-  box-shadow: 0 3px 10px rgba(36, 65, 56, 0.035) !important;
-  font-size: 13px !important;
-  font-weight: 850 !important;
-  transform: none !important;
-}
-
-.filter-strip button.active,
-.action-library-panel .filter-strip button.active,
-.template-editor-sheet .filter-strip button.active,
-.library-modal-sheet .filter-strip button.active {
-  height: 32px !important;
-  min-width: 42px !important;
-  background: var(--pilates-green) !important;
-  color: #ffffff !important;
-  border-color: var(--pilates-green) !important;
-  box-shadow: 0 5px 12px rgba(11, 155, 135, 0.16) !important;
-}
-
-/* 动作卡片里的“打标签 / 收藏”：不要像禁用态 */
-.library-card-actions button {
-  background: rgba(11, 155, 135, 0.07) !important;
-  color: var(--pilates-green-dark) !important;
-  border: 1px solid rgba(11, 155, 135, 0.14) !important;
-  box-shadow: none !important;
-  font-weight: 900 !important;
-}
-
-.library-card-actions button:first-child::before {
-  content: "🏷 ";
-}
-
-.library-card-actions button:last-child::before {
-  content: "♡ ";
-}
-
-.library-card-actions button.active {
-  background: rgba(255, 91, 73, 0.08) !important;
-  color: #d85c46 !important;
-  border-color: rgba(216, 92, 70, 0.16) !important;
-}
-
-.library-card-actions button.active::before {
-  content: "♥ ";
-}
-
-/* 模板卡片：更轻、更像产品卡片 */
-.template-card {
-  box-shadow: var(--pilates-shadow-soft) !important;
-  padding: 14px 14px 12px !important;
-}
-
-.template-card-actions button {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  font-size: 12px !important;
-}
-
-.template-card-actions button:first-child {
-  color: var(--pilates-green-dark) !important;
-}
-
-.template-card-actions button:last-child {
-  color: #d85c46 !important;
-}
-
-/* 新建模板：文字按钮，不要重胶囊 */
-.template-manager-head button {
-  background: transparent !important;
-  color: var(--pilates-green-dark) !important;
-  box-shadow: none !important;
-  border: none !important;
-  padding: 0 !important;
-  height: auto !important;
-  min-width: 0 !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-}
-
-/* 统一设置页各模块左右留白 */
-.settings-list,
-.action-library-entry,
-.template-manager-panel {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-.settings-list {
-  display: grid !important;
-  gap: 14px !important;
-}
-
-/* 底部导航栏：先改为白色毛玻璃风格。实心图标下一版看 App.jsx 再换 */
-.bottom-nav,
-.tab-bar,
-.bottom-tab-bar,
-.mobile-tabbar,
-nav[class*="bottom"],
-div[class*="bottom-nav"],
-div[class*="tab-bar"] {
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border-top: 1px solid rgba(91, 139, 124, 0.12) !important;
-  box-shadow: 0 -8px 24px rgba(36, 65, 56, 0.06) !important;
-}
-
-/* 底部导航普通态 */
-.bottom-nav button,
-.tab-bar button,
-.bottom-tab-bar button,
-.mobile-tabbar button,
-nav[class*="bottom"] button,
-div[class*="bottom-nav"] button,
-div[class*="tab-bar"] button {
-  color: #999999 !important;
-  font-weight: 600 !important;
-}
-
-/* 底部导航选中态：兼容 active/current/selected */
-.bottom-nav button.active,
-.tab-bar button.active,
-.bottom-tab-bar button.active,
-.mobile-tabbar button.active,
-nav[class*="bottom"] button.active,
-div[class*="bottom-nav"] button.active,
-div[class*="tab-bar"] button.active,
-.bottom-nav button[aria-current="page"],
-.tab-bar button[aria-current="page"],
-.bottom-tab-bar button[aria-current="page"],
-.mobile-tabbar button[aria-current="page"] {
-  color: var(--pilates-green) !important;
-  font-weight: 900 !important;
-}
-
-/* 底部导航里的图标稍微加粗放大一点 */
-.bottom-nav svg,
-.tab-bar svg,
-.bottom-tab-bar svg,
-.mobile-tabbar svg,
-nav[class*="bottom"] svg,
-div[class*="bottom-nav"] svg,
-div[class*="tab-bar"] svg {
-  stroke-width: 2.4 !important;
-}
-
-/* 防止白色底部导航遮内容 */
-.page,
-.settings-list {
-  padding-bottom: 132px !important;
-}
-/* ===== v1.4A 动作库弹窗化 + UI 减负版 ===== */
-
-/* 设置页动作库入口：只显示摘要和入口，不直接摊开 705 个动作 */
-.action-library-entry {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  gap: 10px !important;
-}
-
-.action-library-entry .compact-stats {
-  background: #ffffff !important;
-  border-radius: 18px !important;
-  padding: 14px !important;
-  border: 1px solid rgba(91, 139, 124, 0.14) !important;
-  box-shadow: 0 8px 20px rgba(36, 65, 56, 0.055) !important;
-}
-
-.action-library-entry .compact-stats span {
-  color: #667a73 !important;
-}
-
-/* 查看动作入口 */
-.clean-entry-button {
-  width: 100% !important;
-  min-height: 58px !important;
-  border-radius: 18px !important;
-  background: #ffffff !important;
-  border: 1px solid rgba(91, 139, 124, 0.14) !important;
-  box-shadow: 0 8px 20px rgba(36, 65, 56, 0.055) !important;
-  display: grid !important;
-  grid-template-columns: 1fr auto !important;
-  align-items: center !important;
-  text-align: left !important;
-  padding: 12px 14px !important;
-}
-
-.clean-entry-button strong {
-  display: block !important;
-  color: #203530 !important;
-  font-size: 15px !important;
-  font-weight: 900 !important;
-  line-height: 1.3 !important;
-}
-
-.clean-entry-button span {
-  display: block !important;
-  margin-top: 3px !important;
-  color: #667a73 !important;
-  font-size: 12px !important;
-  line-height: 1.35 !important;
-}
-
-.clean-entry-button em {
-  font-style: normal !important;
-  color: #0b8f7b !important;
-  background: rgba(11, 155, 135, 0.08) !important;
-  border-radius: 999px !important;
-  padding: 6px 10px !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-}
-
-/* 动作库弹窗 */
-.library-modal-sheet {
-  width: calc(100vw - 34px) !important;
-  max-width: 420px !important;
-  max-height: 78vh !important;
-  border-radius: 24px !important;
-  padding: 16px 14px 18px !important;
-  overflow-y: auto !important;
-}
-
-.library-modal-sheet .modal-header {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 8 !important;
-  background: rgba(250, 255, 252, 0.96) !important;
-  backdrop-filter: blur(10px) !important;
-  padding-bottom: 10px !important;
-  margin: -4px -2px 8px !important;
-}
-
-.library-modal-sheet .modal-header h2 {
-  font-size: 22px !important;
-  line-height: 1.2 !important;
-}
-
-.library-modal-sheet .modal-header p {
-  color: #667a73 !important;
-  font-size: 12px !important;
-  line-height: 1.45 !important;
-}
-
-/* 弹窗里的筛选条 */
-.library-modal-sheet .filter-strip {
-  display: flex !important;
-  gap: 8px !important;
-  overflow-x: auto !important;
-  padding: 2px 0 10px !important;
-  scrollbar-width: none !important;
-}
-
-.library-modal-sheet .filter-strip::-webkit-scrollbar {
-  display: none !important;
-}
-
-.library-modal-sheet .filter-strip button {
-  flex: 0 0 auto !important;
-  height: 32px !important;
-  min-width: 42px !important;
-  border-radius: 12px !important;
-  padding: 0 12px !important;
-  background: rgba(255, 255, 255, 0.92) !important;
-  color: #536b64 !important;
-  border: 1px solid rgba(91, 139, 124, 0.18) !important;
-  box-shadow: none !important;
-  font-size: 13px !important;
-  font-weight: 850 !important;
-}
-
-.library-modal-sheet .filter-strip button.active {
-  background: #0b9b87 !important;
-  color: #ffffff !important;
-  border-color: #0b9b87 !important;
-  box-shadow: 0 5px 12px rgba(11, 155, 135, 0.16) !important;
-}
-
-/* 弹窗里的搜索框 */
-.library-modal-sheet .field {
-  position: relative !important;
-}
-
-.library-modal-sheet .field input {
-  min-height: 46px !important;
-  border-radius: 16px !important;
-  border: 1.5px solid rgba(91, 139, 124, 0.18) !important;
-  background: #ffffff !important;
-  color: #203530 !important;
-  font-size: 14px !important;
-  padding-left: 42px !important;
-  padding-right: 14px !important;
-  box-shadow: 0 6px 18px rgba(36, 65, 56, 0.035) !important;
-}
-
-.library-modal-sheet .field::before {
-  content: "🔍";
-  position: absolute;
-  left: 15px;
-  bottom: 13px;
-  z-index: 2;
-  font-size: 14px;
-  opacity: 0.62;
-  pointer-events: none;
-}
-
-/* 弹窗动作列表 */
-.modal-library-list {
-  max-height: none !important;
-  overflow: visible !important;
-  padding-bottom: 0 !important;
-}
-
-.library-modal-sheet .library-action-card {
-  border-radius: 16px !important;
-  padding: 11px !important;
-  box-shadow: 0 8px 18px rgba(36, 65, 56, 0.055) !important;
-}
-
-.library-modal-sheet .library-action-card strong {
-  font-size: 14px !important;
-}
-
-.library-modal-sheet .library-action-card span {
-  color: #667a73 !important;
-  font-size: 12px !important;
-}
-
-/* 去掉打标签/收藏前面的丑 emoji */
-.library-card-actions button::before,
-.library-card-actions button:first-child::before,
-.library-card-actions button:last-child::before,
-.library-card-actions button.active::before {
-  content: none !important;
-}
-
-/* 打标签 / 收藏按钮：轻量但不灰 */
-.library-card-actions button {
-  background: rgba(11, 155, 135, 0.07) !important;
-  color: #087d6f !important;
-  border: 1px solid rgba(11, 155, 135, 0.14) !important;
-  box-shadow: none !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-}
-
-.library-card-actions button.active {
-  background: rgba(255, 91, 73, 0.08) !important;
-  color: #d85c46 !important;
-  border-color: rgba(216, 92, 70, 0.16) !important;
-}
-
-/* 轻化模板管理区 */
-.template-manager-panel {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-}
-
-/* 底部导航保持轻，不压内容 */
-.bottom-nav,
-.tab-bar,
-.bottom-tab-bar,
-.mobile-tabbar,
-nav[class*="bottom"],
-div[class*="bottom-nav"],
-div[class*="tab-bar"] {
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(18px) !important;
-  -webkit-backdrop-filter: blur(18px) !important;
-  border-top: 1px solid rgba(91, 139, 124, 0.12) !important;
-  box-shadow: 0 -8px 24px rgba(36, 65, 56, 0.06) !important;
-}
-
-.settings-list {
-  padding-bottom: 132px !important;
-}
-/* ===== v1.4C Logo 缩略上传 + 动作库弹窗固定头部 ===== */
-
-/* 工作室 Logo：正方形上传框，不再显示横向文件按钮 */
-.studio-settings-panel {
-  gap: 14px !important;
-}
-
-.logo-upload-card {
-  display: grid !important;
-  grid-template-columns: 92px 1fr !important;
-  gap: 14px !important;
-  align-items: center !important;
-  background: #ffffff !important;
-  border: 1px solid rgba(91, 139, 124, 0.14) !important;
-  border-radius: 20px !important;
-  padding: 14px !important;
-  box-shadow: 0 8px 20px rgba(36, 65, 56, 0.055) !important;
-}
-
-.logo-square-uploader {
-  width: 92px !important;
-  height: 92px !important;
-  border-radius: 22px !important;
-  border: 1.5px dashed rgba(11, 155, 135, 0.35) !important;
-  background: linear-gradient(135deg, #e8f5ef, #ffffff) !important;
-  display: grid !important;
-  place-items: center !important;
-  overflow: hidden !important;
-  cursor: pointer !important;
-  position: relative !important;
-  flex-shrink: 0 !important;
-}
-
-.logo-square-uploader img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-  display: block !important;
-}
-
-.logo-square-uploader input {
-  display: none !important;
-}
-
-.logo-placeholder-content {
-  display: grid !important;
-  place-items: center !important;
-  gap: 4px !important;
-  color: #0b8f7b !important;
-  text-align: center !important;
-}
-
-.logo-placeholder-content strong {
-  font-size: 18px !important;
-  font-weight: 900 !important;
-  line-height: 1 !important;
-}
-
-.logo-placeholder-content span {
-  font-size: 11px !important;
-  color: #667a73 !important;
-  font-weight: 800 !important;
-}
-
-.logo-upload-info {
-  display: grid !important;
-  gap: 5px !important;
-  min-width: 0 !important;
-}
-
-.logo-upload-info strong {
-  color: #203530 !important;
-  font-size: 15px !important;
-  font-weight: 900 !important;
-}
-
-.logo-upload-info span {
-  color: #667a73 !important;
-  font-size: 12px !important;
-  line-height: 1.45 !important;
-}
-
-.logo-text-button {
-  width: fit-content !important;
-  background: transparent !important;
-  border: none !important;
-  color: #d85c46 !important;
-  padding: 0 !important;
-  margin-top: 4px !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  box-shadow: none !important;
-}
-
-/* 兜底：如果浏览器原生文件选择框还显示，强行隐藏 */
-.studio-settings-panel input[type="file"] {
-  display: none !important;
-}
-
-/* 动作库入口：摘要和查看动作合并成一个卡片 */
-.action-library-entry {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-}
-
-.library-combined-card {
-  display: grid !important;
-  grid-template-columns: 1fr auto !important;
-  gap: 8px 12px !important;
-  align-items: center !important;
-  background: #ffffff !important;
-  border: 1px solid rgba(91, 139, 124, 0.14) !important;
-  border-radius: 20px !important;
-  padding: 15px 14px !important;
-  box-shadow: 0 8px 20px rgba(36, 65, 56, 0.055) !important;
-}
-
-.library-combined-main {
-  display: grid !important;
-  gap: 5px !important;
-  min-width: 0 !important;
-}
-
-.library-combined-main strong {
-  color: #203530 !important;
-  font-size: 17px !important;
-  font-weight: 900 !important;
-  line-height: 1.25 !important;
-}
-
-.library-combined-main span {
-  color: #667a73 !important;
-  font-size: 12px !important;
-  line-height: 1.45 !important;
-}
-
-.library-open-button {
-  grid-column: 2 !important;
-  grid-row: 1 / span 2 !important;
-  align-self: center !important;
-  min-width: 64px !important;
-  height: 36px !important;
-  border-radius: 999px !important;
-  background: rgba(11, 155, 135, 0.08) !important;
-  color: #087d6f !important;
-  border: 1px solid rgba(11, 155, 135, 0.16) !important;
-  font-size: 13px !important;
-  font-weight: 900 !important;
-  box-shadow: none !important;
-}
-
-.library-combined-tip {
-  grid-column: 1 / 2 !important;
-  margin: 0 !important;
-  color: #667a73 !important;
-  font-size: 12px !important;
-  line-height: 1.35 !important;
-}
-
-/* 动作库弹窗：外框固定高度，里面分成固定头部 + 滚动列表 */
-.library-modal-sheet {
-  width: calc(100vw - 34px) !important;
-  max-width: 420px !important;
-  height: min(78vh, 720px) !important;
-  max-height: 78vh !important;
-  border-radius: 24px !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  display: flex !important;
-  flex-direction: column !important;
-  background: #f8fffb !important;
-}
-
-.library-modal-fixed-head {
-  flex: 0 0 auto !important;
-  padding: 16px 14px 10px !important;
-  background: rgba(250, 255, 252, 0.98) !important;
-  border-bottom: 1px solid rgba(91, 139, 124, 0.1) !important;
-  z-index: 5 !important;
-}
-
-.library-modal-fixed-head .modal-header {
-  margin: 0 0 10px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  position: static !important;
-  backdrop-filter: none !important;
-}
-
-.library-modal-fixed-head .modal-header h2 {
-  font-size: 22px !important;
-  line-height: 1.2 !important;
-}
-
-.library-modal-fixed-head .modal-header p {
-  color: #667a73 !important;
-  font-size: 12px !important;
-  line-height: 1.45 !important;
-}
-
-.library-modal-fixed-head .modal-header button {
-  width: 42px !important;
-  height: 42px !important;
-  border-radius: 999px !important;
-  background: rgba(91, 139, 124, 0.08) !important;
-  color: #536b64 !important;
-  box-shadow: none !important;
-}
-
-/* 顶部筛选保持横向滑动，不跟列表一起滚走 */
-.library-modal-fixed-head .filter-strip {
-  display: flex !important;
-  gap: 8px !important;
-  overflow-x: auto !important;
-  padding: 0 0 10px !important;
-  margin: 0 !important;
-  scrollbar-width: none !important;
-}
-
-.library-modal-fixed-head .filter-strip::-webkit-scrollbar {
-  display: none !important;
-}
-
-.library-modal-fixed-head .filter-strip button {
-  flex: 0 0 auto !important;
-  height: 32px !important;
-  min-width: 42px !important;
-  border-radius: 12px !important;
-  padding: 0 12px !important;
-  background: #ffffff !important;
-  color: #536b64 !important;
-  border: 1px solid rgba(91, 139, 124, 0.18) !important;
-  font-size: 13px !important;
-  font-weight: 850 !important;
-  box-shadow: none !important;
-}
-
-.library-modal-fixed-head .filter-strip button.active {
-  background: #0b9b87 !important;
-  color: #ffffff !important;
-  border-color: #0b9b87 !important;
-  box-shadow: 0 5px 12px rgba(11, 155, 135, 0.16) !important;
-}
-
-/* 搜索框固定在顶部区域 */
-.library-search-field {
-  position: relative !important;
-  display: grid !important;
-  gap: 6px !important;
-}
-
-.library-search-field span {
-  color: #667a73 !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-}
-
-.library-search-field input {
-  min-height: 46px !important;
-  border-radius: 16px !important;
-  border: 1.5px solid rgba(91, 139, 124, 0.18) !important;
-  background: #ffffff !important;
-  color: #203530 !important;
-  font-size: 14px !important;
-  padding-left: 42px !important;
-  padding-right: 14px !important;
-  box-shadow: 0 6px 18px rgba(36, 65, 56, 0.035) !important;
-}
-
-.library-search-field::before {
-  content: "🔍";
-  position: absolute;
-  left: 15px;
-  bottom: 13px;
-  z-index: 2;
-  font-size: 14px;
-  opacity: 0.62;
-  pointer-events: none;
-}
-
-/* 只有动作列表滚动 */
-.library-modal-scroll-body {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  overflow-y: auto !important;
-  padding: 12px 14px 16px !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
-.modal-library-list {
-  display: grid !important;
-  gap: 10px !important;
-  overflow: visible !important;
-  max-height: none !important;
-}
-
-.library-modal-scroll-body .library-action-card {
-  border-radius: 16px !important;
-  padding: 11px !important;
-  background: #ffffff !important;
-  border: 1px solid rgba(91, 139, 124, 0.12) !important;
-  box-shadow: 0 8px 18px rgba(36, 65, 56, 0.055) !important;
-}
-
-.library-modal-scroll-body .library-action-card strong {
-  font-size: 14px !important;
-}
-
-.library-modal-scroll-body .library-action-card span {
-  color: #667a73 !important;
-  font-size: 12px !important;
-}
-
-/* 去掉之前丑的 emoji 图标 */
-.library-card-actions button::before,
-.library-card-actions button:first-child::before,
-.library-card-actions button:last-child::before,
-.library-card-actions button.active::before {
-  content: none !important;
-}
-
-.library-card-actions button {
-  background: rgba(11, 155, 135, 0.07) !important;
-  color: #087d6f !important;
-  border: 1px solid rgba(11, 155, 135, 0.14) !important;
-  box-shadow: none !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-}
-
-.library-card-actions button.active {
-  background: rgba(255, 91, 73, 0.08) !important;
-  color: #d85c46 !important;
-  border-color: rgba(216, 92, 70, 0.16) !important;
-}
-
-/* 弹窗底部分页固定在滚动区底部内容后，不影响顶部 */
-.library-modal-scroll-body .pagination-row {
-  margin-top: 12px !important;
-}
-/* ===== v1.4C-1 查看动作按钮轻量化 ===== */
-
-.library-open-button {
-  min-width: auto !important;
-  width: auto !important;
-  height: auto !important;
-  padding: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #0b8f7b !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-  line-height: 1.2 !important;
-}
-
-.library-open-button::after {
-  content: " ›";
-  font-weight: 900;
-}
-
-.library-open-button:active {
-  opacity: 0.65 !important;
-}
-/* ===== v1.5A 保存课程稳定版：清空草稿 + 底部按钮布局 ===== */
-
-.course-save-actions {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 8px !important;
-}
-
-.course-save-actions button {
-  min-height: 42px !important;
-  border-radius: 16px !important;
-  font-size: 13px !important;
-  font-weight: 900 !important;
-}
-
-.danger-action {
-  background: rgba(255, 91, 73, 0.08) !important;
-  color: #d85c46 !important;
-  border: 1px solid rgba(216, 92, 70, 0.16) !important;
-  box-shadow: none !important;
-}
-/* ===== v1.5B 排课页保存与课次稳定版 ===== */
-
-/* 底部操作按钮不再悬浮，跟着页面正常滚动 */
-.lesson-bottom-actions {
-  position: static !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  z-index: auto !important;
-  margin: 14px 0 132px !important;
-  padding: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 10px !important;
-}
-
-.lesson-bottom-actions button {
-  min-height: 46px !important;
-  border-radius: 18px !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-}
-
-.lesson-bottom-actions .main-action {
-  grid-column: 1 / -1 !important;
-}
-
-/* 课次数字可点击 */
-.lesson-number-button {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  min-width: 40px !important;
-  color: #203530 !important;
-  font-size: 16px !important;
-  font-weight: 900 !important;
-}
-
-/* 课次选择弹窗 */
-.lesson-picker-grid {
-  display: grid !important;
-  grid-template-columns: repeat(3, 1fr) !important;
-  gap: 8px !important;
-  max-height: 50vh !important;
-  overflow-y: auto !important;
-  padding: 4px 0 8px !important;
-}
-
-.lesson-picker-grid button {
-  min-height: 42px !important;
-  border-radius: 14px !important;
-  border: 1px solid rgba(91, 139, 124, 0.16) !important;
-  background: #ffffff !important;
-  color: #536b64 !important;
-  font-size: 13px !important;
-  font-weight: 900 !important;
-}
-
-.lesson-picker-grid button.active {
-  background: #0b9b87 !important;
-  color: #ffffff !important;
-  border-color: #0b9b87 !important;
-}
-
-/* 推荐动作只在搜索时展开，不再常驻 */
-.action-search-area {
-  position: relative !important;
-}
-
-.action-search-area .search-results {
-  margin-top: 10px !important;
-}
-
-.action-search-area .quick-recommend-title {
-  margin-top: 10px !important;
-}
-
-/* 课次加减禁用时弱化 */
-.lesson-stepper button:disabled {
-  opacity: 0.35 !important;
-}
-/* ===== v1.5C 排课交互效率版：会员选择 + 主题预设 + 推荐动作滚动优化 ===== */
-
-.schedule-page {
-  padding-bottom: 150px !important;
-}
-
-/* 学员下拉选择 */
-.member-picker-field {
-  position: relative !important;
-  display: grid !important;
-  gap: 8px !important;
-}
-
-.member-picker-menu {
-  position: absolute !important;
-  left: 0 !important;
-  right: 0 !important;
-  top: calc(100% + 8px) !important;
-  z-index: 40 !important;
-  background: #ffffff !important;
-  border-radius: 18px !important;
-  border: 1px solid rgba(91, 139, 124, 0.14) !important;
-  box-shadow: 0 14px 30px rgba(36, 65, 56, 0.14) !important;
-  padding: 8px !important;
-  display: grid !important;
-  gap: 6px !important;
-  max-height: 240px !important;
-  overflow-y: auto !important;
-}
-
-.member-picker-menu button {
-  text-align: left !important;
-  display: grid !important;
-  gap: 3px !important;
-  padding: 10px 11px !important;
-  border-radius: 14px !important;
-  border: none !important;
-  background: #f8fffb !important;
-  box-shadow: none !important;
-}
-
-.member-picker-menu button strong {
-  color: #203530 !important;
-  font-size: 14px !important;
-  font-weight: 900 !important;
-}
-
-.member-picker-menu button span,
-.member-picker-menu p {
-  color: #667a73 !important;
-  font-size: 12px !important;
-  line-height: 1.35 !important;
-  margin: 0 !important;
-}
-
-/* 课程主题：关联按钮 + 横向预设 */
-.theme-field {
-  gap: 8px !important;
-}
-
-.theme-label-row {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 10px !important;
-}
-
-.theme-link {
-  min-height: 26px !important;
-  border-radius: 999px !important;
-  padding: 0 10px !important;
-  border: 1px solid rgba(91, 139, 124, 0.16) !important;
-  background: #ffffff !important;
-  color: #667a73 !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  box-shadow: none !important;
-}
-
-.theme-link.active {
-  background: rgba(11, 155, 135, 0.08) !important;
-  color: #087d6f !important;
-  border-color: rgba(11, 155, 135, 0.2) !important;
-}
-
-.theme-preset-strip {
-  display: flex !important;
-  gap: 8px !important;
-  overflow-x: auto !important;
-  padding: 2px 2px 4px !important;
-  scrollbar-width: none !important;
-}
-
-.theme-preset-strip::-webkit-scrollbar {
-  display: none !important;
-}
-
-.theme-preset-strip button {
-  flex: 0 0 auto !important;
-  min-height: 32px !important;
-  border-radius: 999px !important;
-  padding: 0 12px !important;
-  border: 1px solid rgba(91, 139, 124, 0.14) !important;
-  background: #ffffff !important;
-  color: #536b64 !important;
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  box-shadow: 0 4px 12px rgba(36, 65, 56, 0.04) !important;
-}
-
-.theme-preset-strip .theme-add-button {
-  background: rgba(11, 155, 135, 0.08) !important;
-  color: #087d6f !important;
-}
-
-/* 推荐动作：展开时更适合连续点选，并避开底部 Tab */
-.action-search-area {
-  scroll-margin-top: 18px !important;
-}
-
-.recommendation-results {
-  max-height: 56vh !important;
-  overflow-y: auto !important;
-  padding-bottom: 120px !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
-.recommendation-results button {
-  min-height: 76px !important;
-}
-
-/* 防止动作列表最后一张卡被底部导航遮住 */
-.action-list {
-  padding-bottom: 100px !important;
-}
-/* ===== 海报主题选择 + 预览骨架 ===== */
-
-.poster-theme-panel {
-  background: #ffffff;
-  border-radius: 22px;
-  padding: 14px;
-  margin: 0 0 14px;
-  box-shadow: 0 8px 24px rgba(47, 75, 68, 0.08);
-}
-
-.poster-theme-title {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: baseline;
-  margin-bottom: 10px;
-}
-
-.poster-theme-title strong {
-  color: #21332f;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.poster-theme-title span {
-  color: #8ba09a;
-  font-size: 12px;
-}
-
-.poster-theme-strip {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
-
-.poster-theme-strip::-webkit-scrollbar {
-  display: none;
-}
-
-.poster-theme-strip button {
-  flex: 0 0 auto;
-  height: 38px;
-  border-radius: 999px;
-  padding: 0 14px;
-  background: #f3f8f5;
-  color: #6f827c;
-  font-size: 13px;
-  font-weight: 900;
-}
-
-.poster-theme-strip button.active {
-  background: #079b87;
-  color: #ffffff;
-  box-shadow: 0 8px 18px rgba(7, 155, 135, 0.18);
-}
-
-.course-save-actions {
-  grid-template-columns: 0.9fr 0.9fr 0.8fr 1.1fr;
-}
-
-.poster-preview-placeholder {
-  background: #ffffff;
-  border-radius: 20px;
-  padding: 28px 18px;
-  text-align: center;
-  border: 1px dashed #c8ddd6;
-}
-
-.poster-preview-placeholder strong {
-  display: block;
-  color: #21332f;
-  font-size: 17px;
-  margin-bottom: 8px;
-}
-
-.poster-preview-placeholder p {
-  margin: 0;
-  color: #7c8e88;
-  font-size: 13px;
-  line-height: 1.6;
-}
-/* ===== 海报区压缩优化版：小主题条 + 一排操作按钮 ===== */
-
-.poster-theme-panel {
-  background: transparent !important;
-  border-radius: 0 !important;
-  padding: 0 2px !important;
-  margin: -2px 0 12px !important;
-  box-shadow: none !important;
-}
-
-.poster-theme-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px !important;
-  padding: 0 2px;
-}
-
-.poster-theme-title strong {
-  color: #21332f;
-  font-size: 14px !important;
-  font-weight: 900;
-}
-
-.poster-theme-title span {
-  color: #9aa9a4;
-  font-size: 12px !important;
-}
-
-.poster-theme-strip {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 0 2px 4px !important;
-  scrollbar-width: none;
-}
-
-.poster-theme-strip::-webkit-scrollbar {
-  display: none;
-}
-
-.poster-theme-strip button {
-  flex: 0 0 auto;
-  height: 34px !important;
-  min-width: auto !important;
-  border-radius: 999px;
-  padding: 0 13px !important;
-  background: rgba(255, 255, 255, 0.76) !important;
-  color: #78908a !important;
-  font-size: 13px !important;
-  font-weight: 800;
-  box-shadow: none !important;
-  border: 1px solid rgba(126, 178, 160, 0.12);
-  transform: none !important;
-  transition: none !important;
-}
-
-.poster-theme-strip button.active {
-  background: #079b87 !important;
-  color: #ffffff !important;
-  border-color: #079b87 !important;
-  box-shadow: 0 6px 14px rgba(7, 155, 135, 0.16) !important;
-  transform: none !important;
-}
-
-.lesson-bottom-actions.course-save-actions {
-  display: grid;
-  grid-template-columns: 0.78fr 0.78fr 0.78fr 1.15fr !important;
-  gap: 8px !important;
-  margin: 10px 0 24px !important;
-}
-
-.lesson-bottom-actions.course-save-actions button {
-  height: 46px !important;
-  border-radius: 16px !important;
-  font-size: 14px !important;
-  font-weight: 900;
-  box-shadow: none !important;
-}
-
-.lesson-bottom-actions.course-save-actions .main-action {
-  background: #079b87;
-  color: #ffffff;
-  box-shadow: 0 8px 18px rgba(7, 155, 135, 0.18) !important;
-}
-
-.lesson-bottom-actions.course-save-actions .light-action {
-  background: rgba(255, 255, 255, 0.78);
-  color: #0c8f7c;
-  border: 1px solid rgba(126, 210, 184, 0.32);
-}
-
-.lesson-bottom-actions.course-save-actions .danger-action {
-  background: rgba(255, 248, 244, 0.9);
-  color: #d86555;
-  border: 1px solid rgba(235, 175, 155, 0.3);
-}
-
-/* 生成后的真实海报弹窗 */
-.poster-result-sheet {
-  max-height: 92vh !important;
-  padding-bottom: 20px !important;
-}
-
-.poster-result-image-wrap {
-  width: 100%;
-  max-height: 68vh;
-  overflow: auto;
-  border-radius: 22px;
-  background: #eef5f1;
-  border: 1px solid rgba(126, 178, 160, 0.16);
-}
-
-.poster-result-image-wrap img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 22px;
-}
-
-.poster-preview-placeholder {
-  background: rgba(255, 255, 255, 0.78) !important;
-  border-radius: 18px !important;
-  padding: 22px 16px !important;
-  text-align: center;
-  border: 1px dashed #c8ddd6;
-}
-/* ===== 海报区最终压缩版：主题 + 预览同一行，按钮三等分 ===== */
-
-.poster-theme-panel {
-  background: transparent !important;
-  border-radius: 0 !important;
-  padding: 0 !important;
-  margin: 2px 0 10px !important;
-  box-shadow: none !important;
-}
-
-.poster-theme-title {
-  display: none !important;
-}
-
-.poster-theme-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.poster-theme-topline strong {
-  color: #21332f;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.poster-preview-mini {
-  height: 30px;
-  border-radius: 999px;
-  padding: 0 12px;
-  background: rgba(255, 255, 255, 0.72);
-  color: #0c8f7c;
-  border: 1px solid rgba(126, 210, 184, 0.32);
-  font-size: 12px;
-  font-weight: 900;
-  box-shadow: none;
-}
-
-.poster-theme-strip {
-  display: flex;
-  gap: 7px;
-  overflow-x: auto;
-  padding: 0 1px 4px !important;
-  scrollbar-width: none;
-}
-
-.poster-theme-strip::-webkit-scrollbar {
-  display: none;
-}
-
-.poster-theme-strip button {
-  flex: 0 0 auto;
-  height: 31px !important;
-  border-radius: 999px !important;
-  padding: 0 11px !important;
-  background: rgba(255, 255, 255, 0.66) !important;
-  color: #78908a !important;
-  border: 1px solid rgba(126, 178, 160, 0.12) !important;
-  font-size: 12px !important;
-  font-weight: 850 !important;
-  box-shadow: none !important;
-  transform: none !important;
-  transition: none !important;
-  outline: none !important;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.poster-theme-strip button.active {
-  background: #079b87 !important;
-  color: #ffffff !important;
-  border-color: #079b87 !important;
-  box-shadow: 0 5px 12px rgba(7, 155, 135, 0.14) !important;
-  transform: none !important;
-}
-
-.poster-theme-strip button:focus,
-.poster-theme-strip button:active {
-  outline: none !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.poster-theme-strip button.active:focus,
-.poster-theme-strip button.active:active {
-  background: #079b87 !important;
-  color: #ffffff !important;
-  box-shadow: 0 5px 12px rgba(7, 155, 135, 0.14) !important;
-}
-
-.lesson-bottom-actions.course-save-actions {
-  display: grid;
-  grid-template-columns: 0.9fr 0.9fr 1.2fr !important;
-  gap: 9px !important;
-  margin: 8px 0 24px !important;
-}
-
-.lesson-bottom-actions.course-save-actions button {
-  height: 46px !important;
-  border-radius: 16px !important;
-  font-size: 15px !important;
-  font-weight: 900;
-  box-shadow: none !important;
-}
-
-.lesson-bottom-actions.course-save-actions .danger-action {
-  background: rgba(255, 248, 244, 0.92) !important;
-  color: #d86555 !important;
-  border: 1px solid rgba(235, 175, 155, 0.32) !important;
-}
-
-.lesson-bottom-actions.course-save-actions .light-action {
-  background: rgba(255, 255, 255, 0.78) !important;
-  color: #0c8f7c !important;
-  border: 1px solid rgba(126, 210, 184, 0.32) !important;
-}
-
-.lesson-bottom-actions.course-save-actions .main-action {
-  background: #079b87 !important;
-  color: #ffffff !important;
-  box-shadow: 0 8px 18px rgba(7, 155, 135, 0.16) !important;
-}
-/* ===== 底部 Tab 图标间距修正：不再上跳，图标文字更紧凑 ===== */
-
-.bottom-tabs .tab {
-  transform: none !important;
-  gap: 4px !important;
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
-}
-
-.bottom-tabs .tab.active {
-  transform: none !important;
-}
-
-.bottom-tabs .tab span {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  height: 22px !important;
-  margin: 0 !important;
-  line-height: 1 !important;
-}
-
-.bottom-tabs .tab span svg {
-  display: block !important;
-}
-
-.bottom-tabs .tab {
-  font-size: 13px !important;
-  line-height: 1.15 !important;
-}
-/* ===== Tab 切换丝滑优化：减少白屏闪烁感 ===== */
-
-html,
-body,
-#root {
-  background: #eef8f3 !important;
-  min-height: 100%;
-}
-
-.app-shell,
-.mobile-app,
-.app-container,
-.page-shell,
-.page-content {
-  background: transparent;
-}
-
-.home-page,
-.schedule-page,
-.members-page,
-.settings-page {
-  animation: softPageIn 180ms ease-out both;
-  will-change: opacity, transform;
-}
-
-@keyframes softPageIn {
-  from {
-    opacity: 0.72;
-    transform: translateY(4px);
+  return (
+    <div className="app-shell">
+      <main className="phone-page">
+        {activeTab === "home" && (
+          <HomePage members={members} onOpenSchedule={openSchedule} />
+        )}
+
+        {activeTab === "schedule" && (
+        <SchedulePage
+  member={selectedMember}
+  members={members}
+  languagePreference={languagePreference}
+/>
+        )}
+
+        {activeTab === "members" && (
+          <MembersPage members={members} onOpenSchedule={openSchedule} />
+        )}
+
+        {activeTab === "settings" && (
+          <SettingsPage
+            languagePreference={languagePreference}
+            setLanguagePreference={setLanguagePreference}
+          />
+        )}
+      </main>
+
+      <nav className="bottom-tabs">
+        <button
+          className={activeTab === "home" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("home")}
+        >
+          <span><HomeIcon /></span>
+          首页
+        </button>
+        <button
+          className={activeTab === "schedule" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("schedule")}
+        >
+          <span><CalendarIcon /></span>
+          排课
+        </button>
+        <button
+          className={activeTab === "members" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("members")}
+        >
+          <span><UsersIcon /></span>
+          会员
+        </button>
+        <button
+          className={activeTab === "settings" ? "tab active" : "tab"}
+          onClick={() => setActiveTab("settings")}
+        >
+          <span><SettingsIcon /></span>
+          设置
+        </button>
+      </nav>
+    </div>
+  );
+}
+
+function HomePage({ members, onOpenSchedule }) {
+  const recentMembers = members.slice(0, 3);
+
+  return (
+    <section className="page">
+      <header className="hero">
+        <p>下午好</p>
+        <h1>严老师</h1>
+        <div className="search-box">搜索会员...</div>
+      </header>
+
+      <section className="section-block">
+        <div className="section-title">
+          <div>
+            <h2>🔥 近期活跃会员</h2>
+            <p>按最近训练频率排序，常来的会员优先显示</p>
+          </div>
+          <button className="text-button">查看全部 ›</button>
+        </div>
+
+        <div className="card-list">
+          {recentMembers.map((member) => (
+            <button
+              className="member-card"
+              key={member.name}
+              onClick={() => onOpenSchedule(member)}
+            >
+              <div className="avatar">{member.name.slice(0, 1)}</div>
+              <div className="member-info">
+                <strong>{member.name}</strong>
+                <p>目标：{member.goal}</p>
+              </div>
+              <div className="member-meta">
+                <strong>{member.lessons}次</strong>
+                <span>{member.lastDate}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function SchedulePage({ member, members = [], languagePreference }) {
+  const searchInputRef = useRef(null);
+  const apparatusPickerRef = useRef(null);
+  const actionSearchAreaRef = useRef(null);
+  const memberPickerRef = useRef(null);
+  const didAutoSaveOnceRef = useRef(false);
+  const isRestoringLessonRef = useRef(false);
+
+  const defaultThemePresets = [
+    "核心增强",
+    "脊柱灵活",
+    "肩背改善",
+    "髋膝踝",
+    "柔韧提升",
+    "平衡协调",
+    "体态调整",
+  ];
+
+  const initialSettings = useMemo(() => getAppData().settings || {}, []);
+  const [scheduleMember, setScheduleMember] = useState(member || null);
+  const currentMember = scheduleMember;
+
+  const initialLessonNumber = currentMember ? currentMember.lessons + 1 : 1;
+
+  const [lessonNumber, setLessonNumber] = useState(initialLessonNumber);
+  const [isLessonPickerOpen, setIsLessonPickerOpen] = useState(false);
+
+  const [selectedApparatus, setSelectedApparatus] = useState("all");
+  const [isApparatusOpen, setIsApparatusOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isRecommendationOpen, setIsRecommendationOpen] = useState(false);
+
+  const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
+  const [isThemeLinked, setIsThemeLinked] = useState(true);
+  const [themePresets, setThemePresets] = useState(
+    Array.isArray(initialSettings.courseThemes) && initialSettings.courseThemes.length
+      ? initialSettings.courseThemes
+      : defaultThemePresets
+  );
+
+  const [isQuickPanelOpen, setIsQuickPanelOpen] = useState(false);
+  const [selectedPosterTheme, setSelectedPosterTheme] = useState("vitalityOrange");
+const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false);
+  const [generatedPosterUrl, setGeneratedPosterUrl] = useState("");
+  const [quickMode, setQuickMode] = useState("templates");
+  const [pasteText, setPasteText] = useState("");
+  const [parsedRows, setParsedRows] = useState([]);
+  const [saveMessage, setSaveMessage] = useState("");
+  const [addMessage, setAddMessage] = useState("");
+
+  const [lessonForm, setLessonForm] = useState({
+    weather: "晴 24℃",
+    studentName: currentMember?.name || "",
+    lessonTheme: currentMember ? "核心增强" : "",
+    summary:
+      "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
+  });
+
+  const [actions, setActions] = useState([]);
+
+  const templates = useMemo(() => getTemplates(), []);
+
+  const maxSelectableLesson = currentMember
+    ? currentMember.lessons + 1
+    : Math.max(lessonNumber, 1);
+
+  const lessonOptions = useMemo(() => {
+    const max = Math.max(maxSelectableLesson, lessonNumber, 1);
+    return Array.from({ length: max }, (_, index) => index + 1);
+  }, [maxSelectableLesson, lessonNumber]);
+
+  const selectedApparatusLabel =
+    apparatusOptions.find((item) => item.key === selectedApparatus)?.label || "全部";
+
+  const filteredMembers = useMemo(() => {
+    const keyword = lessonForm.studentName.trim().toLowerCase();
+
+    if (!keyword) return members;
+
+    return members.filter((item) =>
+      [item.name, item.phone, item.goal]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [members, lessonForm.studentName]);
+
+  useEffect(() => {
+    const nextMember = member || null;
+    const nextLessonNumber = nextMember ? nextMember.lessons + 1 : 1;
+
+    didAutoSaveOnceRef.current = false;
+    setScheduleMember(nextMember);
+    setLessonNumber(nextLessonNumber);
+  }, [member]);
+
+  useEffect(() => {
+    const memberName = currentMember?.name || lessonForm.studentName || "";
+
+    isRestoringLessonRef.current = true;
+
+    const draft = getLessonDraftForMemberAndNumber(memberName, lessonNumber);
+    const savedLesson = getLessonByMemberAndNumber(memberName, lessonNumber);
+    const existingLesson = draft || savedLesson;
+
+    if (existingLesson) {
+      setLessonForm({
+        weather: existingLesson.weather || "晴 24℃",
+        studentName: existingLesson.memberName || memberName,
+        lessonTheme: existingLesson.lessonTheme || "",
+        summary: existingLesson.summary || "",
+      });
+
+      setActions(Array.isArray(existingLesson.actions) ? existingLesson.actions : []);
+    } else if (currentMember && lessonNumber <= currentMember.lessons) {
+      setLessonForm({
+        weather: "晴 24℃",
+        studentName: currentMember.name,
+        lessonTheme: `第${lessonNumber}节历史占位`,
+        summary: "这节课是历史课次占位，用于保留课次顺序。",
+      });
+
+      setActions([
+        {
+          id: `placeholder-${currentMember.name}-${lessonNumber}`,
+          name: "占位",
+          rawName: "历史课次占位",
+          cnName: "占位",
+          apparatus: "M",
+          benefit: "历史课次占位，用于保留课次顺序。",
+          comment: "",
+          identityKey: `placeholder-${currentMember.name}-${lessonNumber}`,
+        },
+      ]);
+    } else {
+      setLessonForm((current) => ({
+        ...current,
+        weather: current.weather || "晴 24℃",
+        studentName: memberName,
+        lessonTheme: currentMember ? "" : current.lessonTheme,
+        summary:
+          current.summary ||
+          "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
+      }));
+
+      setActions([]);
+    }
+
+    setTimeout(() => {
+      isRestoringLessonRef.current = false;
+    }, 0);
+  }, [currentMember, lessonNumber]);
+
+  useEffect(() => {
+    if (isRestoringLessonRef.current) return;
+
+    if (!didAutoSaveOnceRef.current) {
+      didAutoSaveOnceRef.current = true;
+      return;
+    }
+
+    const hasContent =
+      lessonForm.studentName.trim() ||
+      lessonForm.lessonTheme.trim() ||
+      lessonForm.summary.trim() ||
+      actions.length > 0;
+
+    if (!hasContent) return;
+
+    const timer = setTimeout(() => {
+      saveLessonDraft(buildLessonPayload());
+    }, 900);
+
+    return () => clearTimeout(timer);
+  }, [lessonForm, actions, languagePreference, lessonNumber]);
+
+  useEffect(() => {
+    function closeWhenClickOutside(event) {
+      if (
+        apparatusPickerRef.current &&
+        !apparatusPickerRef.current.contains(event.target)
+      ) {
+        setIsApparatusOpen(false);
+      }
+
+      if (
+        actionSearchAreaRef.current &&
+        !actionSearchAreaRef.current.contains(event.target)
+      ) {
+        setIsRecommendationOpen(false);
+      }
+
+      if (
+        memberPickerRef.current &&
+        !memberPickerRef.current.contains(event.target)
+      ) {
+        setIsMemberPickerOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", closeWhenClickOutside);
+    document.addEventListener("touchstart", closeWhenClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", closeWhenClickOutside);
+      document.removeEventListener("touchstart", closeWhenClickOutside);
+    };
+  }, []);
+
+  const addedActionKeys = useMemo(() => {
+    return new Set(
+      actions.map((action) => action.identityKey || getActionIdentityKey(action)).filter(Boolean)
+    );
+  }, [actions]);
+
+  const addedBaseActionIds = useMemo(() => {
+    return new Set(actions.map((action) => action.baseActionId).filter(Boolean));
+  }, [actions]);
+
+  const recommendedActions = useMemo(() => {
+    return searchActions({
+      keyword: searchKeyword,
+      apparatus: selectedApparatus,
+      languagePreference,
+    })
+      .filter((action) => !addedBaseActionIds.has(action.id))
+      .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)))
+      .slice(0, 8);
+  }, [searchKeyword, selectedApparatus, languagePreference, addedBaseActionIds, addedActionKeys]);
+
+  function openRecommendationPanel() {
+    setIsRecommendationOpen(true);
+
+    setTimeout(() => {
+      actionSearchAreaRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 50);
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  function updateLessonField(fieldName, nextValue) {
+    setLessonForm((current) => ({
+      ...current,
+      [fieldName]: nextValue,
+    }));
+  }
+
+ function selectMemberFromPicker(nextMember) {
+  const nextLessonNumber = nextMember.lessons + 1;
+
+  didAutoSaveOnceRef.current = false;
+  setScheduleMember(nextMember);
+  setLessonNumber(nextLessonNumber);
+
+  setLessonForm({
+    weather: "晴 24℃",
+    studentName: nextMember.name,
+    lessonTheme: "",
+    summary:
+      "今天整体完成度不错，核心控制比上节课更稳定，后续可以继续加强骨盆稳定和呼吸配合。",
+  });
+
+  setActions([]);
+  setSearchKeyword("");
+  setIsRecommendationOpen(false);
+  setIsMemberPickerOpen(false);
+}
+
+  function appendThemePreset(theme) {
+    setLessonForm((current) => {
+      const existing = current.lessonTheme || "";
+      const parts = existing
+        .split(/[、,，\s]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      if (parts.includes(theme)) return current;
+
+      return {
+        ...current,
+        lessonTheme: parts.length ? `${parts.join("、")}、${theme}` : theme,
+      };
+    });
+  }
+
+  function addThemePreset() {
+    const nextTheme = window.prompt("输入新的课程主题，例如：肩颈放松");
+
+    if (!nextTheme || !nextTheme.trim()) return;
+
+    const cleanTheme = nextTheme.trim();
+
+    setThemePresets((current) => {
+      if (current.includes(cleanTheme)) return current;
+
+      const next = [...current, cleanTheme];
+
+      saveSettings({
+        courseThemes: next,
+        languagePreference,
+      });
+
+      return next;
+    });
+
+    appendThemePreset(cleanTheme);
+  }
+
+  function addAction(action) {
+    const nextAction = createSelectedLessonAction(action);
+
+    setActions((currentActions) => [...currentActions, nextAction]);
+    setSearchKeyword("");
+    setIsRecommendationOpen(true);
+    setAddMessage(`已添加：${action.displayName || action.cnName || action.name}`);
+
+    setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 0);
+
+    setTimeout(() => {
+      setAddMessage("");
+    }, 900);
+  }
+
+  function updateActionField(actionId, fieldName, nextValue) {
+    setActions((currentActions) =>
+      currentActions.map((action) =>
+        action.id === actionId ? { ...action, [fieldName]: nextValue } : action
+      )
+    );
+  }
+
+  function deleteAction(actionId) {
+    setActions((currentActions) => currentActions.filter((action) => action.id !== actionId));
+  }
+
+  function buildLessonPayload() {
+    return {
+      id: `lesson-${lessonForm.studentName || "guest"}-${lessonNumber}`,
+      memberName: lessonForm.studentName,
+      lessonNumber,
+      lessonDate: getTodayLabel(),
+      weather: lessonForm.weather,
+      lessonTheme: lessonForm.lessonTheme,
+      actions,
+      summary: lessonForm.summary,
+      languagePreference,
+    };
+  }
+
+  function saveCurrentLesson() {
+  saveLesson(buildLessonPayload());
+  setSaveMessage("课程已保存");
+  setTimeout(() => setSaveMessage(""), 1600);
+}
+
+function getPosterActionName(action) {
+  const cnName = action.cnName || action.name || "";
+  const enName = action.rawName || action.name || "";
+
+  if (languagePreference === "english") {
+    return enName || cnName;
+  }
+
+  if (languagePreference === "mixed") {
+    if (cnName && enName && cnName !== enName) {
+      return `${cnName} / ${enName}`;
+    }
+
+    return cnName || enName;
+  }
+
+  return cnName || enName;
+}
+
+function buildPosterPayload() {
+  const latestSettings = getAppData().settings || {};
+
+  return {
+    posterTheme: selectedPosterTheme,
+
+    studentName: lessonForm.studentName || "未命名学员",
+    studentNameSlug: lessonForm.studentName || "student",
+    date: getTodayLabel(),
+    weather: lessonForm.weather || "晴",
+    lessonNumber: `第${lessonNumber}课`,
+    courseTheme: lessonForm.lessonTheme || "",
+
+    studioName: latestSettings.studioNameCn || "",
+    studioSubName: latestSettings.studioNameEn || "",
+    logo: latestSettings.logoDataUrl || "",
+
+    summary: lessonForm.summary || "",
+    actions: actions.map((action, index) => ({
+      number: index + 1,
+      equipment: action.apparatus || "",
+      name: getPosterActionName(action),
+      benefit: action.benefit || "",
+      comment: action.comment || "",
+    })),
+  };
+}
+
+async function generatePoster() {
+  if (!lessonForm.studentName.trim()) {
+    setSaveMessage("请先填写学员姓名");
+    setTimeout(() => setSaveMessage(""), 1600);
+    return;
+  }
+
+  if (actions.length === 0) {
+    setSaveMessage("请先添加至少一个动作");
+    setTimeout(() => setSaveMessage(""), 1600);
+    return;
+  }
+
+  try {
+    setSaveMessage("正在生成海报...");
+
+    saveLesson(buildLessonPayload());
+
+    const response = await fetch(POSTER_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(buildPosterPayload()),
+    });
+
+    if (!response.ok) {
+      throw new Error(`生成失败：${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (!result.success || !result.imageUrl) {
+      throw new Error(result.message || "后端没有返回海报图片地址");
+    }
+
+    setSaveMessage("海报已生成");
+setGeneratedPosterUrl(result.imageUrl);
+setTimeout(() => setSaveMessage(""), 1600);
+  } catch (error) {
+    console.error("生成海报失败", error);
+    setSaveMessage("生成海报失败，请检查后端接口");
+    setTimeout(() => setSaveMessage(""), 2200);
   }
 }
 
-.bottom-tabs,
-.bottom-nav {
-  backface-visibility: hidden;
+  function clearCurrentDraft() {
+    clearLessonDraft(lessonForm.studentName, lessonNumber);
+
+    setLessonForm({
+      weather: "晴 24℃",
+      studentName: currentMember?.name || "",
+      lessonTheme: "",
+      summary: "",
+    });
+
+    setActions([]);
+    setPasteText("");
+    setParsedRows([]);
+    setSearchKeyword("");
+    setIsRecommendationOpen(false);
+
+    setSaveMessage("已清空当前草稿");
+    setTimeout(() => setSaveMessage(""), 1600);
+  }
+
+  function buildActionFromKeyword(item) {
+    if (item.baseActionId) {
+      const foundById = getAllActions(languagePreference).find((action) => action.id === item.baseActionId);
+      if (foundById) return createSelectedLessonAction(foundById);
+    }
+
+    const matchedAction = findBestActionMatch({
+      apparatus: item.apparatus || "all",
+      keyword: item.keyword,
+      languagePreference,
+    });
+
+    if (matchedAction) return createSelectedLessonAction(matchedAction);
+
+    return createTemporaryLessonAction({
+      apparatus: item.apparatus || "M",
+      name: item.keyword,
+    });
+  }
+
+  function applyTemplate(template) {
+    const nextActions = template.actions.map(buildActionFromKeyword);
+
+    setActions((currentActions) => [...currentActions, ...nextActions]);
+    setLessonForm((current) => ({
+      ...current,
+      lessonTheme: current.lessonTheme || template.name,
+    }));
+    setIsQuickPanelOpen(false);
+  }
+
+  function handleParsePasteText() {
+    setParsedRows(parsePasteCourseText(pasteText));
+  }
+
+  function updateParsedRowType(rowId, nextType) {
+    setParsedRows((currentRows) =>
+      currentRows.map((row) => (row.id === rowId ? { ...row, type: nextType } : row))
+    );
+  }
+
+  function importParsedRows() {
+    if (!parsedRows.length) return;
+
+    const nextActions = [];
+    let pendingSummary = lessonForm.summary || "";
+
+    parsedRows.forEach((row) => {
+      if (row.type === "summary") {
+        pendingSummary = row.keyword || row.rawText.replace(/^(课后总结|总结)\s*[:：]\s*/, "");
+        return;
+      }
+
+      if (row.type === "action") {
+        const reparsedAction = parseActionLine(row.rawText);
+        const actionInput = {
+          apparatus: row.apparatus || reparsedAction?.apparatus || "all",
+          keyword: row.keyword || reparsedAction?.keyword || row.rawText,
+        };
+
+        nextActions.push(buildActionFromKeyword(actionInput));
+        return;
+      }
+
+      const lastAction = nextActions[nextActions.length - 1];
+
+      if (lastAction) {
+        lastAction.comment = lastAction.comment ? `${lastAction.comment}\n${row.keyword}` : row.keyword;
+      } else {
+        pendingSummary = pendingSummary ? `${pendingSummary}\n${row.keyword}` : row.keyword;
+      }
+    });
+
+    setActions((currentActions) => [...currentActions, ...nextActions]);
+    setLessonForm((current) => ({ ...current, summary: pendingSummary }));
+    setPasteText("");
+    setParsedRows([]);
+    setIsQuickPanelOpen(false);
+  }
+
+  return (
+    <section className="page schedule-page">
+      <header className="simple-header schedule-header">
+        <div>
+          <h1>
+            {lessonForm.studentName
+              ? `${lessonForm.studentName} · 第${lessonNumber}节`
+              : "普拉提私教助手"}
+          </h1>
+          <p>{lessonForm.lessonTheme || "选择学员或填写课程主题"} · {getTodayLabel()}</p>
+        </div>
+        <button
+          className="small-button"
+          onClick={() => {
+            setQuickMode("templates");
+            setIsQuickPanelOpen(true);
+          }}
+        >
+          快速排课
+        </button>
+      </header>
+
+      {saveMessage && <div className="save-toast">{saveMessage}</div>}
+      {addMessage && <div className="add-toast">{addMessage}</div>}
+
+      <section className="form-card">
+        <h2>课程信息</h2>
+
+        <label className="field">
+          <span>天气</span>
+          <input
+            value={lessonForm.weather}
+            onChange={(event) => updateLessonField("weather", event.target.value)}
+            placeholder="例如：晴 24℃"
+          />
+        </label>
+
+        <div className="two-column">
+          <div className="field member-picker-field" ref={memberPickerRef}>
+            <span>学员</span>
+            <input
+              value={lessonForm.studentName}
+              onFocus={() => setIsMemberPickerOpen(true)}
+              onChange={(event) => {
+                setScheduleMember(null);
+                updateLessonField("studentName", event.target.value);
+                setIsMemberPickerOpen(true);
+              }}
+              placeholder="选择或输入学员姓名"
+            />
+
+            {isMemberPickerOpen && (
+              <div className="member-picker-menu">
+                {filteredMembers.length > 0 ? (
+                  filteredMembers.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => selectMemberFromPicker(item)}
+                    >
+                      <strong>{item.name}</strong>
+                      <span>{item.goal || "暂无训练目标"} · 已上 {item.lessons || 0} 节</span>
+                    </button>
+                  ))
+                ) : (
+                  <p>没有匹配会员，可以直接输入新名字。</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <label className="lesson-stepper">
+            <span>课次</span>
+            <div>
+              <button
+                type="button"
+                disabled={lessonNumber <= 1}
+                onClick={() => setLessonNumber((current) => Math.max(1, current - 1))}
+              >
+                -
+              </button>
+
+              <button
+                type="button"
+                className="lesson-number-button"
+                onClick={() => setIsLessonPickerOpen(true)}
+              >
+                {lessonNumber}
+              </button>
+
+              <button
+                type="button"
+                disabled={lessonNumber >= maxSelectableLesson}
+                onClick={() =>
+                  setLessonNumber((current) =>
+                    Math.min(maxSelectableLesson, current + 1)
+                  )
+                }
+              >
+                +
+              </button>
+            </div>
+          </label>
+        </div>
+
+        <label className="field theme-field">
+          <div className="theme-label-row">
+            <span>课程主题</span>
+            <button
+              type="button"
+              className={isThemeLinked ? "theme-link active" : "theme-link"}
+              onClick={() => setIsThemeLinked((current) => !current)}
+            >
+              关联
+            </button>
+          </div>
+
+          <input
+            value={lessonForm.lessonTheme}
+            onChange={(event) => updateLessonField("lessonTheme", event.target.value)}
+            placeholder="例如：核心增强"
+          />
+        </label>
+
+        <div className="theme-preset-strip">
+          {themePresets.map((theme) => (
+            <button
+              key={theme}
+              type="button"
+              onClick={() => appendThemePreset(theme)}
+            >
+              {theme}
+            </button>
+          ))}
+
+          <button type="button" className="theme-add-button" onClick={addThemePreset}>
+            ＋新增
+          </button>
+        </div>
+      </section>
+
+      <section className="form-card">
+        <div className="section-title compact">
+          <h2>训练动作详情</h2>
+          <span>{actions.length} 个动作</span>
+        </div>
+
+        <div className="action-search-area" ref={actionSearchAreaRef}>
+          <div className="action-toolbar">
+            <div className="apparatus-picker" ref={apparatusPickerRef}>
+              <button
+                className="filter-button"
+                onClick={() => setIsApparatusOpen((current) => !current)}
+              >
+                {selectedApparatusLabel} ▾
+              </button>
+
+              {isApparatusOpen && (
+                <div className="apparatus-menu">
+                  {apparatusOptions.map((item) => (
+                    <button
+                      key={item.key}
+                      className={selectedApparatus === item.key ? "selected" : ""}
+                      onClick={() => {
+                        setSelectedApparatus(item.key);
+                        setIsApparatusOpen(false);
+                        openRecommendationPanel();
+                      }}
+                    >
+                      <strong>{item.label}</strong>
+                      <span>{item.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <input
+              ref={searchInputRef}
+              value={searchKeyword}
+              onFocus={openRecommendationPanel}
+              onChange={(event) => {
+                setSearchKeyword(event.target.value);
+                openRecommendationPanel();
+              }}
+              placeholder="输入动作关键词"
+            />
+
+            <button
+              className="add-button"
+              onClick={() => {
+                if (recommendedActions[0]) addAction(recommendedActions[0]);
+              }}
+            >
+              ＋
+            </button>
+          </div>
+
+          {isRecommendationOpen && (
+            <>
+              <div className="quick-recommend-title">
+                <strong>推荐动作</strong>
+                <span>点选后继续停留，可连续添加</span>
+              </div>
+
+              <div className="search-results recommendation-results">
+                {recommendedActions.map((action) => (
+                  <button key={action.id} onClick={() => addAction(action)}>
+                    <div>
+                      <strong>{action.displayName}</strong>
+                      <span>{action.defaultBenefit}</span>
+                    </div>
+                    <em>{action.apparatus}</em>
+                  </button>
+                ))}
+
+                {recommendedActions.length === 0 && (
+                  <p className="empty-result">没有找到动作，可以之后做“临时新增动作”。</p>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="action-list">
+          {actions.map((action, index) => (
+            <div className="action-card" key={action.id}>
+              <div className="action-card-top">
+                <div className="action-number">{index + 1}</div>
+                <div className="action-title-wrap">
+                  <strong className="action-name">{action.name}</strong>
+                  <span>{getApparatusLabel(action.apparatus)} · {action.rawName || action.cnName || action.name}</span>
+                </div>
+                <button className="delete-mini" onClick={() => deleteAction(action.id)}>
+                  ×
+                </button>
+              </div>
+
+              <label className="action-line">
+                <span>好处</span>
+                <textarea
+                  value={action.benefit}
+                  onChange={(event) => updateActionField(action.id, "benefit", event.target.value)}
+                  placeholder="输入这个动作本节课的训练好处..."
+                />
+              </label>
+
+              <label className="action-line">
+                <span>点评</span>
+                <textarea
+                  value={action.comment}
+                  onChange={(event) => updateActionField(action.id, "comment", event.target.value)}
+                  placeholder="输入动作点评，可不填..."
+                />
+              </label>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="form-card bottom-space">
+        <h2>课后总结 / 二天身体反馈</h2>
+        <textarea
+          className="summary-box"
+          placeholder="输入课后总结或二天身体反馈建议..."
+          value={lessonForm.summary}
+          onChange={(event) => updateLessonField("summary", event.target.value)}
+        />
+      </section>
+
+     <div className="poster-theme-panel">
+  <div className="poster-theme-topline">
+    <strong>海报主题</strong>
+
+    <button
+      type="button"
+      className="poster-preview-mini"
+      onClick={() => setIsPosterPreviewOpen(true)}
+    >
+      预览
+    </button>
+  </div>
+
+  <div className="poster-theme-strip">
+    {posterThemeOptions.map((theme) => (
+      <button
+        key={theme.key}
+        type="button"
+        className={selectedPosterTheme === theme.key ? "active" : ""}
+        onClick={() => setSelectedPosterTheme(theme.key)}
+      >
+        {theme.label}
+      </button>
+    ))}
+  </div>
+</div>
+    <div className="lesson-bottom-actions course-save-actions">
+  <button className="danger-action" onClick={clearCurrentDraft}>
+    清空
+  </button>
+
+  <button className="light-action" onClick={saveCurrentLesson}>
+    保存
+  </button>
+
+  <button className="main-action" onClick={generatePoster}>
+    生成
+  </button>
+</div>
+
+     {generatedPosterUrl && (
+  <div className="modal-backdrop" onClick={() => setGeneratedPosterUrl("")}>
+    <div
+      className="modal-sheet poster-result-sheet"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="modal-header">
+        <div>
+          <h2>海报已生成</h2>
+          <p>长按图片保存，或点击下方按钮打开原图。</p>
+        </div>
+        <button onClick={() => setGeneratedPosterUrl("")}>×</button>
+      </div>
+
+      <div className="poster-result-image-wrap">
+        <img src={generatedPosterUrl} alt="生成的课后海报" />
+      </div>
+
+      <button
+        className="main-wide-button"
+        onClick={() => window.open(generatedPosterUrl, "_blank")}
+      >
+        打开原图
+      </button>
+    </div>
+  </div>
+)}
+      {isPosterPreviewOpen && (
+  <div className="modal-backdrop" onClick={() => setIsPosterPreviewOpen(false)}>
+    <div
+      className="modal-sheet small-modal-sheet"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="modal-header">
+        <div>
+          <h2>海报预览</h2>
+          <p>
+            当前主题：
+            {posterThemeOptions.find((item) => item.key === selectedPosterTheme)?.label}
+          </p>
+        </div>
+        <button onClick={() => setIsPosterPreviewOpen(false)}>×</button>
+      </div>
+
+      <div className="poster-preview-placeholder">
+        <strong>预览图待添加</strong>
+        <p>
+          后面放入 5 张假人示例图后，这里会根据当前主题显示对应预览。
+        </p>
+      </div>
+    </div>
+  </div>
+)}
+      {isLessonPickerOpen && (
+        <div className="modal-backdrop" onClick={() => setIsLessonPickerOpen(false)}>
+          <div
+            className="modal-sheet small-modal-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div>
+                <h2>选择课次</h2>
+                <p>可快速切换已上过的历史课次和当前新课。</p>
+              </div>
+              <button onClick={() => setIsLessonPickerOpen(false)}>×</button>
+            </div>
+
+            <div className="lesson-picker-grid">
+              {lessonOptions.map((number) => (
+                <button
+                  key={number}
+                  className={lessonNumber === number ? "active" : ""}
+                  onClick={() => {
+                    setLessonNumber(number);
+                    setIsLessonPickerOpen(false);
+                  }}
+                >
+                  第{number}节
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isQuickPanelOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-sheet">
+            <div className="modal-header">
+              <div>
+                <h2>快速排课</h2>
+                <p>选择一种方式快速生成本节课动作</p>
+              </div>
+              <button onClick={() => setIsQuickPanelOpen(false)}>×</button>
+            </div>
+
+            <div className="quick-mode-tabs">
+              <button className={quickMode === "templates" ? "active" : ""} onClick={() => setQuickMode("templates")}>
+                套用模板
+              </button>
+              <button className={quickMode === "paste" ? "active" : ""} onClick={() => setQuickMode("paste")}>
+                粘贴排课
+              </button>
+              <button className={quickMode === "history" ? "active" : ""} onClick={() => setQuickMode("history")}>
+                复制历史
+              </button>
+            </div>
+
+            {quickMode === "templates" && (
+              <div className="template-list">
+                {templates.map((template) => (
+                  <button key={template.id} onClick={() => applyTemplate(template)}>
+                    <strong>{template.name}</strong>
+                    <span>{template.desc}</span>
+                    <em>{template.actions.length} 个动作</em>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {quickMode === "paste" && (
+              <div className="paste-panel">
+                <textarea
+                  value={pasteText}
+                  onChange={(event) => setPasteText(event.target.value)}
+                  placeholder={`例如：\nR 臀桥\n今天骨盆控制不错\nM 四足游泳\n右肩容易耸肩\n总结：今天核心稳定更好`}
+                />
+
+                <button className="main-wide-button" onClick={handleParsePasteText}>
+                  解析文本
+                </button>
+
+                {parsedRows.length > 0 && (
+                  <div className="parsed-list">
+                    <h3>确认解析结果</h3>
+                    {parsedRows.map((row, index) => (
+                      <div className="parsed-row" key={row.id}>
+                        <div className="parsed-index">{index + 1}</div>
+                        <div className="parsed-content">
+                          <strong>{row.rawText}</strong>
+                          <div className="type-switch">
+                            {["action", "comment", "summary"].map((type) => (
+                              <button
+                                key={type}
+                                className={row.type === type ? "active" : ""}
+                                onClick={() => updateParsedRowType(row.id, type)}
+                              >
+                                {type === "action" ? "动作" : type === "comment" ? "点评" : "总结"}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    <button className="main-wide-button" onClick={importParsedRows}>
+                      一键导入
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {quickMode === "history" && (
+              <div className="empty-quick-panel">
+                <strong>复制历史课程</strong>
+                <p>等课程保存和会员历史稳定后，这里会显示第1节到第N节，可任选一节复制后修改。</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }
 
-button,
-.tab,
-.bottom-tabs .tab {
-  -webkit-tap-highlight-color: transparent;
-}
-/* ===== 修复 Tab 切换优化后底部导航偏移 ===== */
+function MembersPage({ members, onOpenSchedule }) {
+  return (
+    <section className="page">
+      <header className="simple-header">
+        <h1>会员管理</h1>
+        <button className="round-button">＋</button>
+      </header>
 
-.bottom-tabs,
-.bottom-nav {
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100% !important;
-  max-width: none !important;
-  transform: none !important;
-  translate: none !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-}
+      <div className="search-box members-search">搜索会员...</div>
 
-.bottom-tabs {
-  position: fixed !important;
-  z-index: 50 !important;
-}
-
-.bottom-tabs .tab,
-.bottom-tabs .tab.active {
-  transform: none !important;
-}
-/* ===== 账户管理：邮箱注册 / 登录 ===== */
-
-.account-settings-panel {
-  display: grid;
-  gap: 14px;
+      <div className="card-list">
+        {members.map((member) => (
+          <button className="member-card" key={member.name} onClick={() => onOpenSchedule(member)}>
+            <div className="avatar">{member.name.slice(0, 1)}</div>
+            <div className="member-info">
+              <strong>{member.name}</strong>
+              <p>{member.phone || "暂无手机号"}</p>
+              <p>目标：{member.goal}</p>
+            </div>
+            <div className="arrow">›</div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
 }
 
-.account-status-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.76);
-  border: 1px solid rgba(126, 178, 160, 0.16);
+function SettingsPage({ languagePreference, setLanguagePreference }) {
+  const initialData = useMemo(() => getAppData(), []);
+
+  const [openPanel, setOpenPanel] = useState("studio");
+
+  const [settingsForm, setSettingsForm] = useState({
+    studioNameCn: initialData.settings?.studioNameCn || "北极星普拉提",
+    studioNameEn: initialData.settings?.studioNameEn || "Polaris Pilates",
+    coachName: initialData.settings?.coachName || "严老师",
+    logoDataUrl: initialData.settings?.logoDataUrl || "",
+  });
+
+  const [templates, setTemplates] = useState(getTemplates());
+
+  const [libraryApparatus, setLibraryApparatus] = useState("all");
+  const [libraryKeyword, setLibraryKeyword] = useState("");
+  const [libraryPage, setLibraryPage] = useState(1);
+  const [libraryModalOpen, setLibraryModalOpen] = useState(false);
+
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState("");
+  const [templateName, setTemplateName] = useState("");
+  const [templateDesc, setTemplateDesc] = useState("");
+  const [templateApparatus, setTemplateApparatus] = useState("all");
+  const [templateKeyword, setTemplateKeyword] = useState("");
+  const [selectedTemplateActions, setSelectedTemplateActions] = useState([]);
+
+  const [tagTarget, setTagTarget] = useState(null);
+  const [tagInput, setTagInput] = useState("");
+  const [settingsSavedMessage, setSettingsSavedMessage] = useState("");
+  const [authUser, setAuthUser] = useState(null);
+const [authEmail, setAuthEmail] = useState("");
+const [authPassword, setAuthPassword] = useState("");
+const [authLoading, setAuthLoading] = useState(false);
+const [authMessage, setAuthMessage] = useState("");
+
+function applyStudioSettings(settings) {
+  if (!settings) return;
+
+  setSettingsForm((current) => ({
+    ...current,
+    studioNameCn: settings.studioNameCn ?? current.studioNameCn,
+    studioNameEn: settings.studioNameEn ?? current.studioNameEn,
+    coachName: settings.coachName ?? current.coachName,
+    logoDataUrl: settings.logoDataUrl ?? current.logoDataUrl,
+  }));
+
+  if (settings.languagePreference) {
+    setLanguagePreference(settings.languagePreference);
+  }
 }
 
-.account-status-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  color: #079b87;
-  background: rgba(7, 155, 135, 0.08);
+useEffect(() => {
+  let mounted = true;
+
+  async function loadSession() {
+    const { data } = await supabase.auth.getSession();
+
+    if (mounted) {
+      setAuthUser(data.session?.user || null);
+      setAuthEmail(data.session?.user?.email || "");
+    }
+  }
+
+  loadSession();
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    setAuthUser(session?.user || null);
+    setAuthEmail(session?.user?.email || "");
+  });
+
+  return () => {
+    mounted = false;
+    subscription.unsubscribe();
+  };
+}, []);
+
+useEffect(() => {
+  if (!authUser) return undefined;
+
+  let mounted = true;
+
+  async function syncStudioSettingsFromCloud() {
+    const result = await loadCloudStudioSettings();
+
+    if (!mounted || result.source !== "cloud") return;
+
+    applyStudioSettings(result.settings);
+  }
+
+  syncStudioSettingsFromCloud();
+
+  return () => {
+    mounted = false;
+  };
+}, [authUser?.id]);
+
+  const [favoriteIds, setFavoriteIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("pilates-action-favorites-v1") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const [actionTags, setActionTags] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("pilates-action-tags-v1") || "{}");
+    } catch {
+      return {};
+    }
+  });
+
+  const pageSize = 8;
+
+  const allActions = useMemo(() => {
+    return getAllActions(languagePreference);
+  }, [languagePreference]);
+
+  const actionStats = useMemo(() => {
+    const stats = {};
+
+    allActions.forEach((action) => {
+      const key = action.apparatus || "其他";
+      stats[key] = (stats[key] || 0) + 1;
+    });
+
+    return stats;
+  }, [allActions]);
+
+  const filterOptions = [
+    { key: "all", label: "全部" },
+    { key: "M", label: "M" },
+    { key: "R", label: "R" },
+    { key: "TT", label: "TT" },
+    { key: "C", label: "C" },
+    { key: "LB", label: "LB" },
+    { key: "SC", label: "SC" },
+    { key: "P", label: "P" },
+  ];
+
+  const filteredLibraryActions = useMemo(() => {
+    const keyword = libraryKeyword.trim().toLowerCase();
+
+    return allActions
+      .filter((action) => {
+        if (libraryApparatus === "all") return true;
+        return action.apparatus === libraryApparatus;
+      })
+      .filter((action) => {
+        if (!keyword) return true;
+
+        return [
+          action.cnName,
+          action.name,
+          action.displayName,
+          action.defaultBenefit,
+          action.apparatus,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
+      });
+  }, [allActions, libraryApparatus, libraryKeyword]);
+
+  const libraryTotalPages = Math.max(1, Math.ceil(filteredLibraryActions.length / pageSize));
+
+  const pagedLibraryActions = useMemo(() => {
+    const safePage = Math.min(libraryPage, libraryTotalPages);
+    const start = (safePage - 1) * pageSize;
+    return filteredLibraryActions.slice(start, start + pageSize);
+  }, [filteredLibraryActions, libraryPage, libraryTotalPages]);
+
+  const templateSearchActions = useMemo(() => {
+    const keyword = templateKeyword.trim().toLowerCase();
+
+    return allActions
+      .filter((action) => {
+        if (templateApparatus === "all") return true;
+        return action.apparatus === templateApparatus;
+      })
+      .filter((action) => {
+        if (!keyword) return true;
+
+        return [action.cnName, action.name, action.displayName, action.apparatus]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
+      })
+      .slice(0, 30);
+  }, [allActions, templateApparatus, templateKeyword]);
+
+  const languageLabelMap = {
+    chinese: "中文优先",
+    english: "英文优先",
+    mixed: "中英对照",
+  };
+
+ function getCleanAuthInput() {
+  return {
+    email: authEmail.trim(),
+    password: authPassword.trim(),
+  };
 }
 
-.account-status-card strong {
-  display: block;
-  color: #21332f;
-  font-size: 15px;
-  font-weight: 900;
+async function handleEmailSignUp() {
+  const { email, password } = getCleanAuthInput();
+
+  if (!email || !password) {
+    setAuthMessage("请先填写邮箱和密码");
+    return;
+  }
+
+  if (password.length < 6) {
+    setAuthMessage("密码至少需要 6 位");
+    return;
+  }
+
+  try {
+    setAuthLoading(true);
+    setAuthMessage("正在注册...");
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    if (data.session) {
+      setAuthUser(data.user);
+      setAuthMessage("注册成功，已登录");
+    } else {
+      setAuthMessage("注册成功，请去邮箱确认后再登录");
+    }
+  } catch (error) {
+    setAuthMessage(error.message || "注册失败，请稍后再试");
+  } finally {
+    setAuthLoading(false);
+  }
 }
 
-.account-status-card span {
-  display: block;
-  margin-top: 3px;
-  color: #7b8f89;
-  font-size: 12px;
-  line-height: 1.45;
+async function handleEmailSignIn() {
+  const { email, password } = getCleanAuthInput();
+
+  if (!email || !password) {
+    setAuthMessage("请先填写邮箱和密码");
+    return;
+  }
+
+  try {
+    setAuthLoading(true);
+    setAuthMessage("正在登录...");
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+
+    setAuthUser(data.user);
+    setAuthMessage("登录成功");
+    setAuthPassword("");
+  } catch (error) {
+    setAuthMessage(error.message || "登录失败，请检查邮箱或密码");
+  } finally {
+    setAuthLoading(false);
+  }
 }
 
-.input-with-icon {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  background: #f7fbf8;
-  border-radius: 16px;
-  padding: 0 12px;
-  border: 1px solid rgba(126, 178, 160, 0.12);
+async function handleEmailSignOut() {
+  try {
+    setAuthLoading(true);
+    setAuthMessage("正在退出...");
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) throw error;
+
+    setAuthUser(null);
+    setAuthPassword("");
+    setAuthMessage("已退出登录");
+  } catch (error) {
+    setAuthMessage(error.message || "退出失败，请稍后再试");
+  } finally {
+    setAuthLoading(false);
+  }
+}
+  function togglePanel(panelName) {
+    setOpenPanel((current) => (current === panelName ? "" : panelName));
+  }
+
+  function updateLibraryFilter(nextApparatus) {
+    setLibraryApparatus(nextApparatus);
+    setLibraryPage(1);
+  }
+
+  function updateLibraryKeyword(nextKeyword) {
+    setLibraryKeyword(nextKeyword);
+    setLibraryPage(1);
+  }
+
+  function previousLibraryPage() {
+    setLibraryPage((current) => Math.max(1, current - 1));
+  }
+
+  function nextLibraryPage() {
+    setLibraryPage((current) => Math.min(libraryTotalPages, current + 1));
+  }
+
+  function chooseLanguagePreference(nextPreference) {
+    setLanguagePreference(nextPreference);
+    saveSettings({
+      ...settingsForm,
+      languagePreference: nextPreference,
+    });
+  }
+
+  function updateSettingsField(fieldName, value) {
+    setSettingsForm((current) => ({
+      ...current,
+      [fieldName]: value,
+    }));
+  }
+
+  function handleLogoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setSettingsSavedMessage("请上传图片格式的 Logo");
+      setTimeout(() => setSettingsSavedMessage(""), 1600);
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const logoDataUrl = reader.result;
+
+      setSettingsForm((current) => ({
+        ...current,
+        logoDataUrl,
+      }));
+
+      saveSettings({
+        ...settingsForm,
+        logoDataUrl,
+        languagePreference,
+      });
+
+      setSettingsSavedMessage("Logo 已上传");
+      setTimeout(() => setSettingsSavedMessage(""), 1600);
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function clearLogo() {
+    const nextSettings = {
+      ...settingsForm,
+      logoDataUrl: "",
+    };
+
+    setSettingsForm(nextSettings);
+
+    saveSettings({
+      ...nextSettings,
+      languagePreference,
+    });
+
+    setSettingsSavedMessage("Logo 已清除");
+    setTimeout(() => setSettingsSavedMessage(""), 1600);
+  }
+
+  async function saveStudioInfo() {
+    const result = await saveCloudStudioSettings({
+      ...settingsForm,
+      languagePreference,
+    });
+
+    if (result.status === "cloud") {
+      setSettingsSavedMessage("工作室信息已同步");
+    } else if (result.status === "cloud-error") {
+      setSettingsSavedMessage("本机已保存，云端同步失败");
+    } else {
+      setSettingsSavedMessage("工作室信息已保存到本机");
+    }
+
+    setTimeout(() => setSettingsSavedMessage(""), 1600);
+  }
+
+  function toggleFavorite(action) {
+    setFavoriteIds((current) => {
+      const exists = current.includes(action.id);
+      const next = exists
+        ? current.filter((id) => id !== action.id)
+        : [...current, action.id];
+
+      localStorage.setItem("pilates-action-favorites-v1", JSON.stringify(next));
+      return next;
+    });
+  }
+
+  function openTagEditor(action) {
+    setTagTarget(action);
+    setTagInput((actionTags[action.id] || []).join("、"));
+  }
+
+  function saveActionTags() {
+    if (!tagTarget) return;
+
+    const tags = tagInput
+      .split(/[、,，\s]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    const nextTags = {
+      ...actionTags,
+      [tagTarget.id]: tags,
+    };
+
+    localStorage.setItem("pilates-action-tags-v1", JSON.stringify(nextTags));
+    setActionTags(nextTags);
+    setTagTarget(null);
+    setTagInput("");
+  }
+
+  function resetTemplateEditor() {
+    setEditingTemplateId("");
+    setTemplateName("");
+    setTemplateDesc("");
+    setTemplateApparatus("all");
+    setTemplateKeyword("");
+    setSelectedTemplateActions([]);
+  }
+
+  function hasTemplateDraft() {
+    return (
+      templateName.trim() ||
+      templateDesc.trim() ||
+      templateKeyword.trim() ||
+      selectedTemplateActions.length > 0
+    );
+  }
+
+  function openNewTemplateModal() {
+    if (editingTemplateId) {
+      resetTemplateEditor();
+    }
+
+    setTemplateModalOpen(true);
+  }
+
+  function openEditTemplateModal(template) {
+    const loadedActions = (template.actions || []).map((item) => {
+      const foundById = item.actionId
+        ? allActions.find((action) => action.id === item.actionId)
+        : null;
+
+      const foundByKeyword = !foundById
+        ? allActions.find(
+            (action) =>
+              action.apparatus === item.apparatus &&
+              [action.cnName, action.name, action.displayName]
+                .join(" ")
+                .includes(item.keyword || "")
+          )
+        : null;
+
+      const found = foundById || foundByKeyword;
+
+      return {
+        id: found?.id || item.actionId || `${item.apparatus}-${item.keyword}`,
+        apparatus: found?.apparatus || item.apparatus || "M",
+        cnName: found?.cnName || item.keyword || "",
+        name: found?.name || "",
+        keyword: found?.cnName || found?.name || item.keyword || "",
+      };
+    });
+
+    setEditingTemplateId(template.id);
+    setTemplateName(template.name || "");
+    setTemplateDesc(template.desc || "");
+    setTemplateApparatus("all");
+    setTemplateKeyword("");
+    setSelectedTemplateActions(loadedActions);
+    setTemplateModalOpen(true);
+  }
+
+  function closeTemplateModal() {
+    setTemplateModalOpen(false);
+    resetTemplateEditor();
+  }
+
+  function addActionToTemplate(action) {
+    const exists = selectedTemplateActions.some((item) => item.id === action.id);
+    if (exists) return;
+
+    setSelectedTemplateActions((current) => [
+      ...current,
+      {
+        id: action.id,
+        apparatus: action.apparatus,
+        cnName: action.cnName,
+        name: action.name,
+        keyword: action.cnName || action.name,
+      },
+    ]);
+  }
+
+  function removeActionFromTemplate(actionId) {
+    setSelectedTemplateActions((current) =>
+      current.filter((action) => action.id !== actionId)
+    );
+  }
+
+  function moveTemplateAction(actionId, direction) {
+    setSelectedTemplateActions((current) => {
+      const index = current.findIndex((item) => item.id === actionId);
+      if (index < 0) return current;
+
+      const nextIndex = direction === "up" ? index - 1 : index + 1;
+      if (nextIndex < 0 || nextIndex >= current.length) return current;
+
+      const next = [...current];
+      const temp = next[index];
+      next[index] = next[nextIndex];
+      next[nextIndex] = temp;
+
+      return next;
+    });
+  }
+
+  function saveCurrentTemplate() {
+    if (!templateName.trim() || selectedTemplateActions.length === 0) return;
+
+    const nextTemplates = saveTemplate({
+      id: editingTemplateId || undefined,
+      name: templateName.trim(),
+      desc: templateDesc.trim(),
+      actions: selectedTemplateActions.map((action) => ({
+        actionId: action.id,
+        apparatus: action.apparatus,
+        keyword: action.keyword || action.cnName || action.name,
+      })),
+    });
+
+    setTemplates(nextTemplates);
+    closeTemplateModal();
+  }
+
+  function removeTemplate(templateId) {
+    setTemplates(deleteTemplate(templateId));
+  }
+
+  return (
+    <section className="page">
+      <header className="simple-header">
+        <h1>设置</h1>
+      </header>
+
+      {settingsSavedMessage && (
+        <div className="save-toast">{settingsSavedMessage}</div>
+      )}
+
+     <div className="settings-list">
+  <button
+  className="settings-row-with-subtitle"
+  onClick={() => togglePanel("account")}
+>
+  <div>
+    <strong>账户管理</strong>
+    <small>{authUser ? authUser.email : "邮箱注册 / 登录 / 后续云端同步"}</small>
+  </div>
+  <span>{openPanel === "account" ? "⌃" : "›"}</span>
+</button>
+
+{openPanel === "account" && (
+  <div className="settings-panel-card account-settings-panel">
+    <div className="account-status-card">
+      <div className="account-status-icon">
+        {authUser ? <UsersIcon size={20} /> : <MailIcon size={20} />}
+      </div>
+
+      <div>
+        <strong>{authUser ? "已登录" : "未登录"}</strong>
+        <span>
+          {authUser
+            ? authUser.email
+            : "登录后可同步工作室信息，后续再同步会员和课程。"}
+        </span>
+      </div>
+    </div>
+
+    {!authUser && (
+      <>
+        <label className="field icon-field">
+          <span>邮箱</span>
+          <div className="input-with-icon">
+            <MailIcon size={18} />
+            <input
+              value={authEmail}
+              onChange={(event) => setAuthEmail(event.target.value)}
+              placeholder="输入邮箱"
+              type="email"
+              autoComplete="email"
+            />
+          </div>
+        </label>
+
+        <label className="field icon-field">
+          <span>密码</span>
+          <div className="input-with-icon">
+            <LockIcon size={18} />
+            <input
+              value={authPassword}
+              onChange={(event) => setAuthPassword(event.target.value)}
+              placeholder="至少 6 位密码"
+              type="password"
+              autoComplete="current-password"
+            />
+          </div>
+        </label>
+
+        <div className="account-action-row">
+          <button
+            className="light-action account-auth-button"
+            onClick={handleEmailSignIn}
+            disabled={authLoading}
+          >
+            <LogInIcon size={17} />
+            登录
+          </button>
+
+          <button
+            className="main-action account-auth-button"
+            onClick={handleEmailSignUp}
+            disabled={authLoading}
+          >
+            <MailIcon size={17} />
+            注册
+          </button>
+        </div>
+      </>
+    )}
+
+    {authUser && (
+      <button
+        className="danger-action account-signout-button"
+        onClick={handleEmailSignOut}
+        disabled={authLoading}
+      >
+        <LogOutIcon size={17} />
+        退出登录
+      </button>
+    )}
+
+    {authMessage && <p className="account-auth-message">{authMessage}</p>}
+
+    <p className="settings-tip">
+      当前已支持账号登录后的工作室信息云端同步。
+    </p>
+  </div>
+)}
+
+  <button
+    className="settings-row-with-subtitle"
+    onClick={() => togglePanel("studio")}
+  >
+    <div>
+      <strong>工作室信息</strong>
+      <small>{settingsForm.studioNameCn || "设置 Logo、名称和教练称呼"}</small>
+    </div>
+    <span>{openPanel === "studio" ? "⌃" : "›"}</span>
+  </button>
+
+  {openPanel === "studio" && (
+    <div className="settings-panel-card studio-settings-panel">
+      <div className="logo-upload-card">
+        <label className="logo-square-uploader">
+          {settingsForm.logoDataUrl ? (
+            <img src={settingsForm.logoDataUrl} alt="工作室 Logo" />
+          ) : (
+            <div className="logo-placeholder-content">
+              <strong>Logo</strong>
+              <span>点击上传</span>
+            </div>
+          )}
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleLogoUpload}
+          />
+        </label>
+
+        <div className="logo-upload-info">
+          <strong>工作室 Logo</strong>
+          <span>
+            建议上传正方形 Logo。第一版先保存在本机浏览器，后面接云端同步。
+          </span>
+
+          {settingsForm.logoDataUrl && (
+            <button className="logo-text-button" onClick={clearLogo}>
+              清除 Logo
+            </button>
+          )}
+        </div>
+      </div>
+
+      <label className="field">
+        <span>中文名称</span>
+        <input
+          value={settingsForm.studioNameCn || ""}
+          onChange={(event) =>
+            updateSettingsField("studioNameCn", event.target.value)
+          }
+          placeholder="例如：北极星普拉提"
+        />
+      </label>
+
+      <label className="field">
+        <span>英文名称</span>
+        <input
+          value={settingsForm.studioNameEn || ""}
+          onChange={(event) =>
+            updateSettingsField("studioNameEn", event.target.value)
+          }
+          placeholder="例如：Polaris Pilates"
+        />
+      </label>
+
+      <label className="field">
+        <span>首页称呼</span>
+        <input
+          value={settingsForm.coachName || ""}
+          onChange={(event) =>
+            updateSettingsField("coachName", event.target.value)
+          }
+          placeholder="例如：严老师 / Jason"
+        />
+      </label>
+
+      <button className="main-wide-button" onClick={saveStudioInfo}>
+        保存工作室信息
+      </button>
+    </div>
+  )}
+
+  <button
+    className="settings-row-with-subtitle"
+    onClick={() => togglePanel("library")}
+  >
+    <div>
+      <strong>动作库管理</strong>
+      <small>当前动作池 {allActions.length} 个，可按器械和关键词搜索</small>
+    </div>
+    <span>{openPanel === "library" ? "⌃" : "›"}</span>
+  </button>
+
+  {openPanel === "library" && (
+    <div className="settings-panel-card action-library-entry">
+      <div className="library-combined-card">
+        <div className="library-combined-main">
+          <strong>动作库 {allActions.length} 个</strong>
+          <span>
+            M {actionStats.M || 0} · R {actionStats.R || 0} · TT{" "}
+            {actionStats.TT || 0} · C {actionStats.C || 0} · LB{" "}
+            {actionStats.LB || 0} · SC {actionStats.SC || 0} · P{" "}
+            {actionStats.P || 0}
+          </span>
+        </div>
+
+        <button
+          className="library-open-button"
+          onClick={() => setLibraryModalOpen(true)}
+        >
+          查看动作
+        </button>
+
+        <p className="library-combined-tip">
+          支持筛选、搜索、打标签、收藏。
+        </p>
+      </div>
+    </div>
+  )}
+
+  <button
+    className="settings-row-with-subtitle"
+    onClick={() => togglePanel("templates")}
+  >
+    <div>
+      <strong>课程模板管理</strong>
+      <small>在设置页创建模板，排课页直接套用</small>
+    </div>
+    <span>{openPanel === "templates" ? "⌃" : "›"}</span>
+  </button>
+
+  {openPanel === "templates" && (
+    <div className="settings-panel-card template-manager-panel">
+      <div className="template-manager-head">
+        <div>
+          <strong>已有模板</strong>
+          <span>{templates.length} 个模板</span>
+        </div>
+
+        <button onClick={openNewTemplateModal}>
+          {hasTemplateDraft() ? "继续编辑" : "+ 新建模板"}
+        </button>
+      </div>
+
+      <div className="template-card-list">
+        {templates.length > 0 ? (
+          templates.map((template) => (
+            <div key={template.id} className="template-card">
+              <div>
+                <strong>{template.name}</strong>
+                <span>
+                  {template.actions?.length || 0} 个动作
+                  {template.desc ? ` · ${template.desc}` : ""}
+                </span>
+              </div>
+
+              <div className="template-card-actions">
+                <button onClick={() => openEditTemplateModal(template)}>
+                  编辑
+                </button>
+                <button onClick={() => removeTemplate(template.id)}>
+                  删除
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="empty-template-text">
+            暂无模板，点击“新建模板”创建第一个模板。
+          </p>
+        )}
+      </div>
+    </div>
+  )}
+
+  <button
+    className="settings-row-with-subtitle"
+    onClick={() => togglePanel("language")}
+  >
+    <div>
+      <strong>动作语言偏好</strong>
+      <small>{languageLabelMap[languagePreference]}</small>
+    </div>
+    <span>{openPanel === "language" ? "⌃" : "›"}</span>
+  </button>
+
+  {openPanel === "language" && (
+    <div className="language-preference-panel">
+      <button
+        className={languagePreference === "chinese" ? "active" : ""}
+        onClick={() => chooseLanguagePreference("chinese")}
+      >
+        <strong>中文优先</strong>
+        <small>排课和海报优先中文；没有中文时显示英文。</small>
+      </button>
+
+      <button
+        className={languagePreference === "english" ? "active" : ""}
+        onClick={() => chooseLanguagePreference("english")}
+      >
+        <strong>英文优先</strong>
+        <small>排课端英文在前；海报只发英文。</small>
+      </button>
+
+      <button
+        className={languagePreference === "mixed" ? "active" : ""}
+        onClick={() => chooseLanguagePreference("mixed")}
+      >
+        <strong>中英对照</strong>
+        <small>排课和海报尽量显示中英对照。</small>
+      </button>
+    </div>
+  )}
+
+  <button>
+    导出数据 <span>›</span>
+  </button>
+
+  <button>
+    导入数据 <span>›</span>
+  </button>
+
+</div>
+
+      {libraryModalOpen && (
+  <div className="modal-backdrop" onClick={() => setLibraryModalOpen(false)}>
+    <div
+      className="modal-sheet library-modal-sheet"
+      onClick={(event) => event.stopPropagation()}
+    >
+      <div className="library-modal-fixed-head">
+        <div className="modal-header">
+          <div>
+            <h2>查看动作</h2>
+            <p>共 {filteredLibraryActions.length} 个动作，可按器械或关键词筛选。</p>
+          </div>
+          <button onClick={() => setLibraryModalOpen(false)}>×</button>
+        </div>
+
+        <div className="filter-strip modal-filter-strip">
+          {filterOptions.map((item) => (
+            <button
+              key={item.key}
+              className={libraryApparatus === item.key ? "active" : ""}
+              onClick={() => updateLibraryFilter(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <label className="field library-search-field">
+          <span>搜索动作</span>
+          <input
+            value={libraryKeyword}
+            onChange={(event) => updateLibraryKeyword(event.target.value)}
+            placeholder="输入中文、英文或好处关键词"
+          />
+        </label>
+      </div>
+
+      <div className="library-modal-scroll-body">
+        <div className="library-list paged-library-list modal-library-list">
+          {pagedLibraryActions.map((action) => {
+            const tags = actionTags[action.id] || [];
+            const isFavorite = favoriteIds.includes(action.id);
+
+            return (
+              <div key={action.id} className="library-action-card">
+                <em>{action.apparatus}</em>
+                <div>
+                  <strong>
+                    {action.cnName || action.name}
+                    {action.cnName && action.name ? ` / ${action.name}` : ""}
+                  </strong>
+
+                  <span>{action.defaultBenefit || "暂无动作好处"}</span>
+
+                  {tags.length > 0 && (
+                    <div className="tag-row">
+                      {tags.map((tag) => (
+                        <b key={tag}>{tag}</b>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="library-card-actions">
+                    <button onClick={() => openTagEditor(action)}>打标签</button>
+                    <button
+                      className={isFavorite ? "active" : ""}
+                      onClick={() => toggleFavorite(action)}
+                    >
+                      {isFavorite ? "已收藏" : "收藏"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="pagination-row">
+          <button onClick={previousLibraryPage} disabled={libraryPage <= 1}>
+            上一页
+          </button>
+          <span>
+            第 {Math.min(libraryPage, libraryTotalPages)} / {libraryTotalPages} 页
+            （{filteredLibraryActions.length} 个动作）
+          </span>
+          <button
+            onClick={nextLibraryPage}
+            disabled={libraryPage >= libraryTotalPages}
+          >
+            下一页
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+      {templateModalOpen && (
+        <div className="modal-backdrop" onClick={() => setTemplateModalOpen(false)}>
+          <div
+            className="modal-sheet template-editor-sheet"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div>
+                <h2>{editingTemplateId ? "编辑模板" : "新建模板"}</h2>
+                <p>从动作库点选动作，保存后可在排课页套用。</p>
+              </div>
+              <button onClick={closeTemplateModal}>×</button>
+            </div>
+
+            <label className="field">
+              <span>模板名称</span>
+              <input
+                value={templateName}
+                onChange={(event) => setTemplateName(event.target.value)}
+                placeholder="例如：肩颈理疗 / 核心增强"
+              />
+            </label>
+
+            <label className="field">
+              <span>模板说明</span>
+              <input
+                value={templateDesc}
+                onChange={(event) => setTemplateDesc(event.target.value)}
+                placeholder="例如：适合久坐肩颈紧张"
+              />
+            </label>
+
+            <div className="filter-strip mini-filter-strip">
+              {filterOptions.map((item) => (
+                <button
+                  key={item.key}
+                  className={templateApparatus === item.key ? "active" : ""}
+                  onClick={() => setTemplateApparatus(item.key)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            <label className="field">
+              <span>从动作库添加动作</span>
+              <input
+                value={templateKeyword}
+                onChange={(event) => setTemplateKeyword(event.target.value)}
+                placeholder="搜索动作名称"
+              />
+            </label>
+
+            {selectedTemplateActions.length > 0 && (
+              <div className="selected-template-list">
+                {selectedTemplateActions.map((action, index) => (
+                  <div key={action.id}>
+                    <span>
+                      {index + 1}. {action.apparatus} ·{" "}
+                      {action.cnName || action.name}
+                    </span>
+                    <button onClick={() => moveTemplateAction(action.id, "up")}>
+                      ↑
+                    </button>
+                    <button onClick={() => moveTemplateAction(action.id, "down")}>
+                      ↓
+                    </button>
+                    <button onClick={() => removeActionFromTemplate(action.id)}>
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="template-action-picker">
+              {templateSearchActions.map((action) => {
+                const selected = selectedTemplateActions.some(
+                  (item) => item.id === action.id
+                );
+
+                return (
+                  <button
+                    key={action.id}
+                    className={selected ? "selected" : ""}
+                    onClick={() => addActionToTemplate(action)}
+                  >
+                    <em>{action.apparatus}</em>
+                    <span>{action.cnName || action.name}</span>
+                    {action.cnName && action.name && <small>{action.name}</small>}
+                    <strong>{selected ? "已选" : "+"}</strong>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button className="main-wide-button" onClick={saveCurrentTemplate}>
+              保存模板
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tagTarget && (
+        <div className="modal-backdrop">
+          <div className="modal-sheet small-modal-sheet">
+            <div className="modal-header">
+              <div>
+                <h2>给动作打标签</h2>
+                <p>
+                  {tagTarget.apparatus} · {tagTarget.cnName || tagTarget.name}
+                </p>
+              </div>
+              <button onClick={() => setTagTarget(null)}>×</button>
+            </div>
+
+            <label className="field">
+              <span>主题标签</span>
+              <input
+                value={tagInput}
+                onChange={(event) => setTagInput(event.target.value)}
+                placeholder="例如：核心、柔韧性、肩颈"
+              />
+            </label>
+
+            <p className="settings-tip">
+              第一版先保存标签。后面会把“柔韧性 / 活动度”“核心 / 核心增强”等词做关联推荐。
+            </p>
+
+            <button className="main-wide-button" onClick={saveActionTags}>
+              保存标签
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }
 
-.input-with-icon svg {
-  color: #7f938d;
-  flex: 0 0 auto;
-}
-
-.input-with-icon input {
-  flex: 1;
-  border: 0 !important;
-  background: transparent !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  box-shadow: none !important;
-}
-
-.account-action-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.account-auth-button,
-.account-signout-button {
-  height: 44px;
-  border-radius: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.account-auth-button:disabled,
-.account-signout-button:disabled {
-  opacity: 0.62;
-}
-
-.account-auth-message {
-  margin: -2px 2px 0;
-  color: #0c8f7c;
-  font-size: 13px;
-  line-height: 1.5;
-}
+export default App;
