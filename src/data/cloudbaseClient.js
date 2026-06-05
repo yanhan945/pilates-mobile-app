@@ -1,17 +1,20 @@
-import cloudbase from "@cloudbase/js-sdk/app";
-import "@cloudbase/js-sdk/auth";
-import "@cloudbase/js-sdk/database";
+import cloudbase from "@cloudbase/js-sdk";
 
 const cloudbaseEnvId = import.meta.env.VITE_CLOUDBASE_ENV_ID;
 
 let cloudbaseApp = null;
 let cloudbaseAuth = null;
-let cloudbaseDb = null;
 
 export const isCloudBaseConfigured = Boolean(cloudbaseEnvId);
 
 if (!isCloudBaseConfigured) {
-  console.warn("CloudBase 环境变量 VITE_CLOUDBASE_ENV_ID 缺失，云同步已降级为本机数据");
+  console.warn(
+    "CloudBase env var VITE_CLOUDBASE_ENV_ID is missing; cloud sync is using localStorage fallback."
+  );
+}
+
+export function getCloudBaseEnvId() {
+  return cloudbaseEnvId || "";
 }
 
 export function getCloudBaseApp() {
@@ -26,7 +29,7 @@ export function getCloudBaseApp() {
 
     return cloudbaseApp;
   } catch (error) {
-    console.warn("CloudBase 初始化失败，云同步已降级为本机数据", error);
+    console.warn("CloudBase init failed; using localStorage fallback.", error);
     return null;
   }
 }
@@ -44,22 +47,19 @@ export function getCloudBaseAuth() {
 
     return cloudbaseAuth;
   } catch (error) {
-    console.warn("CloudBase Auth 初始化失败", error);
+    console.warn("CloudBase Auth init failed.", error);
     return null;
   }
 }
 
 export function getCloudBaseDb() {
-  if (cloudbaseDb) return cloudbaseDb;
-
   const app = getCloudBaseApp();
   if (!app) return null;
 
   try {
-    cloudbaseDb = app.database();
-    return cloudbaseDb;
+    return app.database();
   } catch (error) {
-    console.warn("CloudBase 数据库初始化失败", error);
+    console.warn("CloudBase database init failed.", error);
     return null;
   }
 }
@@ -68,6 +68,8 @@ function normalizeCloudBaseUser(user) {
   if (!user) return null;
 
   const id =
+    user.id ||
+    user.sub ||
     user.uid ||
     user.user_id ||
     user.openid ||
@@ -81,8 +83,8 @@ function normalizeCloudBaseUser(user) {
   return {
     id,
     user_id: id,
-    uid: user.uid || id,
-    email: user.email || user.username || "",
+    uid: user.uid || user.id || user.sub || id,
+    email: user.email || user.username || user.user_metadata?.email || "",
     provider: "cloudbase",
     raw: user,
   };
@@ -91,6 +93,8 @@ function normalizeCloudBaseUser(user) {
 function normalizeSignInResult(result) {
   const user =
     result?.data?.user ||
+    result?.data?.session?.user ||
+    result?.data?.session ||
     result?.user ||
     result?.loginState?.user ||
     result?.state?.user ||
@@ -99,15 +103,45 @@ function normalizeSignInResult(result) {
   return normalizeCloudBaseUser(user);
 }
 
+function getAuthErrorMessage(error, fallbackMessage) {
+  if (!error) return fallbackMessage;
+
+  return (
+    error.message ||
+    error.error_description ||
+    error.loginMethodHint ||
+    error.helpMessage ||
+    error.category ||
+    fallbackMessage
+  );
+}
+
+function assertCloudBaseAuthSuccess(result, fallbackMessage) {
+  const authError = result?.error || result?.data?.error;
+
+  if (authError) {
+    const error = new Error(getAuthErrorMessage(authError, fallbackMessage));
+    error.cause = authError;
+    error.cloudbaseError = authError;
+    throw error;
+  }
+
+  return result;
+}
+
 export async function getCloudBaseCurrentUser() {
   const auth = getCloudBaseAuth();
   if (!auth) return null;
 
   try {
     const loginState = auth.hasLoginState?.() || (await auth.getLoginState?.());
-    return normalizeCloudBaseUser(loginState?.user || auth.currentUser || null);
+    const currentUser = auth.getCurrentUser
+      ? await auth.getCurrentUser(false)
+      : auth.currentUser;
+
+    return normalizeCloudBaseUser(loginState?.user || currentUser || auth.currentUser || null);
   } catch (error) {
-    console.warn("读取 CloudBase 登录状态失败", error);
+    console.warn("Failed to read CloudBase login state.", error);
     return null;
   }
 }
@@ -115,12 +149,14 @@ export async function getCloudBaseCurrentUser() {
 export async function signUpCloudBaseWithEmail(email, password) {
   const auth = getCloudBaseAuth();
   if (!auth) {
-    throw new Error("CloudBase 未配置，无法注册账号");
+    throw new Error("CloudBase is not configured; cannot sign up.");
   }
 
-  const result = auth.signUpWithEmailAndPassword
-    ? await auth.signUpWithEmailAndPassword(email, password)
-    : await auth.signUp({ email, password });
+  const result = auth.signUp
+    ? await auth.signUp({ email, password })
+    : await auth.signUpWithEmailAndPassword(email, password);
+
+  assertCloudBaseAuthSuccess(result, "CloudBase sign up failed.");
 
   return normalizeSignInResult(result) || (await getCloudBaseCurrentUser());
 }
@@ -128,12 +164,27 @@ export async function signUpCloudBaseWithEmail(email, password) {
 export async function signInCloudBaseWithEmail(email, password) {
   const auth = getCloudBaseAuth();
   if (!auth) {
-    throw new Error("CloudBase 未配置，无法登录账号");
+    throw new Error("CloudBase is not configured; cannot sign in.");
   }
 
   const result = auth.signInWithPassword
     ? await auth.signInWithPassword({ email, password })
     : await auth.signInWithEmailAndPassword(email, password);
+
+  assertCloudBaseAuthSuccess(result, "CloudBase sign in failed.");
+
+  return normalizeSignInResult(result) || (await getCloudBaseCurrentUser());
+}
+
+export async function signInCloudBaseAnonymously() {
+  const auth = getCloudBaseAuth();
+  if (!auth?.signInAnonymously) {
+    throw new Error("CloudBase is not configured or anonymous sign in is unavailable.");
+  }
+
+  const result = await auth.signInAnonymously({});
+
+  assertCloudBaseAuthSuccess(result, "CloudBase anonymous sign in failed.");
 
   return normalizeSignInResult(result) || (await getCloudBaseCurrentUser());
 }

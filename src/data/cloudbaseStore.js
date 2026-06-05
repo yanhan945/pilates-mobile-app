@@ -30,8 +30,8 @@ export async function getCurrentUser() {
 }
 
 async function getCloudContext() {
-  const db = getCloudBaseDb();
   const user = await getCurrentUser();
+  const db = user ? getCloudBaseDb() : null;
 
   if (!db || !user) {
     return { db: null, user, ready: false };
