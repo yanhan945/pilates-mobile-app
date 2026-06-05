@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import {
+  HomeIcon,
+  CalendarIcon,
   UsersIcon,
+  SettingsIcon,
   MailIcon,
   LockIcon,
   LogInIcon,
@@ -50,12 +53,11 @@ import {
 } from "./data/cloudbaseClient";
 
 const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
-const HOME_ASSET_PATH = "/assets/home-redesign/";
 const TAB_ITEMS = [
-  { key: "home", label: "首页", icon: `${HOME_ASSET_PATH}tab-home.png` },
-  { key: "schedule", label: "排课", icon: `${HOME_ASSET_PATH}tab-schedule.png` },
-  { key: "members", label: "会员", icon: `${HOME_ASSET_PATH}tab-members.png` },
-  { key: "settings", label: "设置", icon: `${HOME_ASSET_PATH}tab-settings.png` },
+  { key: "home", label: "首页", Icon: HomeIcon },
+  { key: "schedule", label: "排课", Icon: CalendarIcon },
+  { key: "members", label: "会员", Icon: UsersIcon },
+  { key: "settings", label: "设置", Icon: SettingsIcon },
 ];
 
 const posterThemeOptions = [
@@ -233,7 +235,7 @@ function App() {
             onClick={() => setActiveTab(item.key)}
           >
             <span className="tab-icon-wrap">
-              <img className="tab-icon" src={item.icon} alt="" />
+              <item.Icon className="tab-icon" size={27} strokeWidth={1.9} />
             </span>
             <span className="tab-label">{item.label}</span>
           </button>
@@ -261,9 +263,11 @@ function HomePage({ members, onOpenSchedule, coachName }) {
     <section className="page home-page">
       <header className="home-hero-card">
         <div className="home-hero-copy">
-          <p className="home-greeting">下午好，</p>
-          <h1>{coachName}</h1>
-          <p className="home-welcome">欢迎回来，今天也要加油呀☀️</p>
+          <h1>
+            <span>下午好，</span>
+            <span>{coachName}</span>
+          </h1>
+          <p className="home-welcome">欢迎回来，今天也要加油呀</p>
         </div>
         <div className="home-hero-dots" aria-hidden="true">
           <span className="active" />
