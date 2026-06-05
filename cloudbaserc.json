@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.cloudbase.net/cli/cloudbaserc.schema.json",
+  "envId": "pilatesapp-d8gyzq1ls9198514c",
+  "app": {
+    "serviceName": "pilates-mobile-app-cn",
+    "framework": "vite",
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "outputDir": "dist",
+    "deployPath": "/pilates-mobile-app-cn",
+    "cwd": ".",
+    "envVariables": {
+      "VITE_CLOUDBASE_ENV_ID": "pilatesapp-d8gyzq1ls9198514c"
+    }
+  }
+}
