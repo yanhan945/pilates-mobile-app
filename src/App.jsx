@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import {
-  HomeIcon,
-  CalendarIcon,
   UsersIcon,
-  SettingsIcon,
   MailIcon,
   LockIcon,
   LogInIcon,
@@ -53,6 +50,13 @@ import {
 } from "./data/cloudbaseClient";
 
 const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
+const HOME_ASSET_PATH = "/assets/home-redesign/";
+const TAB_ITEMS = [
+  { key: "home", label: "首页", icon: `${HOME_ASSET_PATH}tab-home.png` },
+  { key: "schedule", label: "排课", icon: `${HOME_ASSET_PATH}tab-schedule.png` },
+  { key: "members", label: "会员", icon: `${HOME_ASSET_PATH}tab-members.png` },
+  { key: "settings", label: "设置", icon: `${HOME_ASSET_PATH}tab-settings.png` },
+];
 
 const posterThemeOptions = [
   { key: "vitalityOrange", label: "活力橙" },
@@ -192,7 +196,11 @@ function App() {
     <div className="app-shell">
       <main className="phone-page">
         {activeTab === "home" && (
-          <HomePage members={members} onOpenSchedule={openSchedule} />
+          <HomePage
+            members={members}
+            onOpenSchedule={openSchedule}
+            coachName={initialData.settings?.coachName || "严老师"}
+          />
         )}
 
         {activeTab === "schedule" && (
@@ -215,78 +223,114 @@ function App() {
         )}
       </main>
 
-      <nav className="bottom-tabs">
-        <button
-          className={activeTab === "home" ? "tab active" : "tab"}
-          onClick={() => setActiveTab("home")}
-        >
-          <span><HomeIcon /></span>
-          首页
-        </button>
-        <button
-          className={activeTab === "schedule" ? "tab active" : "tab"}
-          onClick={() => setActiveTab("schedule")}
-        >
-          <span><CalendarIcon /></span>
-          排课
-        </button>
-        <button
-          className={activeTab === "members" ? "tab active" : "tab"}
-          onClick={() => setActiveTab("members")}
-        >
-          <span><UsersIcon /></span>
-          会员
-        </button>
-        <button
-          className={activeTab === "settings" ? "tab active" : "tab"}
-          onClick={() => setActiveTab("settings")}
-        >
-          <span><SettingsIcon /></span>
-          设置
-        </button>
+      <nav className="bottom-tabs" aria-label="主导航">
+        {TAB_ITEMS.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            className={activeTab === item.key ? "tab active" : "tab"}
+            aria-current={activeTab === item.key ? "page" : undefined}
+            onClick={() => setActiveTab(item.key)}
+          >
+            <span className="tab-icon-wrap">
+              <img className="tab-icon" src={item.icon} alt="" />
+            </span>
+            <span className="tab-label">{item.label}</span>
+          </button>
+        ))}
       </nav>
     </div>
   );
 }
 
-function HomePage({ members, onOpenSchedule }) {
-  const recentMembers = members.slice(0, 3);
+function HomePage({ members, onOpenSchedule, coachName }) {
+  const recentMembers = members;
+
+  function getMemberAvatar(member) {
+    return (
+      member.avatarUrl ||
+      member.avatar ||
+      member.photoUrl ||
+      member.photo ||
+      member.imageUrl ||
+      ""
+    );
+  }
 
   return (
-    <section className="page">
-      <header className="hero">
-        <p>下午好</p>
-        <h1>严老师</h1>
-        <div className="search-box">搜索会员...</div>
+    <section className="page home-page">
+      <header className="home-hero-card">
+        <div className="home-hero-copy">
+          <p className="home-greeting">下午好，</p>
+          <h1>{coachName}</h1>
+          <p className="home-welcome">欢迎回来，今天也要加油呀☀️</p>
+        </div>
+        <div className="home-hero-dots" aria-hidden="true">
+          <span className="active" />
+          <span />
+          <span />
+        </div>
       </header>
 
-      <section className="section-block">
-        <div className="section-title">
-          <div>
-            <h2>🔥 近期活跃会员</h2>
-            <p>按最近训练频率排序，常来的会员优先显示</p>
+      <div className="home-search-shell">
+        <div className="home-search-box" role="search">
+          <SearchIcon size={27} strokeWidth={1.8} />
+          <span>搜索会员姓名</span>
+          <span className="home-scan-icon" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+        </div>
+      </div>
+
+      <section className="home-member-panel" aria-labelledby="home-recent-title">
+        <div className="home-member-header">
+          <div className="home-title-line">
+            <span className="home-title-bar" aria-hidden="true" />
+            <h2 id="home-recent-title">近期活跃会员</h2>
           </div>
-          <button className="text-button">查看全部 ›</button>
+          <button className="home-view-more" type="button">
+            查看更多
+            <span aria-hidden="true">›</span>
+          </button>
         </div>
 
-        <div className="card-list">
-          {recentMembers.map((member) => (
-            <button
-              className="member-card"
-              key={member.name}
-              onClick={() => onOpenSchedule(member)}
-            >
-              <div className="avatar">{member.name.slice(0, 1)}</div>
-              <div className="member-info">
-                <strong>{member.name}</strong>
-                <p>目标：{member.goal}</p>
-              </div>
-              <div className="member-meta">
-                <strong>{member.lessons}次</strong>
-                <span>{member.lastDate}</span>
-              </div>
-            </button>
-          ))}
+        <div className="home-member-list">
+          {recentMembers.map((member) => {
+            const avatarSrc = getMemberAvatar(member);
+
+            return (
+              <button
+                className="home-member-row"
+                key={member.name}
+                onClick={() => onOpenSchedule(member)}
+              >
+                <span className="home-avatar">
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt={`${member.name}头像`} />
+                  ) : (
+                    <span className="home-default-avatar" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="home-member-info">
+                  <strong>{member.name}</strong>
+                  <span>最后上课：{member.lastDate}</span>
+                </span>
+                <span className="home-member-lessons">
+                  <strong>{member.lessons}</strong>
+                  <span>节</span>
+                </span>
+                <span className="home-member-chevron" aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            );
+          })}
+          {recentMembers.length === 0 && (
+            <div className="home-empty-members">暂无活跃会员</div>
+          )}
         </div>
       </section>
     </section>
