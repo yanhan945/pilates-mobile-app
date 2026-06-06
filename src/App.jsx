@@ -475,6 +475,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   const moreApparatusRef = useRef(null);
   const didAutoSaveOnceRef = useRef(false);
   const isRestoringLessonRef = useRef(false);
+  const [isScheduleInputActive, setIsScheduleInputActive] = useState(false);
 
   const initialSettings = useMemo(() => getAppData().settings || {}, []);
   const templates = useMemo(() => getTemplates(), []);
@@ -534,6 +535,25 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     summary: "",
   });
   const [actions, setActions] = useState([]);
+
+  function growTextareaElement(textarea) {
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }
+
+  function openActionSearchPanel() {
+    setIsRecommendationOpen(true);
+    setIsScheduleInputActive(true);
+
+    window.setTimeout(() => {
+      actionSearchAreaRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 80);
+  }
 
   const lessonOptions = useMemo(() => {
     const max = Math.max(Number(currentMember?.lessons || 0) + 1, lessonNumber, 1);
@@ -674,6 +694,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         !actionSearchAreaRef.current.contains(event.target)
       ) {
         setIsRecommendationOpen(false);
+        setIsScheduleInputActive(false);
       }
 
       if (
@@ -699,6 +720,14 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       document.removeEventListener("touchstart", closeWhenClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle("schedule-input-active", isScheduleInputActive);
+
+    return () => {
+      document.body.classList.remove("schedule-input-active");
+    };
+  }, [isScheduleInputActive]);
 
   function showToast(message, duration = 1600) {
     setSaveMessage(message);
@@ -901,6 +930,16 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         action.id === actionId ? { ...action, [fieldName]: nextValue } : action
       )
     );
+  }
+
+  function handleActionCommentChange(actionId, event) {
+    updateActionField(actionId, "comment", event.target.value);
+    growTextareaElement(event.currentTarget);
+  }
+
+  function handleSummaryChange(event) {
+    updateLessonField("summary", event.target.value);
+    growTextareaElement(event.currentTarget);
   }
 
   function updateActionParams(actionId, fieldName, nextValue) {
@@ -1363,7 +1402,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   }
 
   return (
-    <section className="page schedule-page schedule-v2-page">
+    <section
+      className={`page schedule-page schedule-v2-page${
+        isScheduleInputActive ? " schedule-v2-input-active" : ""
+      }`}
+    >
       <header className="schedule-v2-header">
         <div>
           <h1>普拉提私教助手</h1>
@@ -1583,10 +1626,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             <SearchIcon size={18} />
             <input
               value={searchKeyword}
-              onFocus={() => setIsRecommendationOpen(true)}
+              onFocus={openActionSearchPanel}
               onChange={(event) => {
                 setSearchKeyword(event.target.value);
                 setIsRecommendationOpen(true);
+                setIsScheduleInputActive(true);
               }}
               placeholder="搜索动作关键词"
             />
@@ -1652,9 +1696,9 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
                 <textarea
                   className="schedule-v2-comment-input"
                   value={action.comment || ""}
-                  onChange={(event) =>
-                    updateActionField(action.id, "comment", event.target.value)
-                  }
+                  onFocus={() => setIsScheduleInputActive(true)}
+                  onBlur={() => window.setTimeout(() => setIsScheduleInputActive(false), 120)}
+                  onChange={(event) => handleActionCommentChange(action.id, event)}
                   placeholder="点击添加点评..."
                 />
 
@@ -1779,7 +1823,9 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         </div>
         <textarea
           value={lessonForm.summary}
-          onChange={(event) => updateLessonField("summary", event.target.value)}
+          onFocus={() => setIsScheduleInputActive(true)}
+          onBlur={() => window.setTimeout(() => setIsScheduleInputActive(false), 120)}
+          onChange={handleSummaryChange}
           placeholder="输入课后总结或身体反馈建议..."
         />
       </section>
