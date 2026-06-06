@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import {
+  HomeIcon,
+  CalendarIcon,
   UsersIcon,
+  SettingsIcon,
   MailIcon,
   LockIcon,
   LogInIcon,
@@ -29,11 +32,15 @@ import {
   clearLessonDraft,
   deleteTemplate,
   getAppData,
+  getLessonsByMember,
   getLessonByMemberAndNumber,
   getLessonDraftForMemberAndNumber,
+  getMemberActionMemory,
   getTemplates,
+  saveCustomAction,
   saveLesson,
   saveLessonDraft,
+  saveMemberActionMemory,
   saveSettings,
   saveTemplate,
 } from "./data/localStore";
@@ -50,12 +57,11 @@ import {
 } from "./data/cloudbaseClient";
 
 const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
-const HOME_ASSET_PATH = "/assets/home-redesign/";
 const TAB_ITEMS = [
-  { key: "home", label: "首页", icon: `${HOME_ASSET_PATH}tab-home.png` },
-  { key: "schedule", label: "排课", icon: `${HOME_ASSET_PATH}tab-schedule.png` },
-  { key: "members", label: "会员", icon: `${HOME_ASSET_PATH}tab-members.png` },
-  { key: "settings", label: "设置", icon: `${HOME_ASSET_PATH}tab-settings.png` },
+  { key: "home", label: "首页", Icon: HomeIcon },
+  { key: "schedule", label: "排课", Icon: CalendarIcon },
+  { key: "members", label: "会员", Icon: UsersIcon },
+  { key: "settings", label: "设置", Icon: SettingsIcon },
 ];
 
 const posterThemeOptions = [
@@ -178,7 +184,7 @@ function App() {
 
   const [activeTab, setActiveTab] = useState("home");
   const [selectedMember, setSelectedMember] = useState(null);
-  const [members] = useState(initialData.members);
+  const [members, setMembers] = useState(initialData.members);
   const [languagePreference, setLanguagePreference] = useState(
     initialData.settings.languagePreference || "chinese"
   );
@@ -208,6 +214,7 @@ function App() {
   member={selectedMember}
   members={members}
   languagePreference={languagePreference}
+  onMembersUpdated={setMembers}
 />
         )}
 
@@ -233,7 +240,7 @@ function App() {
             onClick={() => setActiveTab(item.key)}
           >
             <span className="tab-icon-wrap">
-              <img className="tab-icon" src={item.icon} alt="" />
+              <item.Icon className="tab-icon" size={27} strokeWidth={1.9} />
             </span>
             <span className="tab-label">{item.label}</span>
           </button>
@@ -244,6 +251,128 @@ function App() {
 }
 
 function HomePage({ members, onOpenSchedule, coachName }) {
+  const [memberSearch, setMemberSearch] = useState("");
+
+  const filteredMembers = useMemo(() => {
+    const keyword = memberSearch.trim().toLowerCase();
+
+    if (!keyword) return members;
+
+    return members.filter((member) =>
+      [member.name, member.phone, member.goal, member.lastDate]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [members, memberSearch]);
+
+  function getMemberAvatar(member) {
+    return (
+      member.avatarUrl ||
+      member.avatar ||
+      member.photoUrl ||
+      member.photo ||
+      member.imageUrl ||
+      ""
+    );
+  }
+
+  return (
+    <section className="page home-page">
+      <section className="home-hero-card">
+        <div className="home-hero-copy">
+          <h1>
+            <span>下午好，</span>
+            <span>{coachName || "严老师"}</span>
+          </h1>
+          <p className="home-welcome">欢迎回来，今天也要加油呀</p>
+        </div>
+        <div className="home-hero-dots" aria-hidden="true">
+          <span className="active" />
+          <span />
+          <span />
+        </div>
+      </section>
+
+      <div className="home-search-shell">
+        <label className="home-search-box">
+          <SearchIcon size={30} />
+          <input
+            value={memberSearch}
+            onChange={(event) => setMemberSearch(event.target.value)}
+            placeholder="搜索会员姓名"
+            aria-label="搜索会员姓名"
+          />
+          {memberSearch ? (
+            <button
+              className="home-search-clear"
+              type="button"
+              onClick={() => setMemberSearch("")}
+              aria-label="清空搜索"
+            >
+              ×
+            </button>
+          ) : (
+            <span className="home-scan-icon" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+          )}
+        </label>
+      </div>
+
+      <section className="home-member-panel" aria-labelledby="home-recent-title">
+        <div className="home-member-header">
+          <div className="home-title-line">
+            <span className="home-title-bar" />
+            <h2 id="home-recent-title">近期活跃会员</h2>
+          </div>
+        </div>
+
+        <div className="home-member-list">
+          {filteredMembers.map((member) => {
+            const avatarSrc = getMemberAvatar(member);
+
+            return (
+              <button
+                className="home-member-row"
+                key={member.name}
+                onClick={() => onOpenSchedule(member)}
+              >
+                <span className="home-avatar">
+                  {avatarSrc ? (
+                    <img src={avatarSrc} alt={`${member.name}头像`} />
+                  ) : (
+                    <span className="home-default-avatar" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="home-member-info">
+                  <strong>{member.name}</strong>
+                  <span>最后上课：{member.lastDate || "暂无记录"}</span>
+                </span>
+                <span className="home-member-lessons">
+                  <strong>{member.lessons || 0}</strong>
+                  <span>节</span>
+                </span>
+                <span className="home-member-chevron" aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            );
+          })}
+
+          {filteredMembers.length === 0 && (
+            <div className="home-empty-members">没有匹配的会员</div>
+          )}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function LegacyHomePage({ members, onOpenSchedule, coachName }) {
   const recentMembers = members;
 
   function getMemberAvatar(member) {
@@ -261,9 +390,11 @@ function HomePage({ members, onOpenSchedule, coachName }) {
     <section className="page home-page">
       <header className="home-hero-card">
         <div className="home-hero-copy">
-          <p className="home-greeting">下午好，</p>
-          <h1>{coachName}</h1>
-          <p className="home-welcome">欢迎回来，今天也要加油呀☀️</p>
+          <h1>
+            <span>下午好，</span>
+            <span>{coachName}</span>
+          </h1>
+          <p className="home-welcome">欢迎回来，今天也要加油呀</p>
         </div>
         <div className="home-hero-dots" aria-hidden="true">
           <span className="active" />
@@ -337,7 +468,1573 @@ function HomePage({ members, onOpenSchedule, coachName }) {
   );
 }
 
-function SchedulePage({ member, members = [], languagePreference }) {
+function SchedulePage({ member, members = [], languagePreference, onMembersUpdated }) {
+  const memberPickerRef = useRef(null);
+  const actionSearchAreaRef = useRef(null);
+  const quickMenuRef = useRef(null);
+  const moreApparatusRef = useRef(null);
+  const didAutoSaveOnceRef = useRef(false);
+  const isRestoringLessonRef = useRef(false);
+
+  const initialSettings = useMemo(() => getAppData().settings || {}, []);
+  const templates = useMemo(() => getTemplates(), []);
+  const weatherOptions = ["晴", "多云", "小雨", "大雨", "暴雨", "雷雨", "雪"];
+  const primaryApparatusOptions = ["all", "M", "R", "TT", "C", "LB"];
+  const extraApparatusOptions = apparatusOptions.filter(
+    (item) => !primaryApparatusOptions.includes(item.key) && item.key !== "favorite"
+  );
+
+  const [scheduleMember, setScheduleMember] = useState(member || null);
+  const currentMember = scheduleMember;
+  const [lessonNumber, setLessonNumber] = useState(member ? (member.lessons || 0) + 1 : 1);
+  const [isLessonPickerOpen, setIsLessonPickerOpen] = useState(false);
+  const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
+  const [selectedApparatus, setSelectedApparatus] = useState("all");
+  const [isMoreApparatusOpen, setIsMoreApparatusOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isRecommendationOpen, setIsRecommendationOpen] = useState(false);
+  const [themePresets, setThemePresets] = useState(
+    Array.isArray(initialSettings.courseThemes) && initialSettings.courseThemes.length
+      ? initialSettings.courseThemes
+      : ["核心增强", "基础灵活", "脊柱灵活", "美背改善", "柔韧提升"]
+  );
+  const [isThemeLinked, setIsThemeLinked] = useState(true);
+  const [isThemeAddOpen, setIsThemeAddOpen] = useState(false);
+  const [isThemeManagerOpen, setIsThemeManagerOpen] = useState(false);
+  const [newThemeName, setNewThemeName] = useState("");
+  const [isQuickMenuOpen, setIsQuickMenuOpen] = useState(false);
+  const [isQuickPanelOpen, setIsQuickPanelOpen] = useState(false);
+  const [quickMode, setQuickMode] = useState("templates");
+  const [pasteText, setPasteText] = useState("");
+  const [parsedRows, setParsedRows] = useState([]);
+  const [selectedHistoryLesson, setSelectedHistoryLesson] = useState(null);
+  const [isCustomActionOpen, setIsCustomActionOpen] = useState(false);
+  const [customActionDraft, setCustomActionDraft] = useState({
+    apparatus: "M",
+    cnName: "",
+    name: "",
+    benefit: "",
+  });
+  const [expandedParamsId, setExpandedParamsId] = useState("");
+  const [editingActionId, setEditingActionId] = useState("");
+  const [actionEditDraft, setActionEditDraft] = useState({
+    cnName: "",
+    name: "",
+    benefit: "",
+  });
+  const [selectedPosterTheme, setSelectedPosterTheme] = useState("vitalityOrange");
+  const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
+  const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false);
+  const [generatedPosterUrl, setGeneratedPosterUrl] = useState("");
+  const [saveMessage, setSaveMessage] = useState("");
+  const [lessonForm, setLessonForm] = useState({
+    weather: "晴",
+    studentName: member?.name || "",
+    lessonTheme: "",
+    summary: "",
+  });
+  const [actions, setActions] = useState([]);
+
+  const lessonOptions = useMemo(() => {
+    const max = Math.max(Number(currentMember?.lessons || 0) + 1, lessonNumber, 1);
+    return Array.from({ length: max }, (_, index) => index + 1);
+  }, [currentMember?.lessons, lessonNumber]);
+
+  const filteredMembers = useMemo(() => {
+    const keyword = lessonForm.studentName.trim().toLowerCase();
+
+    if (!keyword) return members;
+
+    return members.filter((item) =>
+      [item.name, item.phone, item.goal]
+        .join(" ")
+        .toLowerCase()
+        .includes(keyword)
+    );
+  }, [members, lessonForm.studentName]);
+
+  const addedActionKeys = useMemo(() => {
+    return new Set(
+      actions.map((action) => action.identityKey || getActionIdentityKey(action)).filter(Boolean)
+    );
+  }, [actions]);
+
+  const addedBaseActionIds = useMemo(() => {
+    return new Set(actions.map((action) => action.baseActionId).filter(Boolean));
+  }, [actions]);
+
+  const recommendedActions = useMemo(() => {
+    return searchActions({
+      keyword: searchKeyword,
+      apparatus: selectedApparatus,
+      languagePreference,
+    })
+      .filter((action) => !addedBaseActionIds.has(action.id))
+      .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)))
+      .slice(0, 8);
+  }, [searchKeyword, selectedApparatus, languagePreference, addedBaseActionIds, addedActionKeys]);
+
+  const historyLessons = useMemo(() => {
+    return getLessonsByMember(lessonForm.studentName).filter(
+      (lesson) => Number(lesson.lessonNumber) < Number(lessonNumber)
+    );
+  }, [lessonForm.studentName, lessonNumber, isQuickPanelOpen, saveMessage]);
+
+  useEffect(() => {
+    const nextMember = member
+      ? members.find((item) => item.name === member.name) || member
+      : null;
+
+    const nextLessonNumber = nextMember ? Number(nextMember.lessons || 0) + 1 : 1;
+
+    didAutoSaveOnceRef.current = false;
+    setScheduleMember(nextMember);
+    setLessonNumber(nextLessonNumber);
+  }, [member?.name]);
+
+  useEffect(() => {
+    if (!scheduleMember?.name) return;
+
+    const latestMember = members.find((item) => item.name === scheduleMember.name);
+    if (latestMember) setScheduleMember(latestMember);
+  }, [members, scheduleMember?.name]);
+
+  useEffect(() => {
+    const memberName = currentMember?.name || lessonForm.studentName || "";
+
+    isRestoringLessonRef.current = true;
+
+    const draft = getLessonDraftForMemberAndNumber(memberName, lessonNumber);
+    const savedLesson = getLessonByMemberAndNumber(memberName, lessonNumber);
+    const existingLesson = draft || savedLesson;
+
+    if (existingLesson) {
+      setLessonForm({
+        weather: existingLesson.weather || "晴",
+        studentName: existingLesson.memberName || memberName,
+        lessonTheme: existingLesson.lessonTheme || "",
+        summary: existingLesson.summary || "",
+      });
+      setActions(Array.isArray(existingLesson.actions) ? existingLesson.actions : []);
+    } else {
+      setLessonForm((current) => ({
+        ...current,
+        weather: current.weather || "晴",
+        studentName: memberName,
+        lessonTheme: "",
+        summary: "",
+      }));
+      setActions([]);
+    }
+
+    setSearchKeyword("");
+    setIsRecommendationOpen(false);
+    setExpandedParamsId("");
+    setEditingActionId("");
+
+    setTimeout(() => {
+      isRestoringLessonRef.current = false;
+    }, 0);
+  }, [currentMember?.name, lessonNumber]);
+
+  useEffect(() => {
+    if (isRestoringLessonRef.current) return;
+
+    if (!didAutoSaveOnceRef.current) {
+      didAutoSaveOnceRef.current = true;
+      return;
+    }
+
+    const hasContent =
+      lessonForm.studentName.trim() ||
+      lessonForm.lessonTheme.trim() ||
+      lessonForm.summary.trim() ||
+      actions.length > 0;
+
+    if (!hasContent) return;
+
+    const timer = setTimeout(() => {
+      saveLessonDraft(buildLessonPayload());
+    }, 900);
+
+    return () => clearTimeout(timer);
+  }, [lessonForm, actions, languagePreference, lessonNumber]);
+
+  useEffect(() => {
+    function closeWhenClickOutside(event) {
+      if (
+        memberPickerRef.current &&
+        !memberPickerRef.current.contains(event.target)
+      ) {
+        setIsMemberPickerOpen(false);
+      }
+
+      if (
+        actionSearchAreaRef.current &&
+        !actionSearchAreaRef.current.contains(event.target)
+      ) {
+        setIsRecommendationOpen(false);
+      }
+
+      if (
+        quickMenuRef.current &&
+        !quickMenuRef.current.contains(event.target)
+      ) {
+        setIsQuickMenuOpen(false);
+      }
+
+      if (
+        moreApparatusRef.current &&
+        !moreApparatusRef.current.contains(event.target)
+      ) {
+        setIsMoreApparatusOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", closeWhenClickOutside);
+    document.addEventListener("touchstart", closeWhenClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", closeWhenClickOutside);
+      document.removeEventListener("touchstart", closeWhenClickOutside);
+    };
+  }, []);
+
+  function showToast(message, duration = 1600) {
+    setSaveMessage(message);
+    setTimeout(() => setSaveMessage(""), duration);
+  }
+
+  function syncMembersFromStore() {
+    const latestData = getAppData();
+    onMembersUpdated?.(latestData.members || []);
+
+    const latestMember = (latestData.members || []).find(
+      (item) => item.name === lessonForm.studentName
+    );
+
+    if (latestMember) setScheduleMember(latestMember);
+  }
+
+  function updateLessonField(fieldName, nextValue) {
+    setLessonForm((current) => ({
+      ...current,
+      [fieldName]: nextValue,
+    }));
+  }
+
+  function selectMemberFromPicker(nextMember) {
+    const nextLessonNumber = Number(nextMember.lessons || 0) + 1;
+
+    didAutoSaveOnceRef.current = false;
+    setScheduleMember(nextMember);
+    setLessonNumber(nextLessonNumber);
+    setLessonForm({
+      weather: "晴",
+      studentName: nextMember.name,
+      lessonTheme: "",
+      summary: "",
+    });
+    setActions([]);
+    setSearchKeyword("");
+    setIsMemberPickerOpen(false);
+  }
+
+  function persistThemePresets(nextThemes) {
+    setThemePresets(nextThemes);
+    saveSettings({
+      courseThemes: nextThemes,
+    });
+  }
+
+  function applyThemePreset(theme) {
+    setLessonForm((current) => {
+      if (!isThemeLinked) {
+        return {
+          ...current,
+          lessonTheme: theme,
+        };
+      }
+
+      const parts = String(current.lessonTheme || "")
+        .split(/[、,，\s]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      if (parts.includes(theme)) return current;
+
+      return {
+        ...current,
+        lessonTheme: parts.length ? `${parts.join("、")}、${theme}` : theme,
+      };
+    });
+  }
+
+  function addThemePreset() {
+    const cleanTheme = newThemeName.trim();
+    if (!cleanTheme) return;
+
+    const nextThemes = themePresets.includes(cleanTheme)
+      ? themePresets
+      : [...themePresets, cleanTheme];
+
+    persistThemePresets(nextThemes);
+    applyThemePreset(cleanTheme);
+    setNewThemeName("");
+    setIsThemeAddOpen(false);
+  }
+
+  function removeThemePreset(theme) {
+    persistThemePresets(themePresets.filter((item) => item !== theme));
+  }
+
+  function moveThemePreset(theme, direction) {
+    const index = themePresets.indexOf(theme);
+    const targetIndex = index + direction;
+
+    if (index < 0 || targetIndex < 0 || targetIndex >= themePresets.length) return;
+
+    const nextThemes = [...themePresets];
+    const [removed] = nextThemes.splice(index, 1);
+    nextThemes.splice(targetIndex, 0, removed);
+    persistThemePresets(nextThemes);
+  }
+
+  function getCurrentMemberName() {
+    return lessonForm.studentName.trim() || currentMember?.name || "";
+  }
+
+  function createActionForLesson(action) {
+    const nextAction = createSelectedLessonAction(action);
+    const memberName = getCurrentMemberName();
+    const memory = getMemberActionMemory(memberName, nextAction.identityKey);
+
+    if (!memory) return nextAction;
+
+    return {
+      ...nextAction,
+      name: memory.cnName || nextAction.name,
+      posterName: memory.cnName || nextAction.posterName,
+      cnName: memory.cnName || nextAction.cnName,
+      rawName: memory.name || nextAction.rawName,
+      benefit: memory.benefit || nextAction.benefit,
+    };
+  }
+
+  function buildActionFromKeyword(item) {
+    if (item.baseActionId) {
+      const foundById = getAllActions(languagePreference).find(
+        (action) => action.id === item.baseActionId
+      );
+      if (foundById) return createActionForLesson(foundById);
+    }
+
+    const matchedAction = findBestActionMatch({
+      apparatus: item.apparatus || "all",
+      keyword: item.keyword,
+      languagePreference,
+    });
+
+    if (matchedAction) return createActionForLesson(matchedAction);
+
+    return createTemporaryLessonAction({
+      apparatus:
+        item.apparatus && item.apparatus !== "all"
+          ? item.apparatus
+          : selectedApparatus !== "all"
+            ? selectedApparatus
+            : "M",
+      name: item.keyword,
+    });
+  }
+
+  function addAction(action) {
+    const nextAction = createActionForLesson(action);
+
+    setActions((currentActions) => [...currentActions, nextAction]);
+    setSearchKeyword("");
+    setIsRecommendationOpen(true);
+  }
+
+  function handleSearchAdd() {
+    if (recommendedActions[0]) {
+      addAction(recommendedActions[0]);
+      return;
+    }
+
+    const cleanKeyword = searchKeyword.trim();
+    if (!cleanKeyword) {
+      setIsRecommendationOpen(true);
+      return;
+    }
+
+    setCustomActionDraft({
+      apparatus: selectedApparatus === "all" ? "M" : selectedApparatus,
+      cnName: cleanKeyword,
+      name: "",
+      benefit: "",
+    });
+    setIsCustomActionOpen(true);
+  }
+
+  function saveCustomActionDraft() {
+    const cleanName = customActionDraft.cnName.trim() || customActionDraft.name.trim();
+
+    if (!cleanName) return;
+
+    const savedAction = saveCustomAction({
+      apparatus: customActionDraft.apparatus || "M",
+      cnName: customActionDraft.cnName.trim() || cleanName,
+      name: customActionDraft.name.trim() || cleanName,
+      defaultBenefit: customActionDraft.benefit.trim(),
+    });
+
+    setActions((currentActions) => [...currentActions, createActionForLesson(savedAction)]);
+    setSearchKeyword("");
+    setIsCustomActionOpen(false);
+    showToast("动作已加入动作库");
+  }
+
+  function updateActionField(actionId, fieldName, nextValue) {
+    setActions((currentActions) =>
+      currentActions.map((action) =>
+        action.id === actionId ? { ...action, [fieldName]: nextValue } : action
+      )
+    );
+  }
+
+  function updateActionParams(actionId, fieldName, nextValue) {
+    setActions((currentActions) =>
+      currentActions.map((action) =>
+        action.id === actionId
+          ? {
+              ...action,
+              params: {
+                ...(action.params || {}),
+                [fieldName]: nextValue,
+              },
+            }
+          : action
+      )
+    );
+  }
+
+  function deleteAction(actionId) {
+    setActions((currentActions) => currentActions.filter((action) => action.id !== actionId));
+  }
+
+  function moveAction(actionId, direction) {
+    setActions((currentActions) => {
+      const index = currentActions.findIndex((action) => action.id === actionId);
+      const targetIndex = index + direction;
+
+      if (index < 0 || targetIndex < 0 || targetIndex >= currentActions.length) {
+        return currentActions;
+      }
+
+      const nextActions = [...currentActions];
+      const [removed] = nextActions.splice(index, 1);
+      nextActions.splice(targetIndex, 0, removed);
+      return nextActions;
+    });
+  }
+
+  function openActionEdit(action) {
+    setExpandedParamsId("");
+    setEditingActionId(action.id);
+    setActionEditDraft({
+      cnName: action.cnName || action.name || "",
+      name: action.rawName || action.name || "",
+      benefit: action.benefit || "",
+    });
+  }
+
+  function saveActionEdit(actionId) {
+    const action = actions.find((item) => item.id === actionId);
+    if (!action) return;
+
+    const cnName = actionEditDraft.cnName.trim();
+    const name = actionEditDraft.name.trim();
+    const benefit = actionEditDraft.benefit.trim();
+
+    setActions((currentActions) =>
+      currentActions.map((item) =>
+        item.id === actionId
+          ? {
+              ...item,
+              name: cnName || item.name,
+              posterName: cnName || item.posterName,
+              cnName: cnName || item.cnName,
+              rawName: name || item.rawName,
+              benefit,
+            }
+          : item
+      )
+    );
+
+    saveMemberActionMemory({
+      memberName: getCurrentMemberName(),
+      actionIdentityKey: action.identityKey || getActionIdentityKey(action),
+      cnName: cnName || action.cnName || action.name,
+      name: name || action.rawName || "",
+      benefit,
+    });
+
+    setEditingActionId("");
+    showToast("动作记忆已保存");
+  }
+
+  function getActionParamText(action) {
+    const params = action.params || {};
+    const parts = [];
+
+    if (params.reps) parts.push(`${params.reps}次`);
+    if (params.sets) parts.push(`${params.sets}组`);
+    if (params.seconds) parts.push(`${params.seconds}秒`);
+    if (params.kg) parts.push(`${params.kg}公斤`);
+    if (params.spring) parts.push(`${params.spring}弹簧`);
+
+    return parts.join(" · ");
+  }
+
+  function parseImportText() {
+    const defaultApparatus = selectedApparatus === "all" ? "all" : selectedApparatus;
+    const rows = pasteText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line, index) => {
+        const parsed = parseActionLine(line);
+
+        return {
+          id: `import-${Date.now()}-${index}`,
+          rawText: line,
+          apparatus: parsed?.apparatus || defaultApparatus,
+          keyword: parsed?.keyword || line,
+        };
+      });
+
+    setParsedRows(rows);
+  }
+
+  function removeParsedRow(rowId) {
+    setParsedRows((currentRows) => currentRows.filter((row) => row.id !== rowId));
+  }
+
+  function confirmImportRows() {
+    if (!parsedRows.length) return;
+
+    setActions(parsedRows.map(buildActionFromKeyword));
+    setIsQuickPanelOpen(false);
+    setPasteText("");
+    setParsedRows([]);
+  }
+
+  function applyTemplate(template) {
+    const nextActions = (template.actions || []).map(buildActionFromKeyword);
+
+    setActions(nextActions);
+    setLessonForm((current) => ({
+      ...current,
+      lessonTheme: template.name || current.lessonTheme,
+    }));
+    setIsQuickPanelOpen(false);
+  }
+
+  function copyHistoryLesson() {
+    const lesson = historyLessons.find(
+      (item) => Number(item.lessonNumber) === Number(selectedHistoryLesson)
+    );
+
+    if (!lesson) return;
+
+    setLessonForm((current) => ({
+      ...current,
+      lessonTheme: lesson.lessonTheme || "",
+      summary: lesson.summary || "",
+    }));
+    setActions(Array.isArray(lesson.actions) ? lesson.actions : []);
+    setSelectedHistoryLesson(null);
+    setIsQuickPanelOpen(false);
+    showToast(`已复制第${lesson.lessonNumber}节`);
+  }
+
+  function buildLessonPayload() {
+    return {
+      id: `lesson-${lessonForm.studentName || "guest"}-${lessonNumber}`,
+      memberName: lessonForm.studentName,
+      lessonNumber,
+      lessonDate: getTodayLabel(),
+      weather: lessonForm.weather,
+      lessonTheme: lessonForm.lessonTheme,
+      posterTheme: selectedPosterTheme,
+      actions,
+      summary: lessonForm.summary,
+      languagePreference,
+    };
+  }
+
+  function saveCurrentLesson() {
+    if (!lessonForm.studentName.trim()) {
+      showToast("请先选择或输入学员");
+      return;
+    }
+
+    saveLesson(buildLessonPayload());
+    syncMembersFromStore();
+    showToast("课程已保存");
+  }
+
+  function clearCurrentDraft() {
+    clearLessonDraft(lessonForm.studentName, lessonNumber);
+    setLessonForm({
+      weather: "晴",
+      studentName: currentMember?.name || "",
+      lessonTheme: "",
+      summary: "",
+    });
+    setActions([]);
+    setPasteText("");
+    setParsedRows([]);
+    setSearchKeyword("");
+    setExpandedParamsId("");
+    setEditingActionId("");
+    showToast("已清空当前草稿");
+  }
+
+  function getPosterActionName(action) {
+    const cnName = action.cnName || action.name || "";
+    const enName = action.rawName || action.name || "";
+
+    if (languagePreference === "english") return enName || cnName;
+
+    if (languagePreference === "mixed") {
+      if (cnName && enName && cnName !== enName) return `${cnName} / ${enName}`;
+      return cnName || enName;
+    }
+
+    return cnName || enName;
+  }
+
+  function buildPosterPayload() {
+    const latestSettings = getAppData().settings || {};
+
+    return {
+      posterTheme: selectedPosterTheme,
+      studentName: lessonForm.studentName || "未命名学员",
+      studentNameSlug: lessonForm.studentName || "student",
+      date: getTodayLabel(),
+      weather: lessonForm.weather || "晴",
+      lessonNumber: `第${lessonNumber}课`,
+      courseTheme: lessonForm.lessonTheme || "",
+      studioName: latestSettings.studioNameCn || "",
+      studioSubName: latestSettings.studioNameEn || "",
+      logo: latestSettings.logoDataUrl || "",
+      summary: lessonForm.summary || "",
+      actions: actions.map((action, index) => ({
+        number: index + 1,
+        equipment: action.apparatus || "",
+        name: getPosterActionName(action),
+        benefit: action.benefit || "",
+        comment: action.comment || "",
+      })),
+    };
+  }
+
+  async function generatePoster() {
+    if (!lessonForm.studentName.trim()) {
+      showToast("请先填写学员姓名");
+      return;
+    }
+
+    if (actions.length === 0) {
+      showToast("请先添加至少一个动作");
+      return;
+    }
+
+    try {
+      showToast("正在生成海报...", 2200);
+      saveLesson(buildLessonPayload());
+      syncMembersFromStore();
+
+      const response = await fetch(POSTER_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(buildPosterPayload()),
+      });
+
+      if (!response.ok) {
+        throw new Error(`生成失败：${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.imageUrl) {
+        throw new Error(result.message || "后端没有返回海报图片地址");
+      }
+
+      setGeneratedPosterUrl(result.imageUrl);
+      setIsPosterModalOpen(false);
+      showToast("海报已生成");
+    } catch (error) {
+      console.error("生成海报失败", error);
+      showToast("生成海报失败，请检查后端接口", 2200);
+    }
+  }
+
+  function buildCourseText() {
+    const actionText = actions
+      .map((action, index) => {
+        const params = getActionParamText(action);
+        return [
+          `${index + 1}. [${action.apparatus || "-"}] ${action.name || action.cnName || action.rawName || ""}`,
+          action.rawName && action.rawName !== action.name ? `   ${action.rawName}` : "",
+          action.benefit ? `   好处：${action.benefit}` : "",
+          action.comment ? `   点评：${action.comment}` : "",
+          params ? `   参数：${params}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n");
+      })
+      .join("\n");
+
+    return [
+      `${lessonForm.studentName || "未命名学员"} · 第${lessonNumber}节`,
+      `日期：${getTodayLabel()}`,
+      `天气：${lessonForm.weather || "晴"}`,
+      `主题：${lessonForm.lessonTheme || "未填写"}`,
+      "",
+      "训练动作：",
+      actionText || "暂无动作",
+      "",
+      "课后总结：",
+      lessonForm.summary || "暂无总结",
+    ].join("\n");
+  }
+
+  async function copyCourseText() {
+    const text = buildCourseText();
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+
+      showToast("课程文本已复制");
+    } catch (error) {
+      console.error("复制课程文本失败", error);
+      showToast("复制失败，请稍后再试");
+    }
+  }
+
+  function openQuickMode(mode) {
+    setQuickMode(mode);
+    setIsQuickPanelOpen(true);
+    setIsQuickMenuOpen(false);
+    if (mode === "history") setSelectedHistoryLesson(null);
+  }
+
+  function getQuickTitle() {
+    if (quickMode === "paste") return "导入动作文本";
+    if (quickMode === "history") return "复制历史课程";
+    return "套用课程模板";
+  }
+
+  function renderQuickPanelBody() {
+    if (quickMode === "templates") {
+      return (
+        <div className="schedule-v2-template-list">
+          {templates.map((template) => (
+            <button
+              key={template.id}
+              type="button"
+              className="schedule-v2-template-row"
+              onClick={() => applyTemplate(template)}
+            >
+              <span>
+                <strong>{template.name}</strong>
+                <small>{template.desc || "设置页保存的模板"}</small>
+              </span>
+              <em>{template.actions?.length || 0}个动作</em>
+            </button>
+          ))}
+
+          {templates.length === 0 && (
+            <div className="schedule-v2-empty">暂无模板，请先到设置页创建。</div>
+          )}
+        </div>
+      );
+    }
+
+    if (quickMode === "paste") {
+      return (
+        <div className="schedule-v2-import-panel">
+          <textarea
+            value={pasteText}
+            onChange={(event) => setPasteText(event.target.value)}
+            placeholder={"每行一个动作，例如：\nR 蹬腿系列\nTT 坐姿推开\nM 卷腹"}
+          />
+          <button
+            type="button"
+            className="schedule-v2-primary-wide"
+            onClick={parseImportText}
+          >
+            解析
+          </button>
+
+          {parsedRows.length > 0 && (
+            <div className="schedule-v2-import-preview">
+              {parsedRows.map((row) => {
+                const previewAction = buildActionFromKeyword(row);
+
+                return (
+                  <div className="schedule-v2-import-row" key={row.id}>
+                    <span className="schedule-v2-apparatus-badge">{previewAction.apparatus}</span>
+                    <span>
+                      <strong>{previewAction.name || row.keyword}</strong>
+                      <small>{previewAction.benefit || "暂无动作好处"}</small>
+                    </span>
+                    <button type="button" onClick={() => removeParsedRow(row.id)}>
+                      ×
+                    </button>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                className="schedule-v2-primary-wide"
+                onClick={confirmImportRows}
+              >
+                确认导入
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="schedule-v2-history-list">
+        {historyLessons.map((lesson) => (
+          <button
+            key={lesson.id}
+            type="button"
+            className={
+              Number(selectedHistoryLesson) === Number(lesson.lessonNumber)
+                ? "active"
+                : ""
+            }
+            onClick={() => setSelectedHistoryLesson(lesson.lessonNumber)}
+          >
+            <span>
+              <strong>第{lesson.lessonNumber}节</strong>
+              <small>{lesson.lessonTheme || lesson.summary || "已保存课程"}</small>
+            </span>
+            <em>{lesson.actions?.length || 0}个动作</em>
+          </button>
+        ))}
+
+        {historyLessons.length === 0 && (
+          <div className="schedule-v2-empty">当前学员还没有可复制的历史课程。</div>
+        )}
+
+        <button
+          type="button"
+          className="schedule-v2-primary-wide"
+          disabled={!selectedHistoryLesson}
+          onClick={copyHistoryLesson}
+        >
+          确认复制
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <section className="page schedule-page schedule-v2-page">
+      <header className="schedule-v2-header">
+        <div>
+          <h1>普拉提私教助手</h1>
+          <p>
+            {lessonForm.studentName || "选择学员"} · {getTodayLabel()}
+          </p>
+        </div>
+        <div className="schedule-v2-quick-wrap" ref={quickMenuRef}>
+          <button
+            type="button"
+            className="schedule-v2-quick-button"
+            onClick={() => setIsQuickMenuOpen((current) => !current)}
+          >
+            <SparklesIcon size={17} />
+            快速排课
+          </button>
+          {isQuickMenuOpen && (
+            <div className="schedule-v2-quick-menu">
+              <button type="button" onClick={() => openQuickMode("templates")}>
+                <ClipboardListIcon size={15} />
+                模板
+              </button>
+              <button type="button" onClick={() => openQuickMode("paste")}>
+                <FileTextIcon size={15} />
+                导入
+              </button>
+              <button type="button" onClick={() => openQuickMode("history")}>
+                <SaveIcon size={15} />
+                复制课程
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {saveMessage && <div className="save-toast schedule-v2-toast">{saveMessage}</div>}
+
+      <section className="schedule-v2-card">
+        <div className="schedule-v2-card-title">
+          <h2>
+            <ClipboardListIcon size={18} />
+            课程信息
+          </h2>
+          <button type="button" onClick={clearCurrentDraft}>
+            清空当前草稿
+          </button>
+        </div>
+
+        <div className="schedule-v2-meta-grid">
+          <label>
+            <span>日期</span>
+            <strong>{getTodayLabel().split(" · ")[0] || getTodayLabel()}</strong>
+          </label>
+          <label>
+            <span>天气</span>
+            <select
+              value={lessonForm.weather}
+              onChange={(event) => updateLessonField("weather", event.target.value)}
+            >
+              {weatherOptions.map((weather) => (
+                <option key={weather} value={weather}>
+                  {weather}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>课次</span>
+            <button
+              type="button"
+              className="schedule-v2-select-button"
+              onClick={() => setIsLessonPickerOpen(true)}
+            >
+              第{lessonNumber}节
+            </button>
+          </label>
+        </div>
+
+        <div className="schedule-v2-field member-picker-field" ref={memberPickerRef}>
+          <span>学员姓名</span>
+          <input
+            value={lessonForm.studentName}
+            onFocus={() => setIsMemberPickerOpen(true)}
+            onChange={(event) => {
+              setScheduleMember(null);
+              updateLessonField("studentName", event.target.value);
+              setIsMemberPickerOpen(true);
+            }}
+            placeholder="搜索或输入学员姓名"
+          />
+
+          {isMemberPickerOpen && (
+            <div className="schedule-v2-dropdown member-picker-menu">
+              {filteredMembers.length > 0 ? (
+                filteredMembers.map((item) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => selectMemberFromPicker(item)}
+                  >
+                    <strong>{item.name}</strong>
+                    <span>{item.goal || "暂无训练目标"} · 已上 {item.lessons || 0} 节</span>
+                  </button>
+                ))
+              ) : (
+                <p>没有匹配会员，可以直接保留这个姓名。</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="schedule-v2-readonly-grid">
+          <div>
+            <span>训练目标</span>
+            <strong>{currentMember?.goal || "暂无训练目标"}</strong>
+          </div>
+          <div>
+            <span>禁忌症</span>
+            <strong>{currentMember?.contraindications || currentMember?.taboo || "无"}</strong>
+          </div>
+        </div>
+
+        <div className="schedule-v2-field">
+          <div className="schedule-v2-label-row">
+            <span>课程主题</span>
+            <button
+              type="button"
+              className={isThemeLinked ? "active" : ""}
+              onClick={() => setIsThemeLinked((current) => !current)}
+            >
+              关联
+            </button>
+          </div>
+          <div className="schedule-v2-theme-input-row">
+            <input
+              value={lessonForm.lessonTheme}
+              onChange={(event) => updateLessonField("lessonTheme", event.target.value)}
+              placeholder="输入课程主题或选择预设主题..."
+            />
+            <button type="button" onClick={() => setIsThemeAddOpen(true)}>
+              +
+            </button>
+            <button type="button" onClick={() => setIsThemeManagerOpen(true)}>
+              -
+            </button>
+          </div>
+        </div>
+
+        <div className="schedule-v2-theme-strip">
+          {themePresets.map((theme) => (
+            <button key={theme} type="button" onClick={() => applyThemePreset(theme)}>
+              {theme}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="schedule-v2-card">
+        <div className="schedule-v2-card-title">
+          <h2>
+            <SparklesIcon size={18} />
+            训练动作详情
+          </h2>
+          <span>{actions.length}个动作</span>
+        </div>
+
+        <div className="schedule-v2-filter-row">
+          {primaryApparatusOptions.map((key) => {
+            const item = apparatusOptions.find((option) => option.key === key);
+
+            return (
+              <button
+                key={key}
+                type="button"
+                className={selectedApparatus === key ? "active" : ""}
+                onClick={() => {
+                  setSelectedApparatus(key);
+                  setIsMoreApparatusOpen(false);
+                  setIsRecommendationOpen(true);
+                }}
+              >
+                {item?.label || key}
+              </button>
+            );
+          })}
+          <div className="schedule-v2-more-filter" ref={moreApparatusRef}>
+            <button
+              type="button"
+              className={!primaryApparatusOptions.includes(selectedApparatus) ? "active" : ""}
+              onClick={() => setIsMoreApparatusOpen((current) => !current)}
+            >
+              更多
+            </button>
+            {isMoreApparatusOpen && (
+              <div className="schedule-v2-dropdown schedule-v2-more-menu">
+                {extraApparatusOptions.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedApparatus(item.key);
+                      setIsMoreApparatusOpen(false);
+                      setIsRecommendationOpen(true);
+                    }}
+                  >
+                    <strong>{item.label}</strong>
+                    <span>{item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="schedule-v2-action-search" ref={actionSearchAreaRef}>
+          <label>
+            <SearchIcon size={18} />
+            <input
+              value={searchKeyword}
+              onFocus={() => setIsRecommendationOpen(true)}
+              onChange={(event) => {
+                setSearchKeyword(event.target.value);
+                setIsRecommendationOpen(true);
+              }}
+              placeholder="搜索动作关键词"
+            />
+          </label>
+          <button type="button" onClick={handleSearchAdd}>
+            <PlusIcon size={23} />
+          </button>
+
+          {isRecommendationOpen && (
+            <div className="schedule-v2-recommend-panel">
+              <div className="schedule-v2-recommend-head">
+                <strong>推荐动作</strong>
+                <span>点选后可连续添加</span>
+              </div>
+              {recommendedActions.map((action) => (
+                <button key={action.id} type="button" onClick={() => addAction(action)}>
+                  <span>
+                    <strong>{action.displayName}</strong>
+                    <small>{action.defaultBenefit || "暂无动作好处"}</small>
+                  </span>
+                  <em>{action.apparatus}</em>
+                </button>
+              ))}
+              {recommendedActions.length === 0 && (
+                <p>没有找到动作，点击加号可新增到动作库。</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="schedule-v2-action-list">
+          {actions.map((action, index) => {
+            const paramText = getActionParamText(action);
+
+            return (
+              <article className="schedule-v2-action-card" key={action.id}>
+                <div className="schedule-v2-action-top">
+                  <span className="schedule-v2-action-number">{index + 1}</span>
+                  <span className="schedule-v2-apparatus-badge">{action.apparatus || "-"}</span>
+                  <div>
+                    <strong>{action.name || action.cnName || action.rawName}</strong>
+                    {action.rawName && action.rawName !== action.name && (
+                      <small>{action.rawName}</small>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="schedule-v2-icon-button"
+                    onClick={() =>
+                      setExpandedParamsId(
+                        expandedParamsId === action.id ? "" : action.id
+                      )
+                    }
+                  >
+                    ⌄
+                  </button>
+                </div>
+
+                <p className="schedule-v2-action-benefit">
+                  {action.benefit || "暂无动作好处"}
+                </p>
+
+                <textarea
+                  className="schedule-v2-comment-input"
+                  value={action.comment || ""}
+                  onChange={(event) =>
+                    updateActionField(action.id, "comment", event.target.value)
+                  }
+                  placeholder="点击添加点评..."
+                />
+
+                <div className="schedule-v2-action-tools">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedParamsId(
+                        expandedParamsId === action.id ? "" : action.id
+                      )
+                    }
+                  >
+                    参数
+                  </button>
+                  <button type="button" onClick={() => openActionEdit(action)}>
+                    编辑动作
+                  </button>
+                  <button type="button" onClick={() => moveAction(action.id, -1)} disabled={index === 0}>
+                    上移
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveAction(action.id, 1)}
+                    disabled={index === actions.length - 1}
+                  >
+                    下移
+                  </button>
+                  <button type="button" onClick={() => deleteAction(action.id)}>
+                    删除
+                  </button>
+                </div>
+
+                {paramText && <div className="schedule-v2-param-text">{paramText}</div>}
+
+                {expandedParamsId === action.id && (
+                  <div className="schedule-v2-inline-panel schedule-v2-param-panel">
+                    {[
+                      ["sets", "组数"],
+                      ["reps", "次数"],
+                      ["seconds", "秒数"],
+                      ["kg", "公斤"],
+                      ["spring", "弹簧"],
+                    ].map(([field, label]) => (
+                      <label key={field}>
+                        <span>{label}</span>
+                        <input
+                          value={action.params?.[field] || ""}
+                          onChange={(event) =>
+                            updateActionParams(action.id, field, event.target.value)
+                          }
+                          placeholder={field === "spring" ? "如一红" : "可选"}
+                        />
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {editingActionId === action.id && (
+                  <div className="schedule-v2-inline-panel schedule-v2-edit-panel">
+                    <label>
+                      <span>中文名</span>
+                      <input
+                        value={actionEditDraft.cnName}
+                        onChange={(event) =>
+                          setActionEditDraft((current) => ({
+                            ...current,
+                            cnName: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>英文名</span>
+                      <input
+                        value={actionEditDraft.name}
+                        onChange={(event) =>
+                          setActionEditDraft((current) => ({
+                            ...current,
+                            name: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>动作好处</span>
+                      <textarea
+                        value={actionEditDraft.benefit}
+                        onChange={(event) =>
+                          setActionEditDraft((current) => ({
+                            ...current,
+                            benefit: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <div className="schedule-v2-panel-actions">
+                      <button type="button" onClick={() => setEditingActionId("")}>
+                        取消
+                      </button>
+                      <button type="button" onClick={() => saveActionEdit(action.id)}>
+                        保存
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+
+          {actions.length === 0 && (
+            <div className="schedule-v2-empty">搜索或导入动作后，会显示在这里。</div>
+          )}
+        </div>
+      </section>
+
+      <section className="schedule-v2-card schedule-v2-summary-card">
+        <div className="schedule-v2-card-title">
+          <h2>
+            <FileTextIcon size={18} />
+            课后总结
+          </h2>
+        </div>
+        <textarea
+          value={lessonForm.summary}
+          onChange={(event) => updateLessonField("summary", event.target.value)}
+          placeholder="输入课后总结或身体反馈建议..."
+        />
+      </section>
+
+      <div className="schedule-v2-bottom-bar">
+        <button type="button" onClick={saveCurrentLesson}>
+          <SaveIcon size={21} />
+          <span>保存</span>
+        </button>
+        <button type="button" onClick={() => setIsPosterModalOpen(true)}>
+          <ImageIcon size={21} />
+          <span>海报</span>
+        </button>
+        <button type="button" onClick={copyCourseText}>
+          <ClipboardListIcon size={21} />
+          <span>复制</span>
+        </button>
+      </div>
+
+      {isLessonPickerOpen && (
+        <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsLessonPickerOpen(false)}>
+          <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>选择课次</h2>
+                <p>可切换历史课次或当前新课。</p>
+              </div>
+              <button type="button" onClick={() => setIsLessonPickerOpen(false)}>×</button>
+            </div>
+            <div className="lesson-picker-grid schedule-v2-lesson-grid">
+              {lessonOptions.map((number) => (
+                <button
+                  key={number}
+                  type="button"
+                  className={lessonNumber === number ? "active" : ""}
+                  onClick={() => {
+                    setLessonNumber(number);
+                    setIsLessonPickerOpen(false);
+                  }}
+                >
+                  第{number}节
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isThemeAddOpen && (
+        <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsThemeAddOpen(false)}>
+          <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>新增主题</h2>
+                <p>保存后会出现在主题横向列表。</p>
+              </div>
+              <button type="button" onClick={() => setIsThemeAddOpen(false)}>×</button>
+            </div>
+            <label className="schedule-v2-field">
+              <span>主题名称</span>
+              <input
+                value={newThemeName}
+                onChange={(event) => setNewThemeName(event.target.value)}
+                placeholder="例如：肩背塑形"
+              />
+            </label>
+            <button type="button" className="schedule-v2-primary-wide" onClick={addThemePreset}>
+              保存主题
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isThemeManagerOpen && (
+        <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsThemeManagerOpen(false)}>
+          <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>管理主题</h2>
+                <p>用上/下按钮调整展示顺序。</p>
+              </div>
+              <button type="button" onClick={() => setIsThemeManagerOpen(false)}>×</button>
+            </div>
+            <div className="schedule-v2-theme-manager">
+              {themePresets.map((theme, index) => (
+                <div key={theme}>
+                  <strong>{theme}</strong>
+                  <button type="button" onClick={() => moveThemePreset(theme, -1)} disabled={index === 0}>↑</button>
+                  <button type="button" onClick={() => moveThemePreset(theme, 1)} disabled={index === themePresets.length - 1}>↓</button>
+                  <button type="button" onClick={() => removeThemePreset(theme)}>删除</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isCustomActionOpen && (
+        <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsCustomActionOpen(false)}>
+          <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>新增动作</h2>
+                <p>保存后会进入动作库，并加入当前课程。</p>
+              </div>
+              <button type="button" onClick={() => setIsCustomActionOpen(false)}>×</button>
+            </div>
+            <div className="schedule-v2-custom-grid">
+              <label className="schedule-v2-field">
+                <span>器械</span>
+                <select
+                  value={customActionDraft.apparatus}
+                  onChange={(event) =>
+                    setCustomActionDraft((current) => ({
+                      ...current,
+                      apparatus: event.target.value,
+                    }))
+                  }
+                >
+                  {apparatusOptions.filter((item) => item.key !== "all" && item.key !== "favorite").map((item) => (
+                    <option key={item.key} value={item.key}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="schedule-v2-field">
+                <span>中文名</span>
+                <input
+                  value={customActionDraft.cnName}
+                  onChange={(event) =>
+                    setCustomActionDraft((current) => ({
+                      ...current,
+                      cnName: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="schedule-v2-field">
+                <span>英文名</span>
+                <input
+                  value={customActionDraft.name}
+                  onChange={(event) =>
+                    setCustomActionDraft((current) => ({
+                      ...current,
+                      name: event.target.value,
+                    }))
+                  }
+                  placeholder="可选"
+                />
+              </label>
+              <label className="schedule-v2-field">
+                <span>动作好处</span>
+                <textarea
+                  value={customActionDraft.benefit}
+                  onChange={(event) =>
+                    setCustomActionDraft((current) => ({
+                      ...current,
+                      benefit: event.target.value,
+                    }))
+                  }
+                  placeholder="填写这个动作的训练好处"
+                />
+              </label>
+            </div>
+            <button type="button" className="schedule-v2-primary-wide" onClick={saveCustomActionDraft}>
+              保存并加入
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isQuickPanelOpen && (
+        <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsQuickPanelOpen(false)}>
+          <div className="modal-sheet schedule-v2-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>{getQuickTitle()}</h2>
+                <p>选择后会刷新当前动作列表。</p>
+              </div>
+              <button type="button" onClick={() => setIsQuickPanelOpen(false)}>×</button>
+            </div>
+            {renderQuickPanelBody()}
+          </div>
+        </div>
+      )}
+
+      {isPosterModalOpen && (
+        <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsPosterModalOpen(false)}>
+          <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>海报</h2>
+                <p>选择主题后可预览或生成。</p>
+              </div>
+              <button type="button" onClick={() => setIsPosterModalOpen(false)}>×</button>
+            </div>
+            <div className="poster-theme-strip schedule-v2-poster-strip">
+              {posterThemeOptions.map((theme) => (
+                <button
+                  key={theme.key}
+                  type="button"
+                  className={selectedPosterTheme === theme.key ? "active" : ""}
+                  onClick={() => setSelectedPosterTheme(theme.key)}
+                >
+                  {theme.label}
+                </button>
+              ))}
+            </div>
+            {isPosterPreviewOpen && (
+              <div className="poster-preview-placeholder schedule-v2-poster-preview">
+                <strong>{posterThemeOptions.find((item) => item.key === selectedPosterTheme)?.label}</strong>
+                <p>{lessonForm.studentName || "学员"} · 第{lessonNumber}节 · {lessonForm.lessonTheme || "课程主题"}</p>
+              </div>
+            )}
+            <div className="schedule-v2-panel-actions">
+              <button type="button" onClick={() => setIsPosterPreviewOpen((current) => !current)}>
+                预览
+              </button>
+              <button type="button" onClick={generatePoster}>
+                生成
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {generatedPosterUrl && (
+        <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setGeneratedPosterUrl("")}>
+          <div className="modal-sheet poster-result-sheet schedule-v2-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>海报已生成</h2>
+                <p>可打开原图保存。</p>
+              </div>
+              <button type="button" onClick={() => setGeneratedPosterUrl("")}>×</button>
+            </div>
+            <div className="poster-result-image-wrap">
+              <img src={generatedPosterUrl} alt="生成的课后海报" />
+            </div>
+            <button
+              type="button"
+              className="schedule-v2-primary-wide"
+              onClick={() => window.open(generatedPosterUrl, "_blank")}
+            >
+              打开原图
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function LegacySchedulePage({ member, members = [], languagePreference }) {
   const searchInputRef = useRef(null);
   const apparatusPickerRef = useRef(null);
   const actionSearchAreaRef = useRef(null);

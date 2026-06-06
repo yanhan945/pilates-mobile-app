@@ -74,6 +74,8 @@ const defaultState = {
   lessonDraft: null,
 
   lessons: [],
+  customActions: [],
+  memberActionMemories: {},
 
   // 后续给动作收藏、标签、自定义动作覆盖层预留
   userActionMeta: {},
@@ -134,6 +136,11 @@ function normalizeState(parsed = {}) {
         ? parsed.templates
         : defaultTemplates,
     lessons: Array.isArray(parsed.lessons) ? parsed.lessons : [],
+    customActions: Array.isArray(parsed.customActions) ? parsed.customActions : [],
+    memberActionMemories:
+      parsed.memberActionMemories && typeof parsed.memberActionMemories === "object"
+        ? parsed.memberActionMemories
+        : {},
     lessonDrafts: migratedDrafts,
     lessonDraft: oldSingleDraft,
     userActionMeta:
@@ -183,8 +190,103 @@ export function getMembers() {
   return readState().members;
 }
 
+export function getLessonsByMember(memberName) {
+  const current = readState();
+  const safeMemberName = String(memberName || "").trim();
+
+  if (!safeMemberName) return [];
+
+  return current.lessons
+    .filter((lesson) => (lesson.memberName || "") === safeMemberName)
+    .sort((a, b) => Number(a.lessonNumber || 0) - Number(b.lessonNumber || 0));
+}
+
 export function getTemplates() {
   return readState().templates;
+}
+
+export function getCustomActions() {
+  return readState().customActions || [];
+}
+
+export function saveCustomAction(action) {
+  const current = readState();
+
+  const cleanCnName = String(action.cnName || action.name || "").trim();
+  const cleanName = String(action.name || cleanCnName).trim();
+  const cleanBenefit = String(action.defaultBenefit || action.benefit || "").trim();
+
+  const nextAction = {
+    id: action.id || createId("custom-action"),
+    source: "custom",
+    apparatus: action.apparatus || "M",
+    cnName: cleanCnName,
+    name: cleanName,
+    defaultBenefit: cleanBenefit,
+    benefits: cleanBenefit ? cleanBenefit.split(/[;；]/).map((item) => item.trim()).filter(Boolean) : [],
+    createdAt: action.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const nextState = {
+    ...current,
+    customActions: [
+      nextAction,
+      ...(current.customActions || []).filter((item) => item.id !== nextAction.id),
+    ],
+  };
+
+  writeState(nextState);
+  return nextAction;
+}
+
+function getMemberActionMemoryKey(memberName, actionIdentityKey) {
+  const safeMemberName = String(memberName || "guest").trim() || "guest";
+  const safeActionKey = String(actionIdentityKey || "").trim();
+
+  return `${safeMemberName}__${safeActionKey}`;
+}
+
+export function getMemberActionMemory(memberName, actionIdentityKey) {
+  if (!memberName || !actionIdentityKey) return null;
+
+  const current = readState();
+  const memoryKey = getMemberActionMemoryKey(memberName, actionIdentityKey);
+
+  return current.memberActionMemories?.[memoryKey] || null;
+}
+
+export function saveMemberActionMemory({
+  memberName,
+  actionIdentityKey,
+  cnName = "",
+  name = "",
+  benefit = "",
+}) {
+  if (!memberName || !actionIdentityKey) return null;
+
+  const current = readState();
+  const memoryKey = getMemberActionMemoryKey(memberName, actionIdentityKey);
+
+  const nextMemory = {
+    memberName,
+    actionIdentityKey,
+    cnName,
+    name,
+    benefit,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const nextState = {
+    ...current,
+    memberActionMemories: {
+      ...(current.memberActionMemories || {}),
+      [memoryKey]: nextMemory,
+    },
+  };
+
+  writeState(nextState);
+  return nextMemory;
 }
 
 export function saveSettings(settings) {
@@ -332,13 +434,34 @@ export function saveLesson(lesson) {
   const nextDrafts = { ...(current.lessonDrafts || {}) };
   delete nextDrafts[draftKey];
 
+  const nextMembers = (current.members || []).map((member) => {
+    const sameMember = (member.name || "") === (savedLesson.memberName || "");
+    const savedLessonNumber = Number(savedLesson.lessonNumber || 0);
+    const currentLessons = Number(member.lessons || 0);
+
+    if (!sameMember || savedLessonNumber <= currentLessons) return member;
+
+    return {
+      ...member,
+      lessons: savedLessonNumber,
+      lastDate: savedLesson.lessonDate || member.lastDate || "",
+    };
+  });
+
   const nextState = {
     ...current,
+    members: nextMembers,
     lessonDrafts: nextDrafts,
     lessonDraft: null,
     lessons: [
       savedLesson,
-      ...current.lessons.filter((item) => item.id !== savedLesson.id),
+      ...current.lessons.filter((item) => {
+        const sameId = item.id === savedLesson.id;
+        const sameMember = (item.memberName || "") === (savedLesson.memberName || "");
+        const sameLesson = Number(item.lessonNumber) === Number(savedLesson.lessonNumber);
+
+        return !sameId && !(sameMember && sameLesson);
+      }),
     ],
   };
 

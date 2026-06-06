@@ -1,5 +1,6 @@
 import { starterActions } from "./starterActions";
 import { baseActionsFull } from "./baseActionsFull";
+import { getCustomActions } from "./localStore";
 
 const userCustomActions = [];
 const userActionOverrides = {};
@@ -172,6 +173,7 @@ function attachDisplayFields(action, languagePreference = "mixed") {
 
 export function getAllActions(languagePreference = "mixed") {
   return mergeActionsWithoutDuplicates([
+    ...getCustomActions(),
     ...userCustomActions,
     ...starterActions,
     ...baseActionsFull,
