@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import "./App.css";
 import {
   HomeIcon,
@@ -41,6 +42,7 @@ import {
   saveLesson,
   saveLessonDraft,
   saveMemberActionMemory,
+  saveMemberProfile,
   saveSettings,
   saveTemplate,
 } from "./data/localStore";
@@ -179,6 +181,12 @@ function normalizeTemplateItemFromAction(action) {
   };
 }
 
+function PortalLayer({ children }) {
+  if (typeof document === "undefined") return children;
+
+  return createPortal(children, document.body);
+}
+
 function App() {
   const initialData = useMemo(() => getAppData(), []);
 
@@ -199,8 +207,8 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
-      <main className="phone-page">
+    <div className={`app-shell app-shell--${activeTab}`}>
+      <main className={`phone-page phone-page--${activeTab}`}>
         {activeTab === "home" && (
           <HomePage
             members={members}
@@ -219,7 +227,11 @@ function App() {
         )}
 
         {activeTab === "members" && (
-          <MembersPage members={members} onOpenSchedule={openSchedule} />
+          <MembersPage
+            members={members}
+            onOpenSchedule={openSchedule}
+            onMembersUpdated={setMembers}
+          />
         )}
 
         {activeTab === "settings" && (
@@ -535,6 +547,14 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     summary: "",
   });
   const [actions, setActions] = useState([]);
+  const isScheduleModalOpen =
+    isLessonPickerOpen ||
+    isThemeAddOpen ||
+    isThemeManagerOpen ||
+    isCustomActionOpen ||
+    isQuickPanelOpen ||
+    isPosterModalOpen ||
+    Boolean(generatedPosterUrl);
 
   function growTextareaElement(textarea) {
     if (!textarea) return;
@@ -728,6 +748,14 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       document.body.classList.remove("schedule-input-active");
     };
   }, [isScheduleInputActive]);
+
+  useEffect(() => {
+    document.body.classList.toggle("schedule-modal-open", isScheduleModalOpen);
+
+    return () => {
+      document.body.classList.remove("schedule-modal-open");
+    };
+  }, [isScheduleModalOpen]);
 
   function showToast(message, duration = 1600) {
     setSaveMessage(message);
@@ -1846,35 +1874,38 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       </div>
 
       {isLessonPickerOpen && (
-        <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsLessonPickerOpen(false)}>
-          <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <h2>选择课次</h2>
-                <p>可切换历史课次或当前新课。</p>
+        <PortalLayer>
+          <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsLessonPickerOpen(false)}>
+            <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
+              <div className="modal-header">
+                <div>
+                  <h2>选择课次</h2>
+                  <p>可切换历史课次或当前新课。</p>
+                </div>
+                <button type="button" onClick={() => setIsLessonPickerOpen(false)}>×</button>
               </div>
-              <button type="button" onClick={() => setIsLessonPickerOpen(false)}>×</button>
-            </div>
-            <div className="lesson-picker-grid schedule-v2-lesson-grid">
-              {lessonOptions.map((number) => (
-                <button
-                  key={number}
-                  type="button"
-                  className={lessonNumber === number ? "active" : ""}
-                  onClick={() => {
-                    setLessonNumber(number);
-                    setIsLessonPickerOpen(false);
-                  }}
-                >
-                  第{number}节
-                </button>
-              ))}
+              <div className="lesson-picker-grid schedule-v2-lesson-grid">
+                {lessonOptions.map((number) => (
+                  <button
+                    key={number}
+                    type="button"
+                    className={lessonNumber === number ? "active" : ""}
+                    onClick={() => {
+                      setLessonNumber(number);
+                      setIsLessonPickerOpen(false);
+                    }}
+                  >
+                    第{number}节
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </PortalLayer>
       )}
 
       {isThemeAddOpen && (
+        <PortalLayer>
         <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsThemeAddOpen(false)}>
           <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -1897,9 +1928,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             </button>
           </div>
         </div>
+        </PortalLayer>
       )}
 
       {isThemeManagerOpen && (
+        <PortalLayer>
         <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsThemeManagerOpen(false)}>
           <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -1921,9 +1954,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             </div>
           </div>
         </div>
+        </PortalLayer>
       )}
 
       {isCustomActionOpen && (
+        <PortalLayer>
         <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsCustomActionOpen(false)}>
           <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -1996,9 +2031,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             </button>
           </div>
         </div>
+        </PortalLayer>
       )}
 
       {isQuickPanelOpen && (
+        <PortalLayer>
         <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsQuickPanelOpen(false)}>
           <div className="modal-sheet schedule-v2-modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -2011,9 +2048,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             {renderQuickPanelBody()}
           </div>
         </div>
+        </PortalLayer>
       )}
 
       {isPosterModalOpen && (
+        <PortalLayer>
         <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setIsPosterModalOpen(false)}>
           <div className="modal-sheet schedule-v2-modal-small" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -2051,9 +2090,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             </div>
           </div>
         </div>
+        </PortalLayer>
       )}
 
       {generatedPosterUrl && (
+        <PortalLayer>
         <div className="modal-backdrop schedule-v2-backdrop" onClick={() => setGeneratedPosterUrl("")}>
           <div className="modal-sheet poster-result-sheet schedule-v2-modal" onClick={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -2075,6 +2116,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             </button>
           </div>
         </div>
+        </PortalLayer>
       )}
     </section>
   );
@@ -3134,28 +3176,247 @@ setTimeout(() => setSaveMessage(""), 1600);
   );
 }
 
-function MembersPage({ members, onOpenSchedule }) {
+function MembersPage({ members, onOpenSchedule, onMembersUpdated }) {
+  const [keyword, setKeyword] = useState("");
+  const [editingMember, setEditingMember] = useState(null);
+  const [originalName, setOriginalName] = useState("");
+  const [memberForm, setMemberForm] = useState({
+    name: "",
+    phone: "",
+    goal: "",
+    contraindications: "",
+    lessons: 0,
+    lastDate: "",
+    avatarUrl: "",
+  });
+
+  const filteredMembers = useMemo(() => {
+    const cleanKeyword = keyword.trim().toLowerCase();
+
+    if (!cleanKeyword) return members;
+
+    return members.filter((member) =>
+      [member.name, member.phone, member.goal, member.contraindications, member.taboo]
+        .join(" ")
+        .toLowerCase()
+        .includes(cleanKeyword)
+    );
+  }, [members, keyword]);
+
+  function getMemberAvatar(member) {
+    return (
+      member.avatarUrl ||
+      member.avatar ||
+      member.photoUrl ||
+      member.photo ||
+      member.imageUrl ||
+      ""
+    );
+  }
+
+  function openMemberEditor(member = null) {
+    const nextMember = member || {
+      name: "",
+      phone: "",
+      goal: "",
+      contraindications: "",
+      lessons: 0,
+      lastDate: "",
+      avatarUrl: "",
+    };
+
+    setEditingMember(nextMember);
+    setOriginalName(member?.name || "");
+    setMemberForm({
+      name: nextMember.name || "",
+      phone: nextMember.phone || "",
+      goal: nextMember.goal || "",
+      contraindications: nextMember.contraindications || nextMember.taboo || "",
+      lessons: Number(nextMember.lessons || 0),
+      lastDate: nextMember.lastDate || "",
+      avatarUrl: getMemberAvatar(nextMember),
+    });
+  }
+
+  function updateMemberField(fieldName, nextValue) {
+    setMemberForm((current) => ({
+      ...current,
+      [fieldName]: nextValue,
+    }));
+  }
+
+  function saveMemberOnly() {
+    if (!memberForm.name.trim()) return;
+
+    const nextMembers = saveMemberProfile(memberForm, originalName);
+    onMembersUpdated?.(nextMembers);
+    setEditingMember(null);
+    setOriginalName("");
+  }
+
+  function saveMemberAndSchedule() {
+    if (!memberForm.name.trim()) return;
+
+    const nextMembers = saveMemberProfile(memberForm, originalName);
+    const savedMember =
+      nextMembers.find((member) => member.name === memberForm.name.trim()) || memberForm;
+
+    onMembersUpdated?.(nextMembers);
+    onOpenSchedule(savedMember);
+  }
+
+  if (editingMember) {
+    const avatarSrc = memberForm.avatarUrl;
+
+    return (
+      <section className="page members-page members-edit-page">
+        <header className="members-edit-header">
+          <button type="button" onClick={() => setEditingMember(null)} aria-label="返回">
+            ‹
+          </button>
+          <h1>{originalName ? "编辑会员" : "新建会员"}</h1>
+          <span />
+        </header>
+
+        <section className="members-edit-card members-profile-card">
+          <div className="members-edit-avatar">
+            {avatarSrc ? (
+              <img src={avatarSrc} alt={`${memberForm.name || "会员"}头像`} />
+            ) : (
+              <span>{(memberForm.name || "会").slice(0, 1)}</span>
+            )}
+            <span className="members-camera-dot">
+              <ImageIcon size={21} />
+            </span>
+          </div>
+
+          <div className="members-form-list">
+            <label>
+              <span>姓名</span>
+              <input
+                value={memberForm.name}
+                onChange={(event) => updateMemberField("name", event.target.value)}
+                placeholder="输入会员姓名"
+              />
+            </label>
+            <label>
+              <span>手机号</span>
+              <input
+                value={memberForm.phone}
+                onChange={(event) => updateMemberField("phone", event.target.value)}
+                placeholder="例如：138****8000"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="members-edit-card">
+          <h2>训练档案</h2>
+          <div className="members-form-list">
+            <label>
+              <span>训练目标</span>
+              <input
+                value={memberForm.goal}
+                onChange={(event) => updateMemberField("goal", event.target.value)}
+                placeholder="例如：塑形翘臀 / 改善体态"
+              />
+            </label>
+            <label>
+              <span>禁忌症</span>
+              <input
+                value={memberForm.contraindications}
+                onChange={(event) =>
+                  updateMemberField("contraindications", event.target.value)
+                }
+                placeholder="无"
+              />
+            </label>
+          </div>
+        </section>
+
+        <section className="members-edit-card">
+          <h2>课程进度</h2>
+          <div className="members-form-list">
+            <label>
+              <span>累计已上课次</span>
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={memberForm.lessons}
+                onChange={(event) => updateMemberField("lessons", event.target.value)}
+              />
+            </label>
+          </div>
+          <p className="members-progress-note">
+            例如填写18，则新建课程时自动从第19节开始
+          </p>
+        </section>
+
+        <div className="members-edit-actions">
+          <button type="button" onClick={saveMemberOnly}>
+            保存资料
+          </button>
+          <button type="button" onClick={saveMemberAndSchedule}>
+            新建课程
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="page">
-      <header className="simple-header">
+    <section className="page members-page members-v2-page">
+      <header className="members-v2-header">
         <h1>会员管理</h1>
-        <button className="round-button">＋</button>
+        <button type="button" onClick={() => openMemberEditor()} aria-label="新建会员">
+          <PlusIcon size={31} />
+        </button>
       </header>
 
-      <div className="search-box members-search">搜索会员...</div>
+      <label className="members-v2-search">
+        <SearchIcon size={21} />
+        <input
+          value={keyword}
+          onChange={(event) => setKeyword(event.target.value)}
+          placeholder="搜索会员..."
+        />
+      </label>
 
-      <div className="card-list">
-        {members.map((member) => (
-          <button className="member-card" key={member.name} onClick={() => onOpenSchedule(member)}>
-            <div className="avatar">{member.name.slice(0, 1)}</div>
-            <div className="member-info">
-              <strong>{member.name}</strong>
-              <p>{member.phone || "暂无手机号"}</p>
-              <p>目标：{member.goal}</p>
-            </div>
-            <div className="arrow">›</div>
-          </button>
-        ))}
+      <div className="members-v2-list">
+        {filteredMembers.map((member) => {
+          const avatarSrc = getMemberAvatar(member);
+
+          return (
+            <button
+              className="members-v2-card"
+              key={member.name}
+              onClick={() => openMemberEditor(member)}
+              type="button"
+            >
+              <span className="members-v2-avatar">
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt={`${member.name}头像`} />
+                ) : (
+                  <span>{member.name.slice(0, 1)}</span>
+                )}
+              </span>
+              <span className="members-v2-info">
+                <strong>{member.name}</strong>
+                <small>{member.phone || "未填写手机号"}</small>
+                <em>目标：{member.goal || "暂无训练目标"}</em>
+              </span>
+              <span className="members-v2-lessons">{member.lessons || 0}节</span>
+              <span className="members-v2-chevron" aria-hidden="true">
+                ›
+              </span>
+            </button>
+          );
+        })}
+
+        {filteredMembers.length === 0 && (
+          <div className="members-v2-empty">没有匹配的会员</div>
+        )}
       </div>
     </section>
   );

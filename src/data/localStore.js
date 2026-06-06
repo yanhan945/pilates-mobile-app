@@ -190,6 +190,50 @@ export function getMembers() {
   return readState().members;
 }
 
+export function saveMemberProfile(memberProfile, originalName = "") {
+  const current = readState();
+  const cleanName = String(memberProfile.name || "").trim();
+
+  if (!cleanName) return current.members || [];
+
+  const nextMember = {
+    name: cleanName,
+    phone: String(memberProfile.phone || "").trim(),
+    goal: String(memberProfile.goal || "").trim(),
+    contraindications: String(
+      memberProfile.contraindications || memberProfile.taboo || ""
+    ).trim(),
+    taboo: String(memberProfile.contraindications || memberProfile.taboo || "").trim(),
+    lessons: Math.max(0, Number(memberProfile.lessons || 0)),
+    lastDate: memberProfile.lastDate || "",
+    avatarUrl:
+      memberProfile.avatarUrl ||
+      memberProfile.avatar ||
+      memberProfile.photoUrl ||
+      memberProfile.photo ||
+      memberProfile.imageUrl ||
+      "",
+  };
+
+  const existingMembers = current.members || [];
+  const targetName = String(originalName || cleanName).trim();
+  const hasExisting = existingMembers.some((member) => member.name === targetName);
+
+  const nextMembers = hasExisting
+    ? existingMembers.map((member) =>
+        member.name === targetName ? { ...member, ...nextMember } : member
+      )
+    : [nextMember, ...existingMembers];
+
+  const nextState = {
+    ...current,
+    members: nextMembers,
+  };
+
+  writeState(nextState);
+  return nextMembers;
+}
+
 export function getLessonsByMember(memberName) {
   const current = readState();
   const safeMemberName = String(memberName || "").trim();
