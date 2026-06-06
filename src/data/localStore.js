@@ -253,6 +253,10 @@ export function getCustomActions() {
   return readState().customActions || [];
 }
 
+export function getUserActionMeta() {
+  return readState().userActionMeta || {};
+}
+
 export function saveCustomAction(action) {
   const current = readState();
 
@@ -282,6 +286,80 @@ export function saveCustomAction(action) {
 
   writeState(nextState);
   return nextAction;
+}
+
+export function saveUserActionMeta(actionId, patch = {}) {
+  const current = readState();
+  const safeActionId = String(actionId || patch.actionId || patch.id || "").trim();
+
+  if (!safeActionId) return current.userActionMeta || {};
+
+  const currentMeta = current.userActionMeta || {};
+  const existing = currentMeta[safeActionId] || {};
+  const nextMeta = {
+    ...existing,
+    ...patch,
+    actionId: safeActionId,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const nextState = {
+    ...current,
+    userActionMeta: {
+      ...currentMeta,
+      [safeActionId]: nextMeta,
+    },
+  };
+
+  writeState(nextState);
+  return nextState.userActionMeta;
+}
+
+function recordLessonActionUsage(userActionMeta = {}, savedLesson = {}) {
+  const actions = Array.isArray(savedLesson.actions) ? savedLesson.actions : [];
+  const usedAt = savedLesson.savedAt || new Date().toISOString();
+  const lessonId =
+    savedLesson.id ||
+    `lesson-${savedLesson.memberName || "guest"}-${savedLesson.lessonNumber || 1}`;
+
+  return actions.reduce((nextMeta, action) => {
+    const actionId =
+      action.baseActionId ||
+      action.actionId ||
+      action.identityKey ||
+      action.id ||
+      "";
+
+    if (!actionId) return nextMeta;
+
+    const existing = nextMeta[actionId] || {};
+    const existingRecords = Array.isArray(existing.usageRecords)
+      ? existing.usageRecords
+      : [];
+    const recordsWithoutCurrentLesson = existingRecords.filter(
+      (record) => record.lessonId !== lessonId
+    );
+
+    const usageRecord = {
+      usedAt,
+      lessonId,
+      memberName: savedLesson.memberName || "",
+      lessonNumber: Number(savedLesson.lessonNumber || 1),
+      apparatus: action.apparatus || existing.apparatus || "",
+    };
+
+    return {
+      ...nextMeta,
+      [actionId]: {
+        ...existing,
+        actionId,
+        apparatus: existing.apparatus || action.apparatus || "",
+        usageRecords: [usageRecord, ...recordsWithoutCurrentLesson].slice(0, 300),
+        lastUsedAt: usedAt,
+        updatedAt: usedAt,
+      },
+    };
+  }, { ...userActionMeta });
 }
 
 function getMemberActionMemoryKey(memberName, actionIdentityKey) {
@@ -470,6 +548,11 @@ export function saveLesson(lesson) {
     savedAt: new Date().toISOString(),
   };
 
+  const nextUserActionMeta = recordLessonActionUsage(
+    current.userActionMeta || {},
+    savedLesson
+  );
+
   const draftKey = getLessonDraftKey(
     savedLesson.memberName,
     savedLesson.lessonNumber
@@ -497,6 +580,7 @@ export function saveLesson(lesson) {
     members: nextMembers,
     lessonDrafts: nextDrafts,
     lessonDraft: null,
+    userActionMeta: nextUserActionMeta,
     lessons: [
       savedLesson,
       ...current.lessons.filter((item) => {

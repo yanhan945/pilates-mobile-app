@@ -1,11 +1,17 @@
 import { starterActions } from "./starterActions";
 import { baseActionsFull } from "./baseActionsFull";
-import { getCustomActions } from "./localStore";
+import { getCustomActions, getUserActionMeta } from "./localStore";
 
 const userCustomActions = [];
-const userActionOverrides = {};
-const userActionUsage = {};
 const userFavorites = new Set();
+
+const tagAliasGroups = [
+  ["臀腿", "臀部", "腿部", "翘臀", "美腿", "髋", "髋膝踝"],
+  ["核心", "核心增强", "腹部", "腹肌", "骨盆稳定", "躯干"],
+  ["肩颈", "肩背", "美背", "圆肩", "肩颈理疗", "肩胛"],
+  ["柔韧", "柔韧性", "灵活", "活动度", "脊柱灵活"],
+  ["平衡", "协调", "稳定", "体态", "体态调整"],
+];
 
 function normalizeText(value) {
   return String(value || "")
@@ -15,7 +21,7 @@ function normalizeText(value) {
 }
 
 function compactText(value) {
-  return normalizeText(value).replace(/[\/\-\s（）()·+＋]/g, "");
+  return normalizeText(value).replace(/[/\s（）()·+＋-]/g, "");
 }
 
 function createSafeId(prefix = "selected") {
@@ -108,16 +114,36 @@ function getPosterDisplayName(action, languagePreference = "mixed") {
   return getPrimaryName(action, languagePreference);
 }
 
-function applyUserOverride(action) {
-  const override = userActionOverrides[action.id];
+function normalizeMeta(meta = {}) {
+  return {
+    ...meta,
+    isFavorite: Boolean(meta.isFavorite ?? meta.is_favorite),
+    tags: Array.isArray(meta.tags) ? meta.tags : [],
+    customCnName: meta.customCnName ?? meta.custom_cn_name ?? "",
+    customEnName: meta.customEnName ?? meta.custom_en_name ?? "",
+    customBenefit: meta.customBenefit ?? meta.custom_benefit ?? "",
+    isHidden: Boolean(meta.isHidden ?? meta.is_hidden),
+    apparatus: meta.apparatus || "",
+    usageRecords: Array.isArray(meta.usageRecords) ? meta.usageRecords : [],
+  };
+}
 
-  if (!override) return action;
+function applyUserMeta(action, metaMap) {
+  const meta = normalizeMeta(metaMap[action.id]);
+
+  if (!meta || Object.keys(meta).length === 0) return action;
 
   return {
     ...action,
-    ...override,
-    benefits: override.benefits || action.benefits,
-    defaultBenefit: override.defaultBenefit || action.defaultBenefit,
+    apparatus: meta.apparatus || action.apparatus,
+    cnName: meta.customCnName || action.cnName,
+    name: meta.customEnName || action.name,
+    benefits: meta.customBenefit ? [meta.customBenefit] : action.benefits,
+    defaultBenefit: meta.customBenefit || action.defaultBenefit,
+    isFavorite: meta.isFavorite,
+    tags: meta.tags,
+    usageRecords: meta.usageRecords,
+    isHidden: meta.isHidden,
   };
 }
 
@@ -149,7 +175,13 @@ function mergeActionsWithoutDuplicates(actions) {
 }
 
 function getUsageScore(action) {
-  return userActionUsage[action.id]?.last30DaysCount || 0;
+  const records = Array.isArray(action.usageRecords) ? action.usageRecords : [];
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+  return records.filter((record) => {
+    const usedAt = Date.parse(record.usedAt || record.last_used_at || "");
+    return Number.isFinite(usedAt) && usedAt >= thirtyDaysAgo;
+  }).length;
 }
 
 function getRecommendationScore(action) {
@@ -171,14 +203,47 @@ function attachDisplayFields(action, languagePreference = "mixed") {
   };
 }
 
+function getTagSearchTokens(keyword) {
+  const compactKeyword = compactText(keyword);
+  const tokens = new Set([compactKeyword]);
+
+  tagAliasGroups.forEach((group) => {
+    const normalizedGroup = group.map(compactText);
+    const hasMatch = normalizedGroup.some(
+      (item) => item && (compactKeyword.includes(item) || item.includes(compactKeyword))
+    );
+
+    if (hasMatch) {
+      normalizedGroup.forEach((item) => {
+        if (item) tokens.add(item);
+      });
+    }
+  });
+
+  return Array.from(tokens);
+}
+
+function matchesTagSearch(action, keyword) {
+  const tags = Array.isArray(action.tags) ? action.tags : [];
+  if (!tags.length) return false;
+
+  const tagText = compactText(tags.join(" "));
+  const tokens = getTagSearchTokens(keyword);
+
+  return tokens.some((token) => token && tagText.includes(token));
+}
+
 export function getAllActions(languagePreference = "mixed") {
+  const metaMap = getUserActionMeta();
+
   return mergeActionsWithoutDuplicates([
     ...getCustomActions(),
     ...userCustomActions,
     ...starterActions,
     ...baseActionsFull,
   ])
-    .map(applyUserOverride)
+    .map((action) => applyUserMeta(action, metaMap))
+    .filter((action) => !action.isHidden)
     .map((action) => attachDisplayFields(action, languagePreference));
 }
 
@@ -208,12 +273,14 @@ export function searchActions({
         action.cnName,
         action.displayName,
         action.defaultBenefit,
+        ...(action.tags || []),
         ...(action.benefits || []),
       ].join(" ");
 
       return (
         normalizeText(searchableText).includes(normalizedKeyword) ||
-        compactText(searchableText).includes(compactKeyword)
+        compactText(searchableText).includes(compactKeyword) ||
+        matchesTagSearch(action, keyword)
       );
     })
     .sort((a, b) => getRecommendationScore(b) - getRecommendationScore(a));

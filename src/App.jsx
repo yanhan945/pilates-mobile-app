@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect, react-hooks/exhaustive-deps */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "./App.css";
@@ -38,6 +39,7 @@ import {
   getLessonDraftForMemberAndNumber,
   getMemberActionMemory,
   getTemplates,
+  getUserActionMeta,
   saveCustomAction,
   saveLesson,
   saveLessonDraft,
@@ -45,6 +47,7 @@ import {
   saveMemberProfile,
   saveSettings,
   saveTemplate,
+  saveUserActionMeta,
 } from "./data/localStore";
 import {
   getCurrentUser as getCloudSyncUser,
@@ -57,6 +60,12 @@ import {
   signOutCloudBase,
   signUpCloudBaseWithEmail,
 } from "./data/cloudbaseClient";
+import {
+  loadUserActionMeta,
+  saveCloudLesson,
+  saveCloudTemplate,
+  saveUserActionMeta as saveCloudUserActionMeta,
+} from "./data/cloudbaseStore";
 
 const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
 const TAB_ITEMS = [
@@ -103,6 +112,20 @@ const apparatusAliases = {
   壶铃: "kettlebell",
   波速球: "bosu",
 };
+
+function getDynamicApparatusOptions(actions = []) {
+  const known = new Set(apparatusOptions.map((item) => item.key));
+  const dynamicOptions = actions
+    .map((action) => String(action.apparatus || "").trim())
+    .filter((key) => key && !known.has(key))
+    .map((key) => ({
+      key,
+      label: key,
+      desc: "自定义器械",
+    }));
+
+  return [...apparatusOptions, ...dynamicOptions];
+}
 
 function getTodayLabel() {
   const now = new Date();
@@ -170,15 +193,6 @@ function parsePasteCourseText(rawText) {
         keyword: line,
       };
     });
-}
-
-function normalizeTemplateItemFromAction(action) {
-  return {
-    apparatus: action.apparatus,
-    keyword: action.cnName || action.name,
-    baseActionId: action.id,
-    displayName: action.displayName,
-  };
 }
 
 function PortalLayer({ children }) {
@@ -482,18 +496,27 @@ function LegacyHomePage({ members, onOpenSchedule, coachName }) {
 
 function SchedulePage({ member, members = [], languagePreference, onMembersUpdated }) {
   const memberPickerRef = useRef(null);
+  const themeFieldRef = useRef(null);
   const actionSearchAreaRef = useRef(null);
   const quickMenuRef = useRef(null);
   const moreApparatusRef = useRef(null);
   const didAutoSaveOnceRef = useRef(false);
   const isRestoringLessonRef = useRef(false);
   const [isScheduleInputActive, setIsScheduleInputActive] = useState(false);
+  const [scheduleFocusMode, setScheduleFocusMode] = useState("");
 
   const initialSettings = useMemo(() => getAppData().settings || {}, []);
   const templates = useMemo(() => getTemplates(), []);
+  const allScheduleActions = useMemo(() => getAllActions(languagePreference), [
+    languagePreference,
+  ]);
+  const scheduleApparatusOptions = useMemo(
+    () => getDynamicApparatusOptions(allScheduleActions),
+    [allScheduleActions]
+  );
   const weatherOptions = ["晴", "多云", "小雨", "大雨", "暴雨", "雷雨", "雪"];
   const primaryApparatusOptions = ["all", "M", "R", "TT", "C", "LB"];
-  const extraApparatusOptions = apparatusOptions.filter(
+  const extraApparatusOptions = scheduleApparatusOptions.filter(
     (item) => !primaryApparatusOptions.includes(item.key) && item.key !== "favorite"
   );
 
@@ -563,14 +586,41 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     textarea.style.height = `${textarea.scrollHeight}px`;
   }
 
+  function activateScheduleInput(mode) {
+    setScheduleFocusMode(mode);
+    setIsScheduleInputActive(true);
+  }
+
+  function deactivateScheduleInput(mode) {
+    window.setTimeout(() => {
+      setScheduleFocusMode((currentMode) => {
+        if (currentMode !== mode) return currentMode;
+
+        setIsScheduleInputActive(false);
+        return "";
+      });
+    }, 140);
+  }
+
   function openActionSearchPanel() {
     setIsRecommendationOpen(true);
-    setIsScheduleInputActive(true);
+    activateScheduleInput("action");
 
     window.setTimeout(() => {
       actionSearchAreaRef.current?.scrollIntoView({
         behavior: "smooth",
-        block: "start",
+        block: "center",
+      });
+    }, 80);
+  }
+
+  function focusThemeInput() {
+    activateScheduleInput("theme");
+
+    window.setTimeout(() => {
+      themeFieldRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
       });
     }, 80);
   }
@@ -604,15 +654,29 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   }, [actions]);
 
   const recommendedActions = useMemo(() => {
+    const recommendationKeyword = searchKeyword.trim()
+      ? searchKeyword
+      : isThemeLinked
+        ? lessonForm.lessonTheme
+        : "";
+
     return searchActions({
-      keyword: searchKeyword,
+      keyword: recommendationKeyword,
       apparatus: selectedApparatus,
       languagePreference,
     })
       .filter((action) => !addedBaseActionIds.has(action.id))
       .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)))
       .slice(0, 8);
-  }, [searchKeyword, selectedApparatus, languagePreference, addedBaseActionIds, addedActionKeys]);
+  }, [
+    searchKeyword,
+    selectedApparatus,
+    languagePreference,
+    addedBaseActionIds,
+    addedActionKeys,
+    isThemeLinked,
+    lessonForm.lessonTheme,
+  ]);
 
   const historyLessons = useMemo(() => {
     return getLessonsByMember(lessonForm.studentName).filter(
@@ -795,6 +859,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     setActions([]);
     setSearchKeyword("");
     setIsMemberPickerOpen(false);
+    setScheduleFocusMode("");
+    setIsScheduleInputActive(false);
   }
 
   function persistThemePresets(nextThemes) {
@@ -1141,14 +1207,21 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     };
   }
 
-  function saveCurrentLesson() {
+  async function saveCurrentLesson() {
     if (!lessonForm.studentName.trim()) {
       showToast("请先选择或输入学员");
       return;
     }
 
-    saveLesson(buildLessonPayload());
+    const savedLesson = saveLesson(buildLessonPayload());
     syncMembersFromStore();
+
+    try {
+      await saveCloudLesson(savedLesson);
+    } catch (error) {
+      console.warn("课程云端同步失败，已保存在本机", error);
+    }
+
     showToast("课程已保存");
   }
 
@@ -1433,7 +1506,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     <section
       className={`page schedule-page schedule-v2-page${
         isScheduleInputActive ? " schedule-v2-input-active" : ""
-      }`}
+      }${scheduleFocusMode ? ` schedule-v2-focus-${scheduleFocusMode}` : ""}`}
     >
       <header className="schedule-v2-header">
         <div>
@@ -1517,11 +1590,16 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
           <span>学员姓名</span>
           <input
             value={lessonForm.studentName}
-            onFocus={() => setIsMemberPickerOpen(true)}
+            onFocus={() => {
+              setIsMemberPickerOpen(true);
+              activateScheduleInput("member");
+            }}
+            onBlur={() => deactivateScheduleInput("member")}
             onChange={(event) => {
               setScheduleMember(null);
               updateLessonField("studentName", event.target.value);
               setIsMemberPickerOpen(true);
+              activateScheduleInput("member");
             }}
             placeholder="搜索或输入学员姓名"
           />
@@ -1557,7 +1635,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
           </div>
         </div>
 
-        <div className="schedule-v2-field">
+        <div className="schedule-v2-field" ref={themeFieldRef}>
           <div className="schedule-v2-label-row">
             <span>课程主题</span>
             <button
@@ -1571,6 +1649,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
           <div className="schedule-v2-theme-input-row">
             <input
               value={lessonForm.lessonTheme}
+              onFocus={focusThemeInput}
+              onBlur={() => deactivateScheduleInput("theme")}
               onChange={(event) => updateLessonField("lessonTheme", event.target.value)}
               placeholder="输入课程主题或选择预设主题..."
             />
@@ -1603,7 +1683,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
 
         <div className="schedule-v2-filter-row">
           {primaryApparatusOptions.map((key) => {
-            const item = apparatusOptions.find((option) => option.key === key);
+            const item = scheduleApparatusOptions.find((option) => option.key === key);
 
             return (
               <button
@@ -1658,7 +1738,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
               onChange={(event) => {
                 setSearchKeyword(event.target.value);
                 setIsRecommendationOpen(true);
-                setIsScheduleInputActive(true);
+                activateScheduleInput("action");
               }}
               placeholder="搜索动作关键词"
             />
@@ -1724,8 +1804,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
                 <textarea
                   className="schedule-v2-comment-input"
                   value={action.comment || ""}
-                  onFocus={() => setIsScheduleInputActive(true)}
-                  onBlur={() => window.setTimeout(() => setIsScheduleInputActive(false), 120)}
+                  onFocus={() => activateScheduleInput("comment")}
+                  onBlur={() => deactivateScheduleInput("comment")}
                   onChange={(event) => handleActionCommentChange(action.id, event)}
                   placeholder="点击添加点评..."
                 />
@@ -1851,8 +1931,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         </div>
         <textarea
           value={lessonForm.summary}
-          onFocus={() => setIsScheduleInputActive(true)}
-          onBlur={() => window.setTimeout(() => setIsScheduleInputActive(false), 120)}
+          onFocus={() => activateScheduleInput("summary")}
+          onBlur={() => deactivateScheduleInput("summary")}
           onChange={handleSummaryChange}
           placeholder="输入课后总结或身体反馈建议..."
         />
@@ -1980,7 +2060,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
                     }))
                   }
                 >
-                  {apparatusOptions.filter((item) => item.key !== "all" && item.key !== "favorite").map((item) => (
+                  {scheduleApparatusOptions.filter((item) => item.key !== "all" && item.key !== "favorite").map((item) => (
                     <option key={item.key} value={item.key}>
                       {item.label}
                     </option>
@@ -3424,6 +3504,1403 @@ function MembersPage({ members, onOpenSchedule, onMembersUpdated }) {
 
 function SettingsPage({ languagePreference, setLanguagePreference }) {
   const initialData = useMemo(() => getAppData(), []);
+  const [settingsView, setSettingsView] = useState("home");
+  const [settingsForm, setSettingsForm] = useState({
+    studioNameCn: initialData.settings?.studioNameCn || "北极星普拉提",
+    studioNameEn: initialData.settings?.studioNameEn || "Polaris Pilates",
+    coachName: initialData.settings?.coachName || "严老师",
+    logoDataUrl: initialData.settings?.logoDataUrl || "",
+  });
+
+  const [templates, setTemplates] = useState(getTemplates());
+  const [userActionMeta, setUserActionMeta] = useState(() => getUserActionMeta());
+  const [actionLibraryVersion, setActionLibraryVersion] = useState(0);
+  const [libraryApparatus, setLibraryApparatus] = useState("all");
+  const [libraryKeyword, setLibraryKeyword] = useState("");
+  const [isMoreLibraryFilterOpen, setIsMoreLibraryFilterOpen] = useState(false);
+  const [tagTarget, setTagTarget] = useState(null);
+  const [tagInput, setTagInput] = useState("");
+  const [actionEditorOpen, setActionEditorOpen] = useState(false);
+  const [editingAction, setEditingAction] = useState(null);
+  const [actionDraft, setActionDraft] = useState({
+    apparatus: "M",
+    newApparatus: "",
+    cnName: "",
+    name: "",
+    benefit: "",
+    tags: "",
+    isFavorite: false,
+  });
+
+  const [editingTemplateId, setEditingTemplateId] = useState("");
+  const [templateName, setTemplateName] = useState("");
+  const [templateDesc, setTemplateDesc] = useState("");
+  const [templateApparatus, setTemplateApparatus] = useState("all");
+  const [templateKeyword, setTemplateKeyword] = useState("");
+  const [selectedTemplateActions, setSelectedTemplateActions] = useState([]);
+
+  const [settingsSavedMessage, setSettingsSavedMessage] = useState("");
+  const [authUser, setAuthUser] = useState(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
+
+  const allActions = useMemo(() => {
+    return getAllActions(languagePreference);
+  }, [languagePreference, userActionMeta, actionLibraryVersion]);
+
+  const settingsApparatusOptions = useMemo(
+    () => getDynamicApparatusOptions(allActions),
+    [allActions]
+  );
+
+  const actionStats = useMemo(() => {
+    const stats = {};
+
+    allActions.forEach((action) => {
+      const key = action.apparatus || "其他";
+      stats[key] = (stats[key] || 0) + 1;
+    });
+
+    return stats;
+  }, [allActions]);
+
+  const primaryFilterKeys = ["all", "M", "R", "TT", "C", "LB"];
+  const libraryPrimaryFilters = primaryFilterKeys.map((key) => (
+    settingsApparatusOptions.find((item) => item.key === key) || { key, label: key }
+  ));
+  const libraryExtraFilters = settingsApparatusOptions.filter(
+    (item) => !primaryFilterKeys.includes(item.key)
+  );
+  const editorApparatusOptions = settingsApparatusOptions.filter(
+    (item) => item.key !== "all" && item.key !== "favorite"
+  );
+
+  const filteredLibraryActions = useMemo(() => {
+    const keyword = libraryKeyword.trim().toLowerCase();
+
+    return allActions
+      .filter((action) => {
+        if (libraryApparatus === "all") return true;
+        if (libraryApparatus === "favorite") return action.isFavorite;
+        return action.apparatus === libraryApparatus;
+      })
+      .filter((action) => {
+        if (!keyword) return true;
+
+        return [
+          action.cnName,
+          action.name,
+          action.displayName,
+          action.defaultBenefit,
+          action.apparatus,
+          ...(action.tags || []),
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
+      });
+  }, [allActions, libraryApparatus, libraryKeyword]);
+
+  const libraryVisibleActions = filteredLibraryActions.slice(0, 120);
+
+  const templateSearchActions = useMemo(() => {
+    const keyword = templateKeyword.trim().toLowerCase();
+
+    return allActions
+      .filter((action) => {
+        if (templateApparatus === "all") return true;
+        return action.apparatus === templateApparatus;
+      })
+      .filter((action) => {
+        if (!keyword) return true;
+
+        return [action.cnName, action.name, action.displayName, action.apparatus]
+          .join(" ")
+          .toLowerCase()
+          .includes(keyword);
+      })
+      .slice(0, 50);
+  }, [allActions, templateApparatus, templateKeyword]);
+
+  const languageLabelMap = {
+    chinese: "中文优先",
+    english: "英文优先",
+    mixed: "中英对照",
+  };
+
+  function showSettingsMessage(message, duration = 1600) {
+    setSettingsSavedMessage(message);
+    window.setTimeout(() => setSettingsSavedMessage(""), duration);
+  }
+
+  function getActionMeta(actionId) {
+    return userActionMeta[actionId] || {};
+  }
+
+  function parseTags(value) {
+    return String(value || "")
+      .split(/[、,，\s]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  function toCloudActionMeta(actionId, meta = {}) {
+    return {
+      id: actionId,
+      action_id: actionId,
+      is_favorite: Boolean(meta.isFavorite),
+      tags: Array.isArray(meta.tags) ? meta.tags : [],
+      custom_cn_name: meta.customCnName || "",
+      custom_en_name: meta.customEnName || "",
+      custom_benefit: meta.customBenefit || "",
+      apparatus: meta.apparatus || "",
+      is_hidden: Boolean(meta.isHidden),
+      is_custom_action: Boolean(meta.isCustomAction),
+    };
+  }
+
+  function fromCloudActionMeta(row = {}) {
+    return {
+      isFavorite: Boolean(row.is_favorite),
+      tags: Array.isArray(row.tags) ? row.tags : [],
+      customCnName: row.custom_cn_name || "",
+      customEnName: row.custom_en_name || "",
+      customBenefit: row.custom_benefit || "",
+      apparatus: row.apparatus || "",
+      isHidden: Boolean(row.is_hidden),
+      isCustomAction: Boolean(row.is_custom_action),
+      updatedAt: row.updated_at || row.updatedAt || "",
+    };
+  }
+
+  function persistActionMeta(actionId, patch) {
+    const nextMetaMap = saveUserActionMeta(actionId, patch);
+    const nextMeta = nextMetaMap[actionId] || {};
+
+    setUserActionMeta(nextMetaMap);
+    saveCloudUserActionMeta(toCloudActionMeta(actionId, nextMeta)).catch((error) => {
+      console.warn("动作设置云端同步失败，已保存在本机", error);
+    });
+
+    return nextMetaMap;
+  }
+
+  function applyStudioSettings(settings) {
+    if (!settings) return;
+
+    setSettingsForm((current) => ({
+      ...current,
+      studioNameCn: settings.studioNameCn ?? current.studioNameCn,
+      studioNameEn: settings.studioNameEn ?? current.studioNameEn,
+      coachName: settings.coachName ?? current.coachName,
+      logoDataUrl: settings.logoDataUrl ?? current.logoDataUrl,
+    }));
+
+    if (settings.languagePreference) {
+      setLanguagePreference(settings.languagePreference);
+    }
+  }
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadSession() {
+      const cloudUser = await getCloudSyncUser();
+
+      if (mounted) {
+        setAuthUser(cloudUser || null);
+        setAuthEmail(cloudUser?.email || "");
+      }
+    }
+
+    loadSession();
+
+    const unsubscribeCloudBase = onCloudBaseAuthStateChange((user) => {
+      setAuthUser(user || null);
+      setAuthEmail(user?.email || "");
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribeCloudBase();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!authUser) return undefined;
+
+    let mounted = true;
+
+    async function syncCloudState() {
+      const studioResult = await loadCloudStudioSettings();
+
+      if (mounted && studioResult.source === "cloud") {
+        applyStudioSettings(studioResult.settings);
+      }
+
+      try {
+        const cloudRows = await loadUserActionMeta();
+
+        if (!mounted || !cloudRows.length) return;
+
+        cloudRows.forEach((row) => {
+          const actionId = row.action_id || row.id;
+          if (!actionId) return;
+
+          saveUserActionMeta(actionId, fromCloudActionMeta(row));
+        });
+
+        setUserActionMeta(getUserActionMeta());
+      } catch (error) {
+        console.warn("读取云端动作偏好失败，继续使用本机数据", error);
+      }
+    }
+
+    syncCloudState();
+
+    return () => {
+      mounted = false;
+    };
+  }, [authUser?.id]);
+
+  function getCleanAuthInput() {
+    return {
+      email: authEmail.trim(),
+      password: authPassword.trim(),
+    };
+  }
+
+  async function handleEmailSignUp() {
+    const { email, password } = getCleanAuthInput();
+
+    if (!email || !password) {
+      setAuthMessage("请先填写邮箱和密码");
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthMessage("密码至少需要 6 位");
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      setAuthMessage("正在注册...");
+
+      await signUpCloudBaseWithEmail(email, password);
+      const cloudUser = await signInCloudBaseWithEmail(email, password);
+
+      setAuthUser(cloudUser);
+      setAuthEmail(cloudUser?.email || email);
+      setAuthPassword("");
+      setAuthMessage("注册成功，已登录");
+    } catch (error) {
+      setAuthMessage(error.message || "CloudBase 注册失败，请检查云开发身份认证");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function handleEmailSignIn() {
+    const { email, password } = getCleanAuthInput();
+
+    if (!email || !password) {
+      setAuthMessage("请先填写邮箱和密码");
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      setAuthMessage("正在登录...");
+
+      const cloudUser = await signInCloudBaseWithEmail(email, password);
+
+      setAuthUser(cloudUser);
+      setAuthEmail(cloudUser?.email || email);
+      setAuthMessage("登录成功");
+      setAuthPassword("");
+    } catch (error) {
+      setAuthMessage(error.message || "CloudBase 登录失败，请检查邮箱或密码");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function handleEmailSignOut() {
+    try {
+      setAuthLoading(true);
+      setAuthMessage("正在退出...");
+
+      await signOutCloudBase();
+
+      setAuthUser(null);
+      setAuthPassword("");
+      setAuthMessage("已退出登录");
+    } catch (error) {
+      setAuthMessage(error.message || "退出失败，请稍后再试");
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  function updateSettingsField(fieldName, value) {
+    setSettingsForm((current) => ({
+      ...current,
+      [fieldName]: value,
+    }));
+  }
+
+  function handleLogoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showSettingsMessage("请上传图片格式的 Logo");
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const logoDataUrl = reader.result;
+
+      setSettingsForm((current) => ({
+        ...current,
+        logoDataUrl,
+      }));
+
+      saveSettings({
+        ...settingsForm,
+        logoDataUrl,
+        languagePreference,
+      });
+
+      showSettingsMessage("Logo 已上传");
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function clearLogo() {
+    const nextSettings = {
+      ...settingsForm,
+      logoDataUrl: "",
+    };
+
+    setSettingsForm(nextSettings);
+    saveSettings({
+      ...nextSettings,
+      languagePreference,
+    });
+    showSettingsMessage("Logo 已清除");
+  }
+
+  async function saveStudioInfo() {
+    const result = await saveCloudStudioSettings({
+      ...settingsForm,
+      languagePreference,
+    });
+
+    if (result.status === "cloud") {
+      showSettingsMessage("工作室信息已同步");
+    } else if (result.status === "cloud-error") {
+      showSettingsMessage("本机已保存，云端同步失败");
+    } else {
+      showSettingsMessage("工作室信息已保存到本机");
+    }
+  }
+
+  function chooseLanguagePreference(nextPreference) {
+    setLanguagePreference(nextPreference);
+    saveSettings({
+      ...settingsForm,
+      languagePreference: nextPreference,
+    });
+    showSettingsMessage("语言偏好已保存");
+  }
+
+  function updateLibraryFilter(nextApparatus) {
+    setLibraryApparatus(nextApparatus);
+    setIsMoreLibraryFilterOpen(false);
+  }
+
+  function toggleFavorite(action) {
+    const meta = getActionMeta(action.id);
+
+    persistActionMeta(action.id, {
+      ...meta,
+      isFavorite: !(action.isFavorite || meta.isFavorite),
+      tags: meta.tags || action.tags || [],
+    });
+  }
+
+  function openTagEditor(action) {
+    const meta = getActionMeta(action.id);
+
+    setTagTarget(action);
+    setTagInput((meta.tags || action.tags || []).join("、"));
+  }
+
+  function saveActionTags() {
+    if (!tagTarget) return;
+
+    const tags = parseTags(tagInput);
+    const meta = getActionMeta(tagTarget.id);
+
+    persistActionMeta(tagTarget.id, {
+      ...meta,
+      tags,
+      isFavorite: Boolean(meta.isFavorite || tagTarget.isFavorite),
+    });
+
+    setTagTarget(null);
+    setTagInput("");
+    showSettingsMessage("标签已保存");
+  }
+
+  function openNewActionEditor() {
+    setEditingAction(null);
+    setActionDraft({
+      apparatus: libraryApparatus !== "all" && libraryApparatus !== "favorite" ? libraryApparatus : "M",
+      newApparatus: "",
+      cnName: "",
+      name: "",
+      benefit: "",
+      tags: "",
+      isFavorite: false,
+    });
+    setActionEditorOpen(true);
+  }
+
+  function openEditActionEditor(action) {
+    const meta = getActionMeta(action.id);
+
+    setEditingAction(action);
+    setActionDraft({
+      apparatus: action.apparatus || meta.apparatus || "M",
+      newApparatus: "",
+      cnName: action.cnName || "",
+      name: action.name || "",
+      benefit: action.defaultBenefit || "",
+      tags: (meta.tags || action.tags || []).join("、"),
+      isFavorite: Boolean(action.isFavorite || meta.isFavorite),
+    });
+    setActionEditorOpen(true);
+  }
+
+  function saveActionEditor() {
+    const cleanApparatus =
+      actionDraft.apparatus === "__new__"
+        ? actionDraft.newApparatus.trim()
+        : actionDraft.apparatus;
+    const cleanCnName = actionDraft.cnName.trim();
+    const cleanName = actionDraft.name.trim();
+    const cleanBenefit = actionDraft.benefit.trim();
+    const tags = parseTags(actionDraft.tags);
+
+    if (!cleanApparatus) {
+      showSettingsMessage("请先选择或新增器械");
+      return;
+    }
+
+    if (!cleanCnName && !cleanName) {
+      showSettingsMessage("请至少填写中文名或英文名");
+      return;
+    }
+
+    if (editingAction?.id) {
+      if (editingAction.source === "custom") {
+        saveCustomAction({
+          id: editingAction.id,
+          apparatus: cleanApparatus,
+          cnName: cleanCnName || cleanName,
+          name: cleanName || cleanCnName,
+          defaultBenefit: cleanBenefit,
+        });
+      }
+
+      persistActionMeta(editingAction.id, {
+        ...getActionMeta(editingAction.id),
+        apparatus: cleanApparatus,
+        customCnName: cleanCnName || cleanName,
+        customEnName: cleanName || cleanCnName,
+        customBenefit: cleanBenefit,
+        tags,
+        isFavorite: actionDraft.isFavorite,
+        isCustomAction: editingAction.source === "custom",
+      });
+
+      showSettingsMessage("动作已更新");
+    } else {
+      const savedAction = saveCustomAction({
+        apparatus: cleanApparatus,
+        cnName: cleanCnName || cleanName,
+        name: cleanName || cleanCnName,
+        defaultBenefit: cleanBenefit,
+      });
+
+      persistActionMeta(savedAction.id, {
+        apparatus: cleanApparatus,
+        tags,
+        isFavorite: actionDraft.isFavorite,
+        isCustomAction: true,
+      });
+
+      showSettingsMessage("动作已添加");
+    }
+
+    setActionEditorOpen(false);
+    setEditingAction(null);
+    setActionLibraryVersion((current) => current + 1);
+  }
+
+  function resetTemplateEditor() {
+    setEditingTemplateId("");
+    setTemplateName("");
+    setTemplateDesc("");
+    setTemplateApparatus("all");
+    setTemplateKeyword("");
+    setSelectedTemplateActions([]);
+  }
+
+  function openNewTemplatePage() {
+    resetTemplateEditor();
+    setSettingsView("templateEditor");
+  }
+
+  function openEditTemplatePage(template) {
+    const loadedActions = (template.actions || []).map((item, index) => {
+      const foundById = item.actionId
+        ? allActions.find((action) => action.id === item.actionId)
+        : null;
+      const foundByBaseId = item.baseActionId
+        ? allActions.find((action) => action.id === item.baseActionId)
+        : null;
+      const foundByKeyword =
+        foundById || foundByBaseId
+          ? null
+          : allActions.find(
+              (action) =>
+                action.apparatus === item.apparatus &&
+                [action.cnName, action.name, action.displayName]
+                  .join(" ")
+                  .includes(item.keyword || "")
+            );
+      const found = foundById || foundByBaseId || foundByKeyword;
+
+      if (found) {
+        return {
+          id: found.id,
+          apparatus: found.apparatus,
+          cnName: found.cnName,
+          name: found.name,
+          keyword: found.cnName || found.name,
+        };
+      }
+
+      return {
+        id: item.actionId || item.baseActionId || `${item.apparatus}-${item.keyword}-${index}`,
+        apparatus: item.apparatus || "M",
+        cnName: item.keyword || "",
+        name: "",
+        keyword: item.keyword || "",
+      };
+    });
+
+    setEditingTemplateId(template.id);
+    setTemplateName(template.name || "");
+    setTemplateDesc(template.desc || "");
+    setTemplateApparatus("all");
+    setTemplateKeyword("");
+    setSelectedTemplateActions(loadedActions);
+    setSettingsView("templateEditor");
+  }
+
+  function addActionToTemplate(action) {
+    const exists = selectedTemplateActions.some((item) => item.id === action.id);
+    if (exists) return;
+
+    setSelectedTemplateActions((current) => [
+      ...current,
+      {
+        id: action.id,
+        apparatus: action.apparatus,
+        cnName: action.cnName,
+        name: action.name,
+        keyword: action.cnName || action.name,
+      },
+    ]);
+  }
+
+  function removeActionFromTemplate(actionId) {
+    setSelectedTemplateActions((current) =>
+      current.filter((action) => action.id !== actionId)
+    );
+  }
+
+  function moveTemplateAction(actionId, direction) {
+    setSelectedTemplateActions((current) => {
+      const index = current.findIndex((item) => item.id === actionId);
+      if (index < 0) return current;
+
+      const nextIndex = direction === "up" ? index - 1 : index + 1;
+      if (nextIndex < 0 || nextIndex >= current.length) return current;
+
+      const next = [...current];
+      const temp = next[index];
+      next[index] = next[nextIndex];
+      next[nextIndex] = temp;
+
+      return next;
+    });
+  }
+
+  async function saveCurrentTemplate() {
+    if (!templateName.trim()) {
+      showSettingsMessage("请填写模板名称");
+      return;
+    }
+
+    if (!selectedTemplateActions.length) {
+      showSettingsMessage("请至少选择一个动作");
+      return;
+    }
+
+    const templatePayload = {
+      id: editingTemplateId || undefined,
+      name: templateName.trim(),
+      desc: templateDesc.trim(),
+      actions: selectedTemplateActions.map((action) => ({
+        actionId: action.id,
+        apparatus: action.apparatus,
+        keyword: action.keyword || action.cnName || action.name,
+      })),
+    };
+    const nextTemplates = saveTemplate(templatePayload);
+    const savedTemplate = nextTemplates.find(
+      (template) => template.id === (editingTemplateId || nextTemplates[0]?.id)
+    );
+
+    setTemplates(nextTemplates);
+    resetTemplateEditor();
+    setSettingsView("templates");
+    showSettingsMessage("模板已保存");
+
+    if (savedTemplate) {
+      try {
+        await saveCloudTemplate(savedTemplate);
+      } catch (error) {
+        console.warn("模板云端同步失败，已保存在本机", error);
+      }
+    }
+  }
+
+  function removeTemplate(templateId) {
+    setTemplates(deleteTemplate(templateId));
+    showSettingsMessage("模板已删除");
+  }
+
+  function renderBackHeader(title, subtitle, backView = "home") {
+    return (
+      <header className="settings-v2-sub-header">
+        <button
+          type="button"
+          className="settings-v2-back"
+          onClick={() => {
+            if (settingsView === "templateEditor") resetTemplateEditor();
+            setSettingsView(backView);
+          }}
+        >
+          ‹
+        </button>
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
+      </header>
+    );
+  }
+
+  function renderSettingsToast() {
+    return settingsSavedMessage ? (
+      <div className="save-toast settings-v2-toast">{settingsSavedMessage}</div>
+    ) : null;
+  }
+
+  function renderSettingsHome() {
+    return (
+      <section className="page settings-v2-page">
+        <header className="settings-v2-main-header">
+          <h1>设置</h1>
+          <p>管理账号、工作室和排课配置</p>
+        </header>
+        {renderSettingsToast()}
+
+        <div className="settings-v2-group-title">
+          <SettingsIcon size={16} />
+          <span>账号与工作室</span>
+        </div>
+        <div className="settings-v2-card-list">
+          <button type="button" className="settings-v2-nav-row" onClick={() => setSettingsView("account")}>
+            <span className="settings-v2-icon-tile">
+              <UsersIcon size={28} />
+            </span>
+            <span>
+              <strong>账户管理</strong>
+              <small>{authUser ? authUser.email : "邮箱注册 / 登录 / 云端同步"}</small>
+            </span>
+            <em>›</em>
+          </button>
+          <button type="button" className="settings-v2-nav-row" onClick={() => setSettingsView("studio")}>
+            <span className="settings-v2-icon-tile">
+              <HomeIcon size={28} />
+            </span>
+            <span>
+              <strong>工作室信息</strong>
+              <small>Logo、名称、首页称呼</small>
+            </span>
+            <em>›</em>
+          </button>
+        </div>
+
+        <div className="settings-v2-group-title">
+          <CalendarIcon size={16} />
+          <span>排课配置</span>
+        </div>
+        <div className="settings-v2-card-list">
+          <button type="button" className="settings-v2-nav-row" onClick={() => setSettingsView("library")}>
+            <span className="settings-v2-icon-tile">
+              <SparklesIcon size={28} />
+            </span>
+            <span>
+              <strong>动作库管理</strong>
+              <small>当前动作池 {allActions.length} 个，可搜索筛选</small>
+            </span>
+            <em>›</em>
+          </button>
+          <button type="button" className="settings-v2-nav-row" onClick={() => setSettingsView("templates")}>
+            <span className="settings-v2-icon-tile">
+              <ClipboardListIcon size={28} />
+            </span>
+            <span>
+              <strong>课程模板管理</strong>
+              <small>创建模板，排课页可套用</small>
+            </span>
+            <em>›</em>
+          </button>
+          <div className="settings-v2-nav-row settings-v2-language-row">
+            <span className="settings-v2-icon-tile">文</span>
+            <span>
+              <strong>动作语言偏好</strong>
+              <small>{languageLabelMap[languagePreference]}</small>
+            </span>
+            <select
+              value={languagePreference}
+              onChange={(event) => chooseLanguagePreference(event.target.value)}
+            >
+              <option value="chinese">中文优先</option>
+              <option value="english">英文优先</option>
+              <option value="mixed">中英对照</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="settings-v2-group-title">
+          <SaveIcon size={16} />
+          <span>数据管理</span>
+        </div>
+        <div className="settings-v2-card-list">
+          <button type="button" className="settings-v2-nav-row">
+            <span className="settings-v2-icon-tile">
+              <LogOutIcon size={26} />
+            </span>
+            <span>
+              <strong>导出数据</strong>
+            </span>
+            <em>›</em>
+          </button>
+          <button type="button" className="settings-v2-nav-row">
+            <span className="settings-v2-icon-tile">
+              <LogInIcon size={26} />
+            </span>
+            <span>
+              <strong>导入数据</strong>
+            </span>
+            <em>›</em>
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  function renderAccountPage() {
+    return (
+      <section className="page settings-v2-page settings-v2-sub-page">
+        {renderBackHeader("账户管理", "邮箱注册 / 登录 / 云端同步")}
+        {renderSettingsToast()}
+
+        <div className="settings-v2-panel account-v2-panel">
+          <div className="account-v2-status">
+            <span className="settings-v2-icon-tile">
+              {authUser ? <UsersIcon size={30} /> : <MailIcon size={30} />}
+            </span>
+            <span>
+              <strong>{authUser ? "已登录" : "未登录"}</strong>
+              <small>
+                {authUser
+                  ? authUser.email
+                  : "登录后可同步您的工作室信息、动作设置与模板。"}
+              </small>
+            </span>
+          </div>
+
+          {!authUser && (
+            <>
+              <label className="settings-v2-field">
+                <span>邮箱</span>
+                <div>
+                  <MailIcon size={18} />
+                  <input
+                    value={authEmail}
+                    onChange={(event) => setAuthEmail(event.target.value)}
+                    placeholder="请输入邮箱"
+                    type="email"
+                    autoComplete="email"
+                  />
+                </div>
+              </label>
+              <label className="settings-v2-field">
+                <span>密码</span>
+                <div>
+                  <LockIcon size={18} />
+                  <input
+                    value={authPassword}
+                    onChange={(event) => setAuthPassword(event.target.value)}
+                    placeholder="请输入密码"
+                    type="password"
+                    autoComplete="current-password"
+                  />
+                </div>
+              </label>
+              <div className="settings-v2-two-actions">
+                <button type="button" className="settings-v2-primary" onClick={handleEmailSignIn} disabled={authLoading}>
+                  登录
+                </button>
+                <button type="button" className="settings-v2-secondary" onClick={handleEmailSignUp} disabled={authLoading}>
+                  注册
+                </button>
+              </div>
+            </>
+          )}
+
+          {authUser && (
+            <button type="button" className="settings-v2-secondary" onClick={handleEmailSignOut} disabled={authLoading}>
+              退出登录
+            </button>
+          )}
+
+          {authMessage && <p className="settings-v2-note">{authMessage}</p>}
+        </div>
+
+        <div className="settings-v2-panel account-v2-sync">
+          <span className="settings-v2-icon-tile">
+            <SaveIcon size={28} />
+          </span>
+          <div>
+            <strong>云端同步</strong>
+            <p>同一邮箱登录后，工作室、动作偏好、标签、收藏与模板会优先跟随账号。</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  function renderStudioPage() {
+    return (
+      <section className="page settings-v2-page settings-v2-sub-page">
+        {renderBackHeader("工作室信息", "Logo、名称与首页称呼")}
+        {renderSettingsToast()}
+
+        <div className="settings-v2-panel studio-v2-panel">
+          <div className="studio-v2-logo-row">
+            <label className="studio-v2-logo-upload">
+              {settingsForm.logoDataUrl ? (
+                <img src={settingsForm.logoDataUrl} alt="工作室 Logo" />
+              ) : (
+                <>
+                  <SaveIcon size={38} />
+                  <span>上传 Logo</span>
+                </>
+              )}
+              <input type="file" accept="image/*" onChange={handleLogoUpload} />
+            </label>
+            <div>
+              <strong>工作室 Logo</strong>
+              <p>将在课程页面、会员端及相关场景中展示。</p>
+              {settingsForm.logoDataUrl && (
+                <button type="button" onClick={clearLogo}>清除 Logo</button>
+              )}
+            </div>
+          </div>
+
+          <label className="settings-v2-plain-field">
+            <span>中文名称</span>
+            <input
+              value={settingsForm.studioNameCn || ""}
+              onChange={(event) => updateSettingsField("studioNameCn", event.target.value)}
+              placeholder="例如：北极星普拉提"
+            />
+          </label>
+          <label className="settings-v2-plain-field">
+            <span>英文名称</span>
+            <input
+              value={settingsForm.studioNameEn || ""}
+              onChange={(event) => updateSettingsField("studioNameEn", event.target.value)}
+              placeholder="例如：Polaris Pilates"
+            />
+          </label>
+          <label className="settings-v2-plain-field">
+            <span>首页称呼</span>
+            <input
+              value={settingsForm.coachName || ""}
+              onChange={(event) => updateSettingsField("coachName", event.target.value)}
+              placeholder="例如：严老师"
+            />
+          </label>
+
+          <button type="button" className="settings-v2-primary settings-v2-wide" onClick={saveStudioInfo}>
+            保存工作室信息
+          </button>
+        </div>
+      </section>
+    );
+  }
+
+  function renderLibraryPage() {
+    return (
+      <section className="page settings-v2-page settings-v2-sub-page settings-v2-library-page">
+        {renderBackHeader("动作库管理", "查看、搜索与筛选动作")}
+        {renderSettingsToast()}
+
+        <div className="settings-v2-summary-card">
+          <span className="settings-v2-icon-tile">
+            <SparklesIcon size={30} />
+          </span>
+          <div>
+            <strong>动作池 {allActions.length} 个</strong>
+            <p>
+              M {actionStats.M || 0} · R {actionStats.R || 0} · TT {actionStats.TT || 0} · C {actionStats.C || 0} · LB {actionStats.LB || 0}
+            </p>
+          </div>
+        </div>
+
+        <div className="settings-v2-filter-row">
+          {libraryPrimaryFilters.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={libraryApparatus === item.key ? "active" : ""}
+              onClick={() => updateLibraryFilter(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+          <div className="settings-v2-more-filter">
+            <button
+              type="button"
+              className={!primaryFilterKeys.includes(libraryApparatus) ? "active" : ""}
+              onClick={() => setIsMoreLibraryFilterOpen((current) => !current)}
+            >
+              更多⌄
+            </button>
+            {isMoreLibraryFilterOpen && (
+              <div className="settings-v2-more-menu">
+                {libraryExtraFilters.map((item) => (
+                  <button key={item.key} type="button" onClick={() => updateLibraryFilter(item.key)}>
+                    <strong>{item.label}</strong>
+                    <span>{item.key === "favorite" ? "收藏动作" : item.desc}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <label className="settings-v2-search">
+          <SearchIcon size={18} />
+          <input
+            value={libraryKeyword}
+            onChange={(event) => setLibraryKeyword(event.target.value)}
+            placeholder="搜索动作名称 / 好处关键词"
+          />
+        </label>
+
+        <div className="settings-v2-action-list">
+          {libraryVisibleActions.map((action) => {
+            const meta = getActionMeta(action.id);
+            const tags = meta.tags || action.tags || [];
+            const isFavorite = Boolean(action.isFavorite || meta.isFavorite);
+
+            return (
+              <article key={action.id} className="settings-v2-action-row">
+                <button type="button" className="settings-v2-action-main" onClick={() => openEditActionEditor(action)}>
+                  <em>{action.apparatus}</em>
+                  <span>
+                    <strong>
+                      {action.cnName || action.name}
+                      {action.cnName && action.name ? ` / ${action.name}` : ""}
+                    </strong>
+                    <small>{action.defaultBenefit || "暂无动作好处"}</small>
+                    {tags.length > 0 && (
+                      <span className="settings-v2-tag-strip">
+                        {tags.map((tag) => (
+                          <b key={tag}>{tag}</b>
+                        ))}
+                      </span>
+                    )}
+                  </span>
+                  <i>›</i>
+                </button>
+                <div className="settings-v2-action-tools">
+                  <button type="button" onClick={() => openTagEditor(action)}>打标签</button>
+                  <button
+                    type="button"
+                    className={isFavorite ? "active" : ""}
+                    onClick={() => toggleFavorite(action)}
+                  >
+                    {isFavorite ? "已收藏" : "收藏"}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+
+          {filteredLibraryActions.length > libraryVisibleActions.length && (
+            <p className="settings-v2-list-note">
+              已显示前 {libraryVisibleActions.length} 个动作，可继续输入关键词缩小范围。
+            </p>
+          )}
+        </div>
+
+        <button type="button" className="settings-v2-floating-add" onClick={openNewActionEditor}>
+          <PlusIcon size={27} />
+        </button>
+      </section>
+    );
+  }
+
+  function renderTemplatesPage() {
+    return (
+      <section className="page settings-v2-page settings-v2-sub-page settings-v2-template-page">
+        {renderBackHeader("课程模板管理", "创建模板，排课页可直接套用")}
+        {renderSettingsToast()}
+
+        <div className="settings-v2-summary-card settings-v2-template-summary">
+          <span className="settings-v2-icon-tile">
+            <ClipboardListIcon size={30} />
+          </span>
+          <strong>已有模板 <b>{templates.length}</b> 个</strong>
+          <button type="button" onClick={openNewTemplatePage}>
+            + 新建模板
+          </button>
+        </div>
+
+        <div className="settings-v2-template-list">
+          {templates.length > 0 ? (
+            templates.map((template) => (
+              <article key={template.id} className="settings-v2-template-row">
+                <button type="button" onClick={() => openEditTemplatePage(template)}>
+                  <span className="settings-v2-icon-tile">
+                    <ClipboardListIcon size={24} />
+                  </span>
+                  <span>
+                    <strong>{template.name}</strong>
+                    <small>
+                      {template.actions?.length || 0} 个动作
+                      {template.desc ? ` · ${template.desc}` : ""}
+                    </small>
+                  </span>
+                  <em>›</em>
+                </button>
+                <div>
+                  <button type="button" onClick={() => openEditTemplatePage(template)}>编辑</button>
+                  <button type="button" onClick={() => removeTemplate(template.id)}>删除</button>
+                </div>
+              </article>
+            ))
+          ) : (
+            <p className="settings-v2-list-note">暂无模板，点击“新建模板”创建第一个模板。</p>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  function renderTemplateEditorPage() {
+    return (
+      <section className="page settings-v2-page settings-v2-sub-page settings-v2-template-editor-page">
+        {renderBackHeader(editingTemplateId ? "编辑模板" : "新建模板", "选择动作并保存为排课模板", "templates")}
+        {renderSettingsToast()}
+
+        <div className="settings-v2-panel">
+          <label className="settings-v2-plain-field">
+            <span>模板名称</span>
+            <input
+              value={templateName}
+              onChange={(event) => setTemplateName(event.target.value)}
+              placeholder="例如：肩颈理疗 / 核心增强"
+            />
+          </label>
+          <label className="settings-v2-plain-field">
+            <span>模板说明</span>
+            <input
+              value={templateDesc}
+              onChange={(event) => setTemplateDesc(event.target.value)}
+              placeholder="例如：适合久坐肩颈紧张"
+            />
+          </label>
+        </div>
+
+        {selectedTemplateActions.length > 0 && (
+          <div className="settings-v2-selected-actions">
+            {selectedTemplateActions.map((action, index) => (
+              <div key={action.id}>
+                <span>{index + 1}. {action.apparatus} · {action.cnName || action.name}</span>
+                <button type="button" onClick={() => moveTemplateAction(action.id, "up")}>↑</button>
+                <button type="button" onClick={() => moveTemplateAction(action.id, "down")}>↓</button>
+                <button type="button" onClick={() => removeActionFromTemplate(action.id)}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="settings-v2-filter-row">
+          {libraryPrimaryFilters.map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              className={templateApparatus === item.key ? "active" : ""}
+              onClick={() => setTemplateApparatus(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <label className="settings-v2-search">
+          <SearchIcon size={18} />
+          <input
+            value={templateKeyword}
+            onChange={(event) => setTemplateKeyword(event.target.value)}
+            placeholder="从动作库添加动作"
+          />
+        </label>
+
+        <div className="settings-v2-template-picker">
+          {templateSearchActions.map((action) => {
+            const selected = selectedTemplateActions.some((item) => item.id === action.id);
+
+            return (
+              <button
+                key={action.id}
+                type="button"
+                className={selected ? "selected" : ""}
+                onClick={() => addActionToTemplate(action)}
+              >
+                <em>{action.apparatus}</em>
+                <span>
+                  <strong>{action.cnName || action.name}</strong>
+                  {action.cnName && action.name && <small>{action.name}</small>}
+                </span>
+                <b>{selected ? "已选" : "+"}</b>
+              </button>
+            );
+          })}
+        </div>
+
+        <button type="button" className="settings-v2-primary settings-v2-wide" onClick={saveCurrentTemplate}>
+          保存模板
+        </button>
+      </section>
+    );
+  }
+
+  function renderActionEditor() {
+    if (!actionEditorOpen) return null;
+
+    return (
+      <PortalLayer>
+        <div className="modal-backdrop settings-v2-backdrop" onClick={() => setActionEditorOpen(false)}>
+          <div className="modal-sheet settings-v2-action-editor" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>{editingAction ? "编辑动作" : "新增动作"}</h2>
+                <p>填写器械、名称、好处、标签与收藏状态。</p>
+              </div>
+              <button type="button" onClick={() => setActionEditorOpen(false)}>×</button>
+            </div>
+
+            <label className="settings-v2-plain-field">
+              <span>器械</span>
+              <select
+                value={actionDraft.apparatus}
+                onChange={(event) =>
+                  setActionDraft((current) => ({
+                    ...current,
+                    apparatus: event.target.value,
+                  }))
+                }
+              >
+                {editorApparatusOptions.map((item) => (
+                  <option key={item.key} value={item.key}>{item.label}</option>
+                ))}
+                <option value="__new__">+ 新增器械</option>
+              </select>
+            </label>
+
+            {actionDraft.apparatus === "__new__" && (
+              <label className="settings-v2-plain-field">
+                <span>新器械</span>
+                <input
+                  value={actionDraft.newApparatus}
+                  onChange={(event) =>
+                    setActionDraft((current) => ({
+                      ...current,
+                      newApparatus: event.target.value,
+                    }))
+                  }
+                  placeholder="例如：狐狸 / FOX"
+                />
+              </label>
+            )}
+
+            <label className="settings-v2-plain-field">
+              <span>中文名</span>
+              <input
+                value={actionDraft.cnName}
+                onChange={(event) =>
+                  setActionDraft((current) => ({
+                    ...current,
+                    cnName: event.target.value,
+                  }))
+                }
+                placeholder="例如：狐狸摇摆"
+              />
+            </label>
+            <label className="settings-v2-plain-field">
+              <span>英文名</span>
+              <input
+                value={actionDraft.name}
+                onChange={(event) =>
+                  setActionDraft((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                placeholder="可选"
+              />
+            </label>
+            <label className="settings-v2-plain-field">
+              <span>动作好处</span>
+              <textarea
+                value={actionDraft.benefit}
+                onChange={(event) =>
+                  setActionDraft((current) => ({
+                    ...current,
+                    benefit: event.target.value,
+                  }))
+                }
+                placeholder="例如：强化下腰背和臀部"
+              />
+            </label>
+            <label className="settings-v2-plain-field">
+              <span>标签</span>
+              <input
+                value={actionDraft.tags}
+                onChange={(event) =>
+                  setActionDraft((current) => ({
+                    ...current,
+                    tags: event.target.value,
+                  }))
+                }
+                placeholder="例如：臀腿、核心、肩颈"
+              />
+            </label>
+            <label className="settings-v2-checkbox">
+              <input
+                type="checkbox"
+                checked={actionDraft.isFavorite}
+                onChange={(event) =>
+                  setActionDraft((current) => ({
+                    ...current,
+                    isFavorite: event.target.checked,
+                  }))
+                }
+              />
+              <span>收藏动作</span>
+            </label>
+
+            <button type="button" className="settings-v2-primary settings-v2-wide" onClick={saveActionEditor}>
+              保存动作
+            </button>
+          </div>
+        </div>
+      </PortalLayer>
+    );
+  }
+
+  function renderTagEditor() {
+    if (!tagTarget) return null;
+
+    return (
+      <PortalLayer>
+        <div className="modal-backdrop settings-v2-backdrop" onClick={() => setTagTarget(null)}>
+          <div className="modal-sheet settings-v2-action-editor settings-v2-tag-editor" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2>给动作打标签</h2>
+                <p>{tagTarget.apparatus} · {tagTarget.cnName || tagTarget.name}</p>
+              </div>
+              <button type="button" onClick={() => setTagTarget(null)}>×</button>
+            </div>
+            <label className="settings-v2-plain-field">
+              <span>主题标签</span>
+              <input
+                value={tagInput}
+                onChange={(event) => setTagInput(event.target.value)}
+                placeholder="例如：核心、臀腿、肩颈"
+              />
+            </label>
+            <button type="button" className="settings-v2-primary settings-v2-wide" onClick={saveActionTags}>
+              保存标签
+            </button>
+          </div>
+        </div>
+      </PortalLayer>
+    );
+  }
+
+  const pageMap = {
+    home: renderSettingsHome,
+    account: renderAccountPage,
+    studio: renderStudioPage,
+    library: renderLibraryPage,
+    templates: renderTemplatesPage,
+    templateEditor: renderTemplateEditorPage,
+  };
+  const renderCurrentPage = pageMap[settingsView] || renderSettingsHome;
+
+  return (
+    <>
+      {renderCurrentPage()}
+      {renderActionEditor()}
+      {renderTagEditor()}
+    </>
+  );
+}
+
+function LegacySettingsPage({ languagePreference, setLanguagePreference }) {
+  const initialData = useMemo(() => getAppData(), []);
 
   const [openPanel, setOpenPanel] = useState("studio");
 
@@ -4538,5 +6015,9 @@ async function handleEmailSignOut() {
     </section>
   );
 }
+
+void LegacyHomePage;
+void LegacySchedulePage;
+void LegacySettingsPage;
 
 export default App;

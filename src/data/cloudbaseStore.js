@@ -21,7 +21,9 @@ function getRows(result) {
 }
 
 function withoutCloudId(row = {}) {
-  const { _id, id, ...rest } = row;
+  const rest = { ...row };
+  delete rest._id;
+  delete rest.id;
   return rest;
 }
 
