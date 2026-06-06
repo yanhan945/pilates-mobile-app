@@ -243,6 +243,8 @@ export async function saveCloudLesson(lesson) {
     poster_theme: lesson.posterTheme || lesson.poster_theme || "",
     actions: Array.isArray(lesson.actions) ? lesson.actions : [],
     summary: lesson.summary || "",
+    summary_mode: lesson.summaryMode || lesson.summary_mode || "lessonSummary",
+    summary_label: lesson.summaryLabel || lesson.summary_label || "课后总结",
   });
 }
 

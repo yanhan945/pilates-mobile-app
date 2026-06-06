@@ -67,7 +67,9 @@ import {
   saveUserActionMeta as saveCloudUserActionMeta,
 } from "./data/cloudbaseStore";
 
-const POSTER_API_URL = "https://pilates-poster-api.onrender.com/generate";
+const POSTER_API_URL =
+  import.meta.env.VITE_POSTER_API_URL ||
+  "https://pilates-poster-api.onrender.com/generate";
 const TAB_ITEMS = [
   { key: "home", label: "首页", Icon: HomeIcon },
   { key: "schedule", label: "排课", Icon: CalendarIcon },
@@ -81,6 +83,20 @@ const posterThemeOptions = [
   { key: "softLightWhite", label: "柔光白" },
   { key: "obsidianBlack", label: "曜石黑" },
   { key: "lakeBlue", label: "静海蓝" },
+];
+const summaryModeOptions = [
+  {
+    key: "lessonSummary",
+    label: "课后总结",
+    placeholder: "输入课后总结、训练重点或给学员的课后建议...",
+    emptyText: "暂无总结",
+  },
+  {
+    key: "bodyFeedback",
+    label: "身体反馈",
+    placeholder: "记录酸痛、身体感觉、恢复状态或第二天跟进内容...",
+    emptyText: "暂无身体反馈",
+  },
 ];
 const apparatusOptions = [
   { key: "all", label: "全部", desc: "全部动作" },
@@ -161,7 +177,7 @@ function parsePasteCourseText(rawText) {
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line, index) => {
-      const summaryMatch = line.match(/^(课后总结|总结)\s*[:：]\s*(.*)$/);
+      const summaryMatch = line.match(/^(课后总结|总结|身体反馈)\s*[:：]\s*(.*)$/);
 
       if (summaryMatch) {
         return {
@@ -559,6 +575,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     benefit: "",
   });
   const [selectedPosterTheme, setSelectedPosterTheme] = useState("vitalityOrange");
+  const [summaryMode, setSummaryMode] = useState("lessonSummary");
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
   const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false);
   const [generatedPosterUrl, setGeneratedPosterUrl] = useState("");
@@ -584,6 +601,36 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
 
     textarea.style.height = "auto";
     textarea.style.height = `${textarea.scrollHeight}px`;
+  }
+
+  function getSummaryOption(mode = summaryMode) {
+    return (
+      summaryModeOptions.find((option) => option.key === mode) ||
+      summaryModeOptions[0]
+    );
+  }
+
+  function getStoredSummaryMode(lesson) {
+    if (summaryModeOptions.some((option) => option.key === lesson?.summaryMode)) {
+      return lesson.summaryMode;
+    }
+
+    if (
+      lesson?.summaryLabel === "身体反馈" ||
+      lesson?.summaryTitle === "身体反馈" ||
+      lesson?.summary_label === "身体反馈" ||
+      lesson?.summary_title === "身体反馈"
+    ) {
+      return "bodyFeedback";
+    }
+
+    return "lessonSummary";
+  }
+
+  function toggleSummaryMode() {
+    setSummaryMode((current) =>
+      current === "lessonSummary" ? "bodyFeedback" : "lessonSummary"
+    );
   }
 
   function activateScheduleInput(mode) {
@@ -719,6 +766,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         lessonTheme: existingLesson.lessonTheme || "",
         summary: existingLesson.summary || "",
       });
+      setSummaryMode(getStoredSummaryMode(existingLesson));
       setActions(Array.isArray(existingLesson.actions) ? existingLesson.actions : []);
     } else {
       setLessonForm((current) => ({
@@ -728,6 +776,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         lessonTheme: "",
         summary: "",
       }));
+      setSummaryMode("lessonSummary");
       setActions([]);
     }
 
@@ -762,7 +811,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     }, 900);
 
     return () => clearTimeout(timer);
-  }, [lessonForm, actions, languagePreference, lessonNumber]);
+  }, [lessonForm, actions, languagePreference, lessonNumber, summaryMode]);
 
   useEffect(() => {
     function closeWhenClickOutside(event) {
@@ -856,6 +905,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       lessonTheme: "",
       summary: "",
     });
+    setSummaryMode("lessonSummary");
     setActions([]);
     setSearchKeyword("");
     setIsMemberPickerOpen(false);
@@ -1186,6 +1236,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       lessonTheme: lesson.lessonTheme || "",
       summary: lesson.summary || "",
     }));
+    setSummaryMode(getStoredSummaryMode(lesson));
     setActions(Array.isArray(lesson.actions) ? lesson.actions : []);
     setSelectedHistoryLesson(null);
     setIsQuickPanelOpen(false);
@@ -1193,6 +1244,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   }
 
   function buildLessonPayload() {
+    const summaryOption = getSummaryOption();
+
     return {
       id: `lesson-${lessonForm.studentName || "guest"}-${lessonNumber}`,
       memberName: lessonForm.studentName,
@@ -1203,6 +1256,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       posterTheme: selectedPosterTheme,
       actions,
       summary: lessonForm.summary,
+      summaryMode,
+      summaryLabel: summaryOption.label,
+      summaryTitle: summaryOption.label,
+      summary_label: summaryOption.label,
+      summary_title: summaryOption.label,
       languagePreference,
     };
   }
@@ -1233,6 +1291,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       lessonTheme: "",
       summary: "",
     });
+    setSummaryMode("lessonSummary");
     setActions([]);
     setPasteText("");
     setParsedRows([]);
@@ -1258,6 +1317,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
 
   function buildPosterPayload() {
     const latestSettings = getAppData().settings || {};
+    const summaryOption = getSummaryOption();
 
     return {
       posterTheme: selectedPosterTheme,
@@ -1271,6 +1331,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       studioSubName: latestSettings.studioNameEn || "",
       logo: latestSettings.logoDataUrl || "",
       summary: lessonForm.summary || "",
+      summaryMode,
+      summaryLabel: summaryOption.label,
+      summaryTitle: summaryOption.label,
+      summary_label: summaryOption.label,
+      summary_title: summaryOption.label,
       actions: actions.map((action, index) => ({
         number: index + 1,
         equipment: action.apparatus || "",
@@ -1325,6 +1390,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   }
 
   function buildCourseText() {
+    const summaryOption = getSummaryOption();
     const actionText = actions
       .map((action, index) => {
         const params = getActionParamText(action);
@@ -1349,8 +1415,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       "训练动作：",
       actionText || "暂无动作",
       "",
-      "课后总结：",
-      lessonForm.summary || "暂无总结",
+      `${summaryOption.label}：`,
+      lessonForm.summary || summaryOption.emptyText,
     ].join("\n");
   }
 
@@ -1926,15 +1992,22 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         <div className="schedule-v2-card-title">
           <h2>
             <FileTextIcon size={18} />
-            课后总结
+            {getSummaryOption().label}
           </h2>
+          <button
+            type="button"
+            className="schedule-v2-summary-switch"
+            onClick={toggleSummaryMode}
+          >
+            切换
+          </button>
         </div>
         <textarea
           value={lessonForm.summary}
           onFocus={() => activateScheduleInput("summary")}
           onBlur={() => deactivateScheduleInput("summary")}
           onChange={handleSummaryChange}
-          placeholder="输入课后总结或身体反馈建议..."
+          placeholder={getSummaryOption().placeholder}
         />
       </section>
 
@@ -2147,7 +2220,9 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
                 <button
                   key={theme.key}
                   type="button"
-                  className={selectedPosterTheme === theme.key ? "active" : ""}
+                  className={`poster-theme-choice poster-theme-choice--${theme.key}${
+                    selectedPosterTheme === theme.key ? " active" : ""
+                  }`}
                   onClick={() => setSelectedPosterTheme(theme.key)}
                 >
                   {theme.label}
