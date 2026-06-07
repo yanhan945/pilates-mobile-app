@@ -7261,11 +7261,35 @@ body.schedule-modal-open .bottom-tabs {
 .phone-page--schedule .schedule-v2-page {
   height: 100% !important;
   min-height: 0 !important;
-  padding: 44px 18px calc(184px + env(safe-area-inset-bottom)) !important;
+  padding: 0 !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  animation: none !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+.phone-page--schedule .schedule-v2-header {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  padding: 44px 18px 12px !important;
+  background: rgba(251, 250, 249, 0.98) !important;
+  border-bottom: 1px solid var(--schedule-border, #ece8e1) !important;
+  box-shadow: 0 8px 18px rgba(65, 54, 43, 0.035) !important;
+  z-index: 4 !important;
+}
+
+.phone-page--schedule .schedule-v2-scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 16px 18px calc(188px + env(safe-area-inset-bottom)) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch !important;
+  scroll-padding-bottom: calc(188px + env(safe-area-inset-bottom)) !important;
 }
 
 .phone-page--schedule .schedule-v2-summary-card {
@@ -7292,15 +7316,15 @@ body.schedule-modal-open .bottom-tabs {
 }
 
 .phone-page--schedule .schedule-v2-bottom-bar {
-  position: fixed !important;
-  left: 50% !important;
-  right: auto !important;
+  position: absolute !important;
+  left: 18px !important;
+  right: 18px !important;
   bottom: calc(92px + env(safe-area-inset-bottom)) !important;
   z-index: 60 !important;
-  width: min(394px, calc(100vw - 36px)) !important;
-  max-width: 394px !important;
+  width: auto !important;
+  max-width: none !important;
   margin: 0 !important;
-  transform: translateX(-50%) !important;
+  transform: none !important;
 }
 
 .phone-page--schedule .schedule-v2-bottom-bar button {
@@ -7314,7 +7338,7 @@ body.schedule-modal-open .bottom-tabs {
 .phone-page--schedule .schedule-v2-input-active .schedule-v2-bottom-bar {
   opacity: 0 !important;
   pointer-events: none !important;
-  transform: translateX(-50%) translateY(20px) !important;
+  transform: translateY(20px) !important;
 }
 
 .phone-page--settings .settings-v2-page {
@@ -7723,12 +7747,22 @@ body.schedule-modal-open .bottom-tabs {
 
 @media (max-width: 374px) {
   .phone-page--schedule .schedule-v2-page {
+    padding: 0 !important;
+  }
+
+  .phone-page--schedule .schedule-v2-header {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .phone-page--schedule .schedule-v2-scroll {
     padding-left: 14px !important;
     padding-right: 14px !important;
   }
 
   .phone-page--schedule .schedule-v2-bottom-bar {
-    width: min(386px, calc(100vw - 28px)) !important;
+    left: 14px !important;
+    right: 14px !important;
   }
 
   .phone-page--settings .settings-v2-page {
@@ -7744,5 +7778,277 @@ body.schedule-modal-open .bottom-tabs {
   .settings-v2-icon-tile {
     width: 38px !important;
     height: 38px !important;
+  }
+}
+
+/* ===== Settings density pass: smaller type and tighter rows ===== */
+.phone-page--settings .settings-v2-page {
+  padding-top: 34px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+}
+
+.phone-page--settings .settings-v2-sub-page {
+  padding-top: 24px !important;
+}
+
+.settings-v2-main-header {
+  margin-bottom: 13px !important;
+}
+
+.settings-v2-main-header h1,
+.settings-v2-sub-header h1 {
+  font-size: 24px !important;
+  line-height: 1.08 !important;
+}
+
+.settings-v2-main-header p,
+.settings-v2-sub-header p {
+  margin-top: 5px !important;
+  font-size: 12px !important;
+  line-height: 1.25 !important;
+}
+
+.settings-v2-sub-header {
+  gap: 4px !important;
+  margin-bottom: 12px !important;
+}
+
+.settings-v2-back {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 32px !important;
+}
+
+.settings-v2-group-title {
+  margin: 11px 0 6px !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+}
+
+.settings-v2-group-title svg {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+.settings-v2-card-list {
+  border-radius: 15px !important;
+}
+
+.settings-v2-nav-row {
+  min-height: 52px !important;
+  padding: 7px 10px !important;
+  grid-template-columns: 36px minmax(0, 1fr) auto !important;
+  gap: 9px !important;
+}
+
+.settings-v2-language-row {
+  grid-template-columns: 36px minmax(0, 1fr) 82px !important;
+}
+
+.settings-v2-nav-row > span:nth-child(2),
+.settings-v2-language-row > span:nth-child(2) {
+  gap: 2px !important;
+}
+
+.settings-v2-nav-row strong,
+.settings-v2-summary-card strong,
+.settings-v2-panel strong,
+.settings-v2-template-row strong {
+  font-size: 13px !important;
+  line-height: 1.14 !important;
+}
+
+.settings-v2-nav-row small,
+.settings-v2-summary-card p,
+.settings-v2-panel p,
+.settings-v2-panel small,
+.settings-v2-template-row small {
+  font-size: 10.5px !important;
+  line-height: 1.25 !important;
+}
+
+.settings-v2-nav-row em,
+.settings-v2-template-row em {
+  font-size: 22px !important;
+}
+
+.settings-v2-icon-tile {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 11px !important;
+  font-size: 15px !important;
+}
+
+.settings-v2-icon-tile svg {
+  width: 19px !important;
+  height: 19px !important;
+}
+
+.settings-v2-language-row select {
+  width: 82px !important;
+  height: 28px !important;
+  font-size: 11.5px !important;
+}
+
+.settings-v2-panel,
+.settings-v2-summary-card {
+  padding: 10px !important;
+  border-radius: 15px !important;
+}
+
+.settings-v2-panel {
+  gap: 9px !important;
+}
+
+.settings-v2-summary-card,
+.account-v2-status,
+.studio-v2-logo-row,
+.account-v2-sync {
+  grid-template-columns: 38px minmax(0, 1fr) !important;
+  gap: 9px !important;
+}
+
+.settings-v2-summary-card {
+  margin-bottom: 9px !important;
+}
+
+.settings-v2-field,
+.settings-v2-plain-field {
+  gap: 4px !important;
+}
+
+.settings-v2-field > span,
+.settings-v2-plain-field > span {
+  font-size: 12px !important;
+}
+
+.settings-v2-field > div,
+.settings-v2-plain-field input,
+.settings-v2-plain-field select,
+.settings-v2-search {
+  min-height: 40px !important;
+  border-radius: 11px !important;
+}
+
+.settings-v2-field > div,
+.settings-v2-search {
+  padding: 0 10px !important;
+}
+
+.settings-v2-field input,
+.settings-v2-plain-field input,
+.settings-v2-plain-field select,
+.settings-v2-plain-field textarea,
+.settings-v2-search input {
+  font-size: 12px !important;
+}
+
+.settings-v2-plain-field input,
+.settings-v2-plain-field select,
+.settings-v2-plain-field textarea {
+  padding: 0 10px !important;
+}
+
+.settings-v2-plain-field textarea {
+  min-height: 62px !important;
+  padding-top: 9px !important;
+}
+
+.settings-v2-primary,
+.settings-v2-secondary {
+  min-height: 42px !important;
+  border-radius: 12px !important;
+  font-size: 13px !important;
+}
+
+.studio-v2-logo-upload {
+  width: 70px !important;
+  height: 70px !important;
+  border-radius: 13px !important;
+  font-size: 10px !important;
+}
+
+.studio-v2-logo-row {
+  grid-template-columns: 78px minmax(0, 1fr) !important;
+  padding-bottom: 9px !important;
+}
+
+.settings-v2-filter-row {
+  gap: 6px !important;
+  padding-bottom: 7px !important;
+  margin-bottom: 6px !important;
+}
+
+.settings-v2-filter-row button {
+  min-height: 30px !important;
+  min-width: 40px !important;
+  padding: 0 10px !important;
+  font-size: 11.5px !important;
+}
+
+.settings-v2-search {
+  margin-bottom: 7px !important;
+}
+
+.settings-v2-action-row,
+.settings-v2-template-row {
+  border-radius: 14px !important;
+  padding: 8px !important;
+}
+
+.settings-v2-action-main {
+  grid-template-columns: 32px minmax(0, 1fr) auto !important;
+  gap: 8px !important;
+}
+
+.settings-v2-action-main em,
+.settings-v2-template-picker em {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 13px !important;
+}
+
+.settings-v2-action-main strong,
+.settings-v2-template-picker strong {
+  font-size: 12.5px !important;
+}
+
+.settings-v2-action-main small,
+.settings-v2-template-picker small {
+  font-size: 10.5px !important;
+}
+
+.settings-v2-action-tools {
+  padding-left: 40px !important;
+}
+
+.settings-v2-action-tools button {
+  min-height: 24px !important;
+  padding: 0 8px !important;
+  font-size: 10.5px !important;
+}
+
+.settings-v2-floating-add {
+  width: 42px !important;
+  height: 42px !important;
+  bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+}
+
+@media (max-width: 374px) {
+  .phone-page--settings .settings-v2-page {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .settings-v2-nav-row {
+    grid-template-columns: 34px minmax(0, 1fr) auto !important;
+    gap: 8px !important;
+  }
+
+  .settings-v2-icon-tile {
+    width: 32px !important;
+    height: 32px !important;
   }
 }
