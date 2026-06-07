@@ -1611,6 +1611,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
 
       {saveMessage && <div className="save-toast schedule-v2-toast">{saveMessage}</div>}
 
+      <div className="schedule-v2-scroll">
       <section className="schedule-v2-card">
         <div className="schedule-v2-card-title">
           <h2>
@@ -2010,6 +2011,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
           placeholder={getSummaryOption().placeholder}
         />
       </section>
+      </div>
 
       <div className="schedule-v2-bottom-bar">
         <button type="button" onClick={saveCurrentLesson}>
@@ -3592,7 +3594,6 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
   const [actionLibraryVersion, setActionLibraryVersion] = useState(0);
   const [libraryApparatus, setLibraryApparatus] = useState("all");
   const [libraryKeyword, setLibraryKeyword] = useState("");
-  const [isMoreLibraryFilterOpen, setIsMoreLibraryFilterOpen] = useState(false);
   const [tagTarget, setTagTarget] = useState(null);
   const [tagInput, setTagInput] = useState("");
   const [actionEditorOpen, setActionEditorOpen] = useState(false);
@@ -3641,13 +3642,32 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     return stats;
   }, [allActions]);
 
-  const primaryFilterKeys = ["all", "M", "R", "TT", "C", "LB"];
-  const libraryPrimaryFilters = primaryFilterKeys.map((key) => (
+  const libraryFilterOrder = [
+    "all",
+    "M",
+    "R",
+    "TT",
+    "C",
+    "LB",
+    "SC",
+    "P",
+    "dumbbell",
+    "kettlebell",
+    "bosu",
+    "favorite",
+  ];
+  const libraryFilterOptions = [
+    ...libraryFilterOrder
+      .map((key) => settingsApparatusOptions.find((item) => item.key === key))
+      .filter(Boolean),
+    ...settingsApparatusOptions.filter(
+      (item) => !libraryFilterOrder.includes(item.key)
+    ),
+  ];
+  const templateFilterKeys = ["all", "M", "R", "TT", "C", "LB"];
+  const templateFilterOptions = templateFilterKeys.map((key) => (
     settingsApparatusOptions.find((item) => item.key === key) || { key, label: key }
   ));
-  const libraryExtraFilters = settingsApparatusOptions.filter(
-    (item) => !primaryFilterKeys.includes(item.key)
-  );
   const editorApparatusOptions = settingsApparatusOptions.filter(
     (item) => item.key !== "all" && item.key !== "favorite"
   );
@@ -3998,7 +4018,6 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
 
   function updateLibraryFilter(nextApparatus) {
     setLibraryApparatus(nextApparatus);
-    setIsMoreLibraryFilterOpen(false);
   }
 
   function toggleFavorite(action) {
@@ -4570,7 +4589,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
         </div>
 
         <div className="settings-v2-filter-row">
-          {libraryPrimaryFilters.map((item) => (
+          {libraryFilterOptions.map((item) => (
             <button
               key={item.key}
               type="button"
@@ -4580,25 +4599,6 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
               {item.label}
             </button>
           ))}
-          <div className="settings-v2-more-filter">
-            <button
-              type="button"
-              className={!primaryFilterKeys.includes(libraryApparatus) ? "active" : ""}
-              onClick={() => setIsMoreLibraryFilterOpen((current) => !current)}
-            >
-              更多⌄
-            </button>
-            {isMoreLibraryFilterOpen && (
-              <div className="settings-v2-more-menu">
-                {libraryExtraFilters.map((item) => (
-                  <button key={item.key} type="button" onClick={() => updateLibraryFilter(item.key)}>
-                    <strong>{item.label}</strong>
-                    <span>{item.key === "favorite" ? "收藏动作" : item.desc}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         <label className="settings-v2-search">
@@ -4750,7 +4750,7 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
         )}
 
         <div className="settings-v2-filter-row">
-          {libraryPrimaryFilters.map((item) => (
+          {templateFilterOptions.map((item) => (
             <button
               key={item.key}
               type="button"
