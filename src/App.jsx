@@ -56,9 +56,14 @@ import {
 } from "./data/studioCloudStore";
 import {
   onCloudBaseAuthStateChange,
+  requestCloudBaseEmailPasswordReset,
+  requestCloudBaseEmailSignUp,
+  resendCloudBaseEmailCode,
   signInCloudBaseWithEmail,
   signOutCloudBase,
   signUpCloudBaseWithEmail,
+  verifyCloudBaseEmailPasswordReset,
+  verifyCloudBaseEmailSignUp,
 } from "./data/cloudbaseClient";
 import {
   loadUserActionMeta,
@@ -3621,6 +3626,11 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
   const [authPassword, setAuthPassword] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
+  const [authMode, setAuthMode] = useState("login");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
+  const [authVerificationCode, setAuthVerificationCode] = useState("");
+  const [pendingSignUpVerification, setPendingSignUpVerification] = useState(null);
+  const [pendingPasswordReset, setPendingPasswordReset] = useState(null);
 
   const allActions = useMemo(() => {
     return getAllActions(languagePreference);
@@ -3864,35 +3874,272 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
     return {
       email: authEmail.trim(),
       password: authPassword.trim(),
+      confirmPassword: authConfirmPassword.trim(),
+      verificationCode: authVerificationCode.trim(),
     };
   }
 
-  async function handleEmailSignUp() {
-    const { email, password } = getCleanAuthInput();
+  function isLikelyEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
 
-    if (!email || !password) {
-      setAuthMessage("请先填写邮箱和密码");
-      return;
+  function getAuthErrorText(error, fallbackMessage) {
+    return error?.message || error?.cloudbaseError?.message || fallbackMessage;
+  }
+
+  function openAuthMode(nextMode) {
+    setAuthMode(nextMode);
+    setAuthMessage("");
+    setAuthVerificationCode("");
+    setAuthConfirmPassword("");
+    setPendingSignUpVerification(null);
+    setPendingPasswordReset(null);
+
+    if (nextMode === "reset" || authMode === "reset") {
+      setAuthPassword("");
+    }
+  }
+
+  function finishSignedInAuth(cloudUser, email, message) {
+    setAuthUser(cloudUser);
+    setAuthEmail(cloudUser?.email || email);
+    setAuthPassword("");
+    setAuthConfirmPassword("");
+    setAuthVerificationCode("");
+    setPendingSignUpVerification(null);
+    setPendingPasswordReset(null);
+    setAuthMode("login");
+    setAuthMessage(message);
+  }
+
+  function validateAuthEmail(email) {
+    if (!email) {
+      setAuthMessage("请先填写邮箱");
+      return false;
+    }
+
+    if (!isLikelyEmail(email)) {
+      setAuthMessage("邮箱格式不正确");
+      return false;
+    }
+
+    return true;
+  }
+
+  function validateNewPassword(password, confirmPassword) {
+    if (!password || !confirmPassword) {
+      setAuthMessage("请填写密码并确认一次");
+      return false;
     }
 
     if (password.length < 6) {
       setAuthMessage("密码至少需要 6 位");
+      return false;
+    }
+
+    if (password !== confirmPassword) {
+      setAuthMessage("两次输入的密码不一致");
+      return false;
+    }
+
+    return true;
+  }
+
+  async function handleEmailSignUp() {
+    const { email, password, confirmPassword, verificationCode } = getCleanAuthInput();
+
+    if (!validateAuthEmail(email)) {
+      return;
+    }
+
+    if (!validateNewPassword(password, confirmPassword)) {
+      return;
+    }
+
+    if (pendingSignUpVerification) {
+      if (pendingSignUpVerification.email !== email || pendingSignUpVerification.password !== password) {
+        setPendingSignUpVerification(null);
+        setAuthVerificationCode("");
+        setAuthMessage("邮箱或密码已修改，请重新发送验证码");
+        return;
+      }
+
+      if (!verificationCode) {
+        setAuthMessage("请输入邮箱验证码");
+        return;
+      }
+
+      try {
+        setAuthLoading(true);
+        setAuthMessage("正在验证验证码...");
+
+        const cloudUser = await verifyCloudBaseEmailSignUp(
+          pendingSignUpVerification.verifyOtp,
+          verificationCode,
+          pendingSignUpVerification.messageId
+        );
+
+        finishSignedInAuth(cloudUser, email, "注册成功，已登录");
+      } catch (error) {
+        setAuthMessage(getAuthErrorText(error, "验证码验证失败，请检查后重试"));
+      } finally {
+        setAuthLoading(false);
+      }
+
       return;
     }
 
     try {
       setAuthLoading(true);
-      setAuthMessage("正在注册...");
+      setAuthMessage("正在发送邮箱验证码...");
 
-      await signUpCloudBaseWithEmail(email, password);
-      const cloudUser = await signInCloudBaseWithEmail(email, password);
+      const signUpResult = await requestCloudBaseEmailSignUp(email, password);
 
-      setAuthUser(cloudUser);
-      setAuthEmail(cloudUser?.email || email);
-      setAuthPassword("");
-      setAuthMessage("注册成功，已登录");
+      if (signUpResult.user && !signUpResult.verifyOtp) {
+        finishSignedInAuth(signUpResult.user, email, "注册成功，已登录");
+        return;
+      }
+
+      if (!signUpResult.verifyOtp) {
+        throw new Error("验证码会话创建失败，请重新发送验证码");
+      }
+
+      setPendingSignUpVerification({
+        verifyOtp: signUpResult.verifyOtp,
+        email,
+        password,
+        messageId: "",
+      });
+      setAuthVerificationCode("");
+      setAuthMessage("验证码已发送，请输入邮箱里的验证码");
     } catch (error) {
-      setAuthMessage(error.message || "CloudBase 注册失败，请检查云开发身份认证");
+      setAuthMessage(getAuthErrorText(error, "CloudBase 注册失败，请检查云开发身份认证"));
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function handleResendSignUpCode() {
+    const { email, password, confirmPassword } = getCleanAuthInput();
+
+    if (!pendingSignUpVerification) {
+      await handleEmailSignUp();
+      return;
+    }
+
+    if (!validateAuthEmail(email) || !validateNewPassword(password, confirmPassword)) {
+      return;
+    }
+
+    if (pendingSignUpVerification.email !== email || pendingSignUpVerification.password !== password) {
+      setPendingSignUpVerification(null);
+      setAuthVerificationCode("");
+      setAuthMessage("邮箱或密码已修改，请重新发送验证码");
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      setAuthMessage("正在重新发送验证码...");
+
+      const messageId = await resendCloudBaseEmailCode(email, "signup");
+
+      setPendingSignUpVerification((current) => (
+        current ? { ...current, messageId } : current
+      ));
+      setAuthVerificationCode("");
+      setAuthMessage("新的验证码已发送");
+    } catch (error) {
+      setAuthMessage(getAuthErrorText(error, "验证码重新发送失败，请稍后再试"));
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function handlePasswordReset() {
+    const { email, password, confirmPassword, verificationCode } = getCleanAuthInput();
+
+    if (!validateAuthEmail(email)) {
+      return;
+    }
+
+    if (!pendingPasswordReset) {
+      try {
+        setAuthLoading(true);
+        setAuthMessage("正在发送重置验证码...");
+
+        const resetResult = await requestCloudBaseEmailPasswordReset(email);
+
+        setPendingPasswordReset({
+          updateUser: resetResult.updateUser,
+          email,
+        });
+        setAuthVerificationCode("");
+        setAuthMessage("重置验证码已发送，请输入邮箱里的验证码");
+      } catch (error) {
+        setAuthMessage(getAuthErrorText(error, "重置验证码发送失败，请检查邮箱"));
+      } finally {
+        setAuthLoading(false);
+      }
+
+      return;
+    }
+
+    if (pendingPasswordReset.email !== email) {
+      setPendingPasswordReset(null);
+      setAuthVerificationCode("");
+      setAuthMessage("邮箱已修改，请重新发送重置验证码");
+      return;
+    }
+
+    if (!validateNewPassword(password, confirmPassword)) {
+      return;
+    }
+
+    if (!verificationCode) {
+      setAuthMessage("请输入邮箱验证码");
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      setAuthMessage("正在重置密码...");
+
+      const cloudUser = await verifyCloudBaseEmailPasswordReset(
+        pendingPasswordReset.updateUser,
+        verificationCode,
+        password
+      );
+
+      finishSignedInAuth(cloudUser, email, "密码已重置，已登录");
+    } catch (error) {
+      setAuthMessage(getAuthErrorText(error, "密码重置失败，请检查验证码"));
+    } finally {
+      setAuthLoading(false);
+    }
+  }
+
+  async function handleResendPasswordResetCode() {
+    const { email } = getCleanAuthInput();
+
+    if (!validateAuthEmail(email)) {
+      return;
+    }
+
+    try {
+      setAuthLoading(true);
+      setAuthMessage("正在重新发送重置验证码...");
+
+      const resetResult = await requestCloudBaseEmailPasswordReset(email);
+
+      setPendingPasswordReset({
+        updateUser: resetResult.updateUser,
+        email,
+      });
+      setAuthVerificationCode("");
+      setAuthMessage("新的重置验证码已发送");
+    } catch (error) {
+      setAuthMessage(getAuthErrorText(error, "重置验证码重新发送失败，请稍后再试"));
     } finally {
       setAuthLoading(false);
     }
@@ -3906,18 +4153,20 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
       return;
     }
 
+    if (!isLikelyEmail(email)) {
+      setAuthMessage("邮箱格式不正确");
+      return;
+    }
+
     try {
       setAuthLoading(true);
       setAuthMessage("正在登录...");
 
       const cloudUser = await signInCloudBaseWithEmail(email, password);
 
-      setAuthUser(cloudUser);
-      setAuthEmail(cloudUser?.email || email);
-      setAuthMessage("登录成功");
-      setAuthPassword("");
+      finishSignedInAuth(cloudUser, email, "登录成功");
     } catch (error) {
-      setAuthMessage(error.message || "CloudBase 登录失败，请检查邮箱或密码");
+      setAuthMessage(getAuthErrorText(error, "CloudBase 登录失败，请检查邮箱或密码"));
     } finally {
       setAuthLoading(false);
     }
@@ -3932,9 +4181,14 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
 
       setAuthUser(null);
       setAuthPassword("");
+      setAuthConfirmPassword("");
+      setAuthVerificationCode("");
+      setPendingSignUpVerification(null);
+      setPendingPasswordReset(null);
+      setAuthMode("login");
       setAuthMessage("已退出登录");
     } catch (error) {
-      setAuthMessage(error.message || "退出失败，请稍后再试");
+      setAuthMessage(getAuthErrorText(error, "退出失败，请稍后再试"));
     } finally {
       setAuthLoading(false);
     }
@@ -4449,42 +4703,191 @@ function SettingsPage({ languagePreference, setLanguagePreference }) {
           </div>
 
           {!authUser && (
-            <>
-              <label className="settings-v2-field">
-                <span>邮箱</span>
-                <div>
-                  <MailIcon size={18} />
-                  <input
-                    value={authEmail}
-                    onChange={(event) => setAuthEmail(event.target.value)}
-                    placeholder="请输入邮箱"
-                    type="email"
-                    autoComplete="email"
-                  />
-                </div>
-              </label>
-              <label className="settings-v2-field">
-                <span>密码</span>
-                <div>
-                  <LockIcon size={18} />
-                  <input
-                    value={authPassword}
-                    onChange={(event) => setAuthPassword(event.target.value)}
-                    placeholder="请输入密码"
-                    type="password"
-                    autoComplete="current-password"
-                  />
-                </div>
-              </label>
-              <div className="settings-v2-two-actions">
-                <button type="button" className="settings-v2-primary" onClick={handleEmailSignIn} disabled={authLoading}>
-                  登录
-                </button>
-                <button type="button" className="settings-v2-secondary" onClick={handleEmailSignUp} disabled={authLoading}>
-                  注册
-                </button>
-              </div>
-            </>
+            <div className="settings-v2-auth-flow">
+              {authMode === "login" && (
+                <>
+                  <label className="settings-v2-field">
+                    <span>邮箱</span>
+                    <div>
+                      <MailIcon size={18} />
+                      <input
+                        value={authEmail}
+                        onChange={(event) => setAuthEmail(event.target.value)}
+                        placeholder="请输入邮箱"
+                        type="email"
+                        autoComplete="email"
+                      />
+                    </div>
+                  </label>
+                  <label className="settings-v2-field">
+                    <span>密码</span>
+                    <div>
+                      <LockIcon size={18} />
+                      <input
+                        value={authPassword}
+                        onChange={(event) => setAuthPassword(event.target.value)}
+                        placeholder="请输入密码"
+                        type="password"
+                        autoComplete="current-password"
+                      />
+                    </div>
+                  </label>
+                  <div className="settings-v2-two-actions">
+                    <button type="button" className="settings-v2-primary" onClick={handleEmailSignIn} disabled={authLoading}>
+                      登录
+                    </button>
+                    <button type="button" className="settings-v2-secondary" onClick={() => openAuthMode("register")} disabled={authLoading}>
+                      注册
+                    </button>
+                  </div>
+                  <button type="button" className="settings-v2-link-button" onClick={() => openAuthMode("reset")} disabled={authLoading}>
+                    忘记密码？
+                  </button>
+                </>
+              )}
+
+              {authMode === "register" && (
+                <>
+                  <div className="settings-v2-auth-head">
+                    <strong>注册账号</strong>
+                    <button type="button" onClick={() => openAuthMode("login")} disabled={authLoading}>
+                      返回登录
+                    </button>
+                  </div>
+                  <label className="settings-v2-field">
+                    <span>邮箱</span>
+                    <div>
+                      <MailIcon size={18} />
+                      <input
+                        value={authEmail}
+                        onChange={(event) => setAuthEmail(event.target.value)}
+                        placeholder="请输入邮箱"
+                        type="email"
+                        autoComplete="email"
+                      />
+                    </div>
+                  </label>
+                  <label className="settings-v2-field">
+                    <span>密码</span>
+                    <div>
+                      <LockIcon size={18} />
+                      <input
+                        value={authPassword}
+                        onChange={(event) => setAuthPassword(event.target.value)}
+                        placeholder="至少 6 位"
+                        type="password"
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  </label>
+                  <label className="settings-v2-field">
+                    <span>确认密码</span>
+                    <div>
+                      <LockIcon size={18} />
+                      <input
+                        value={authConfirmPassword}
+                        onChange={(event) => setAuthConfirmPassword(event.target.value)}
+                        placeholder="再次输入密码"
+                        type="password"
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  </label>
+                  <label className="settings-v2-field">
+                    <span>邮箱验证码</span>
+                    <div>
+                      <MailIcon size={18} />
+                      <input
+                        value={authVerificationCode}
+                        onChange={(event) => setAuthVerificationCode(event.target.value)}
+                        placeholder="请输入验证码"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                      />
+                    </div>
+                  </label>
+                  <button type="button" className="settings-v2-primary settings-v2-wide" onClick={handleEmailSignUp} disabled={authLoading}>
+                    {pendingSignUpVerification ? "完成注册并登录" : "发送验证码"}
+                  </button>
+                  {pendingSignUpVerification && (
+                    <button type="button" className="settings-v2-link-button" onClick={handleResendSignUpCode} disabled={authLoading}>
+                      重新发送验证码
+                    </button>
+                  )}
+                </>
+              )}
+
+              {authMode === "reset" && (
+                <>
+                  <div className="settings-v2-auth-head">
+                    <strong>找回密码</strong>
+                    <button type="button" onClick={() => openAuthMode("login")} disabled={authLoading}>
+                      返回登录
+                    </button>
+                  </div>
+                  <label className="settings-v2-field">
+                    <span>邮箱</span>
+                    <div>
+                      <MailIcon size={18} />
+                      <input
+                        value={authEmail}
+                        onChange={(event) => setAuthEmail(event.target.value)}
+                        placeholder="请输入邮箱"
+                        type="email"
+                        autoComplete="email"
+                      />
+                    </div>
+                  </label>
+                  <label className="settings-v2-field">
+                    <span>新密码</span>
+                    <div>
+                      <LockIcon size={18} />
+                      <input
+                        value={authPassword}
+                        onChange={(event) => setAuthPassword(event.target.value)}
+                        placeholder="至少 6 位"
+                        type="password"
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  </label>
+                  <label className="settings-v2-field">
+                    <span>确认新密码</span>
+                    <div>
+                      <LockIcon size={18} />
+                      <input
+                        value={authConfirmPassword}
+                        onChange={(event) => setAuthConfirmPassword(event.target.value)}
+                        placeholder="再次输入新密码"
+                        type="password"
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  </label>
+                  <label className="settings-v2-field">
+                    <span>邮箱验证码</span>
+                    <div>
+                      <MailIcon size={18} />
+                      <input
+                        value={authVerificationCode}
+                        onChange={(event) => setAuthVerificationCode(event.target.value)}
+                        placeholder="请输入验证码"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                      />
+                    </div>
+                  </label>
+                  <button type="button" className="settings-v2-primary settings-v2-wide" onClick={handlePasswordReset} disabled={authLoading}>
+                    {pendingPasswordReset ? "重设并登录" : "发送重置验证码"}
+                  </button>
+                  {pendingPasswordReset && (
+                    <button type="button" className="settings-v2-link-button" onClick={handleResendPasswordResetCode} disabled={authLoading}>
+                      重新发送验证码
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           )}
 
           {authUser && (
