@@ -5806,6 +5806,68 @@ body,
   border-color: rgba(125, 110, 85, 0.28) !important;
 }
 
+/* ===== Final schedule search/favorite behavior ===== */
+.schedule-v2-title-actions button,
+.schedule-v2-label-row button {
+  transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease !important;
+}
+
+.schedule-v2-title-actions button.active,
+.schedule-v2-label-row button.active {
+  background: #1c1a18 !important;
+  border-color: #1c1a18 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(28, 26, 24, 0.16) !important;
+}
+
+.schedule-v2-filter-row button.active {
+  background: rgba(125, 110, 85, 0.14) !important;
+  border-color: rgba(125, 110, 85, 0.34) !important;
+  color: #6f6047 !important;
+  box-shadow: inset 0 0 0 1px rgba(125, 110, 85, 0.08) !important;
+}
+
+.phone-page--schedule .schedule-v2-action-section {
+  scroll-margin-top: 82px !important;
+}
+
+.schedule-v2-action-search {
+  scroll-margin-top: 82px !important;
+}
+
+.schedule-v2-recommend-panel,
+.schedule-v2-input-active .schedule-v2-recommend-panel {
+  max-height: min(34dvh, 292px) !important;
+  overflow-y: auto !important;
+  padding: 8px !important;
+  gap: 6px !important;
+}
+
+.schedule-v2-recommend-panel button,
+.schedule-v2-input-active .schedule-v2-recommend-panel button {
+  min-height: 44px !important;
+  padding: 7px 9px !important;
+  border-radius: 12px !important;
+}
+
+.schedule-v2-recommend-panel strong,
+.schedule-v2-input-active .schedule-v2-recommend-panel strong {
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+}
+
+.schedule-v2-recommend-panel small,
+.schedule-v2-input-active .schedule-v2-recommend-panel small {
+  margin-top: 2px !important;
+  font-size: 11px !important;
+  line-height: 1.24 !important;
+  -webkit-line-clamp: 1 !important;
+}
+
+.schedule-v2-recommend-head {
+  padding: 0 2px !important;
+}
+
 .schedule-v2-card-title > .schedule-v2-title-actions {
   min-height: 36px !important;
 }
