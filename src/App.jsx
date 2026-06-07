@@ -624,6 +624,7 @@ function LegacyHomePage({ members, onOpenSchedule, coachName }) {
 function SchedulePage({ member, members = [], languagePreference, onMembersUpdated }) {
   const memberPickerRef = useRef(null);
   const themeFieldRef = useRef(null);
+  const scheduleScrollRef = useRef(null);
   const actionDetailsRef = useRef(null);
   const actionSearchAreaRef = useRef(null);
   const quickMenuRef = useRef(null);
@@ -645,7 +646,6 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   const scheduleFilterOptions = useMemo(
     () => [
       { key: "all", label: "所有器械", desc: "全部动作" },
-      { key: "favorite", label: "收藏", desc: "收藏动作" },
       ...scheduleApparatusOptions.filter((item) => item.key !== "all" && item.key !== "favorite"),
     ],
     [scheduleApparatusOptions]
@@ -657,6 +657,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   const [isLessonPickerOpen, setIsLessonPickerOpen] = useState(false);
   const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
   const [selectedApparatus, setSelectedApparatus] = useState("all");
+  const [isFavoriteFilterActive, setIsFavoriteFilterActive] = useState(false);
+  const [isActionSearchPrimed, setIsActionSearchPrimed] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isRecommendationOpen, setIsRecommendationOpen] = useState(false);
   const [themePresets, setThemePresets] = useState(
@@ -766,19 +768,30 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   }
 
   function openActionSearchPanel() {
-    if (!searchKeyword.trim()) {
-      setSelectedApparatus("favorite");
-    }
-
     setIsRecommendationOpen(true);
     activateScheduleInput("action");
 
-    window.setTimeout(() => {
-      actionDetailsRef.current?.scrollIntoView({
+    const scrollToActionSection = () => {
+      const scroller = scheduleScrollRef.current;
+      const section = actionDetailsRef.current;
+      if (!scroller || !section) return;
+
+      scroller.scrollTo({
+        top: Math.max(section.offsetTop - 14, 0),
         behavior: "smooth",
-        block: "start",
       });
-    }, 80);
+    };
+
+    window.setTimeout(scrollToActionSection, 60);
+    window.setTimeout(scrollToActionSection, 260);
+  }
+
+  function primeActionSearch(event) {
+    if (isRecommendationOpen && isActionSearchPrimed) return;
+
+    event.preventDefault();
+    setIsActionSearchPrimed(true);
+    openActionSearchPanel();
   }
 
   function focusThemeInput() {
@@ -820,6 +833,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     return new Set(actions.map((action) => action.baseActionId).filter(Boolean));
   }, [actions]);
 
+  const recommendationApparatus = isFavoriteFilterActive ? "favorite" : selectedApparatus;
+
   const recommendedActions = useMemo(() => {
     const recommendationKeyword = searchKeyword.trim()
       ? searchKeyword
@@ -835,16 +850,16 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       })
         .filter((action) => !addedBaseActionIds.has(action.id))
         .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)));
-    const scopedCandidates = getCandidates(selectedApparatus);
+    const scopedCandidates = getCandidates(recommendationApparatus);
     const candidates =
-      scopedCandidates.length || selectedApparatus === "all"
+      scopedCandidates.length || recommendationApparatus === "all" || recommendationApparatus === "favorite"
         ? scopedCandidates
         : getCandidates("all");
 
     return candidates.slice(0, 8);
   }, [
     searchKeyword,
-    selectedApparatus,
+    recommendationApparatus,
     languagePreference,
     addedBaseActionIds,
     addedActionKeys,
@@ -954,6 +969,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         !actionSearchAreaRef.current.contains(event.target)
       ) {
         setIsRecommendationOpen(false);
+        setIsActionSearchPrimed(false);
         setIsScheduleInputActive(false);
       }
 
@@ -1762,7 +1778,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
 
       {saveMessage && <div className="save-toast schedule-v2-toast">{saveMessage}</div>}
 
-      <div className="schedule-v2-scroll">
+      <div className="schedule-v2-scroll" ref={scheduleScrollRef}>
       <section className="schedule-v2-card">
         <div className="schedule-v2-card-title">
           <h2>
@@ -1899,9 +1915,9 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
           <div className="schedule-v2-title-actions">
             <button
               type="button"
-              className={selectedApparatus === "favorite" ? "active" : ""}
+              className={isFavoriteFilterActive ? "active" : ""}
               onClick={() => {
-                setSelectedApparatus("favorite");
+                setIsFavoriteFilterActive((current) => !current);
                 setIsRecommendationOpen(true);
               }}
             >
@@ -1932,9 +1948,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             <SearchIcon size={18} />
             <input
               value={searchKeyword}
+              onPointerDown={primeActionSearch}
               onFocus={openActionSearchPanel}
               onChange={(event) => {
                 setSearchKeyword(event.target.value);
+                setIsActionSearchPrimed(true);
                 setIsRecommendationOpen(true);
                 activateScheduleInput("action");
               }}
