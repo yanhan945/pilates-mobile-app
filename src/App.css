@@ -5763,6 +5763,83 @@ body,
   }
 }
 
+/* ===== Schedule action editing corrections ===== */
+.phone-page--schedule .schedule-v2-scroll {
+  padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+  scroll-padding-top: 104px !important;
+  scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+}
+
+.phone-page--schedule .schedule-v2-action-section,
+.schedule-v2-action-search {
+  scroll-margin-top: 104px !important;
+}
+
+.schedule-v2-title-actions {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.schedule-v2-title-actions button,
+.schedule-v2-title-actions span {
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 13px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--schedule-border, #ece8e1) !important;
+  background: #ffffff !important;
+  color: var(--schedule-accent, #7d6e55) !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+
+.schedule-v2-title-actions button.active {
+  background: rgba(125, 110, 85, 0.12) !important;
+  border-color: rgba(125, 110, 85, 0.28) !important;
+}
+
+.schedule-v2-card-title > .schedule-v2-title-actions {
+  min-height: 36px !important;
+}
+
+.schedule-v2-filter-row {
+  width: 100% !important;
+  padding-bottom: 2px !important;
+  scroll-snap-type: x proximity !important;
+}
+
+.schedule-v2-filter-row button {
+  scroll-snap-align: start !important;
+}
+
+.phone-page--schedule .schedule-v2-bottom-bar {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: auto !important;
+  width: 100% !important;
+  margin: 4px 0 0 !important;
+  transform: none !important;
+}
+
+.schedule-v2-input-active .schedule-v2-bottom-bar,
+.phone-page--schedule .schedule-v2-input-active .schedule-v2-bottom-bar {
+  display: none !important;
+}
+
+body.schedule-input-active .app-shell--schedule .bottom-tabs {
+  display: none !important;
+}
+
 /* Poster result: keep the preview centered and make saving work without relying on long-press. */
 .poster-result-sheet,
 .poster-result-sheet.schedule-v2-modal {
@@ -8488,4 +8565,67 @@ body.schedule-modal-open .bottom-tabs {
   .settings-v2-template-row small {
     font-size: 11.5px !important;
   }
+}
+
+/* ===== Final schedule action-entry behavior ===== */
+.phone-page--schedule .schedule-v2-scroll {
+  padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+  scroll-padding-top: 104px !important;
+  scroll-padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+}
+
+.phone-page--schedule .schedule-v2-action-section {
+  scroll-margin-top: 104px !important;
+}
+
+.phone-page--schedule .schedule-v2-bottom-bar {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 4px 0 0 !important;
+  transform: none !important;
+}
+
+.schedule-v2-input-active .schedule-v2-bottom-bar,
+.phone-page--schedule .schedule-v2-input-active .schedule-v2-bottom-bar {
+  display: none !important;
+}
+
+body.schedule-input-active .bottom-tabs,
+body.schedule-input-active .app-shell--schedule .bottom-tabs {
+  display: none !important;
+}
+
+.schedule-v2-title-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.schedule-v2-title-actions button,
+.schedule-v2-title-actions span {
+  min-height: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 13px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--schedule-border, #ece8e1) !important;
+  background: #ffffff !important;
+  color: var(--schedule-accent, #7d6e55) !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+}
+
+.schedule-v2-title-actions button.active {
+  background: rgba(125, 110, 85, 0.12) !important;
+  border-color: rgba(125, 110, 85, 0.28) !important;
 }
