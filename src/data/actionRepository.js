@@ -149,26 +149,48 @@ function applyUserMeta(action, metaMap) {
 
 function mergeActionsWithoutDuplicates(actions) {
   const map = new Map();
+  const keyIndex = new Map();
+
+  function getDedupKeys(action) {
+    return [
+      `${action.apparatus}-${compactText(action.name)}-${compactText(action.cnName)}`,
+      action.cnName ? `${action.apparatus}-cn-${compactText(action.cnName)}` : "",
+      action.name ? `${action.apparatus}-en-${compactText(action.name)}` : "",
+    ].filter(Boolean);
+  }
+
+  function indexActionKeys(action, primaryKey) {
+    getDedupKeys(action).forEach((key) => {
+      if (!keyIndex.has(key)) {
+        keyIndex.set(key, primaryKey);
+      }
+    });
+  }
 
   actions.forEach((rawAction) => {
     const action = cleanAction(rawAction);
-    const key = `${action.apparatus}-${compactText(action.name)}-${compactText(action.cnName)}`;
+    const keys = getDedupKeys(action);
+    const existingKey = keys.find((key) => keyIndex.has(key));
+    const key = existingKey ? keyIndex.get(existingKey) : keys[0];
 
     if (!map.has(key)) {
       map.set(key, action);
+      indexActionKeys(action, key);
       return;
     }
 
     const existing = map.get(key);
-
-    map.set(key, {
+    const mergedAction = {
       ...existing,
       cnName: existing.cnName || action.cnName,
       name: existing.name || action.name,
       benefits: existing.benefits?.length ? existing.benefits : action.benefits,
       defaultBenefit: existing.defaultBenefit || action.defaultBenefit,
       source: existing.source === "starter" ? existing.source : action.source,
-    });
+    };
+
+    map.set(key, mergedAction);
+    indexActionKeys(mergedAction, key);
   });
 
   return Array.from(map.values());
@@ -233,6 +255,104 @@ function matchesTagSearch(action, keyword) {
   return tokens.some((token) => token && tagText.includes(token));
 }
 
+function getExpandedSearchTokens(keyword) {
+  const compactKeyword = compactText(keyword);
+  const rawTokens = normalizeText(keyword)
+    .split(/[\s,，、;；/]+/)
+    .map(compactText)
+    .filter(Boolean);
+  const tokens = new Set([compactKeyword, ...rawTokens].filter(Boolean));
+
+  Array.from(tokens).forEach((token) => {
+    tagAliasGroups.forEach((group) => {
+      const normalizedGroup = group.map(compactText);
+      const hasMatch = normalizedGroup.some(
+        (item) => item && (token.includes(item) || item.includes(token))
+      );
+
+      if (hasMatch) {
+        normalizedGroup.forEach((item) => {
+          if (item) tokens.add(item);
+        });
+      }
+    });
+  });
+
+  return Array.from(tokens);
+}
+
+function getSearchableText(action) {
+  return [
+    action.name,
+    action.cnName,
+    action.displayName,
+    action.defaultBenefit,
+    action.apparatus,
+    action.level,
+    ...(action.tags || []),
+    ...(action.benefits || []),
+  ].join(" ");
+}
+
+function getSearchMatchScore(action, keyword) {
+  const normalizedKeyword = normalizeText(keyword);
+  const compactKeyword = compactText(keyword);
+
+  if (!normalizedKeyword) return 1;
+
+  const normalizedText = normalizeText(getSearchableText(action));
+  const compactSearchText = compactText(getSearchableText(action));
+  const compactNames = [
+    action.cnName,
+    action.name,
+    action.displayName,
+  ]
+    .map(compactText)
+    .filter(Boolean);
+  const tokens = getExpandedSearchTokens(keyword);
+  let score = 0;
+
+  if (
+    normalizeText(action.cnName) === normalizedKeyword ||
+    normalizeText(action.name) === normalizedKeyword ||
+    normalizeText(action.displayName) === normalizedKeyword ||
+    compactNames.includes(compactKeyword)
+  ) {
+    score += 10000;
+  }
+
+  if (compactKeyword && compactNames.some((name) => name.includes(compactKeyword))) {
+    score += 4200;
+  }
+
+  if (normalizedText.includes(normalizedKeyword)) {
+    score += 2600;
+  }
+
+  if (compactKeyword && compactSearchText.includes(compactKeyword)) {
+    score += 2200;
+  }
+
+  tokens.forEach((token) => {
+    if (!token) return;
+
+    if (compactNames.some((name) => name.includes(token))) {
+      score += 520;
+      return;
+    }
+
+    if (compactSearchText.includes(token)) {
+      score += 150;
+    }
+  });
+
+  if (matchesTagSearch(action, keyword)) {
+    score += 350;
+  }
+
+  return score;
+}
+
 export function getAllActions(languagePreference = "mixed") {
   const metaMap = getUserActionMeta();
 
@@ -253,7 +373,6 @@ export function searchActions({
   languagePreference = "mixed",
 } = {}) {
   const normalizedKeyword = normalizeText(keyword);
-  const compactKeyword = compactText(keyword);
 
   return getAllActions(languagePreference)
     .filter((action) => {
@@ -265,25 +384,19 @@ export function searchActions({
 
       return action.apparatus === apparatus;
     })
-    .filter((action) => {
+    .map((action) => ({
+      action,
+      matchScore: getSearchMatchScore(action, keyword),
+    }))
+    .filter(({ matchScore }) => {
       if (!normalizedKeyword) return true;
-
-      const searchableText = [
-        action.name,
-        action.cnName,
-        action.displayName,
-        action.defaultBenefit,
-        ...(action.tags || []),
-        ...(action.benefits || []),
-      ].join(" ");
-
-      return (
-        normalizeText(searchableText).includes(normalizedKeyword) ||
-        compactText(searchableText).includes(compactKeyword) ||
-        matchesTagSearch(action, keyword)
-      );
+      return matchScore > 0;
     })
-    .sort((a, b) => getRecommendationScore(b) - getRecommendationScore(a));
+    .sort((a, b) => {
+      if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
+      return getRecommendationScore(b.action) - getRecommendationScore(a.action);
+    })
+    .map(({ action }) => action);
 }
 
 export function findBestActionMatch({
