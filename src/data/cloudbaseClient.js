@@ -161,6 +161,101 @@ export async function signUpCloudBaseWithEmail(email, password) {
   return normalizeSignInResult(result) || (await getCloudBaseCurrentUser());
 }
 
+export async function requestCloudBaseEmailSignUp(email, password) {
+  const auth = getCloudBaseAuth();
+  if (!auth) {
+    throw new Error("CloudBase is not configured; cannot sign up.");
+  }
+
+  const result = auth.signUp
+    ? await auth.signUp({ email, password })
+    : await auth.signUpWithEmailAndPassword(email, password);
+
+  assertCloudBaseAuthSuccess(result, "CloudBase sign up verification failed.");
+
+  return {
+    user: normalizeSignInResult(result) || (await getCloudBaseCurrentUser()),
+    verifyOtp: result?.data?.verifyOtp || null,
+    raw: result,
+  };
+}
+
+export async function verifyCloudBaseEmailSignUp(verifyOtp, verificationCode, messageId = "") {
+  if (typeof verifyOtp !== "function") {
+    throw new Error("验证码会话已失效，请重新发送验证码");
+  }
+
+  const params = {
+    token: verificationCode,
+  };
+
+  if (messageId) {
+    params.messageId = messageId;
+  }
+
+  const result = await verifyOtp(params);
+
+  assertCloudBaseAuthSuccess(result, "CloudBase sign up verification failed.");
+
+  return normalizeSignInResult(result) || (await getCloudBaseCurrentUser());
+}
+
+export async function resendCloudBaseEmailCode(email, type = "signup") {
+  const auth = getCloudBaseAuth();
+  if (!auth?.resend) {
+    throw new Error("当前 CloudBase SDK 不支持重新发送验证码，请重新发送流程");
+  }
+
+  const result = await auth.resend({ email, type });
+
+  assertCloudBaseAuthSuccess(result, "CloudBase resend verification code failed.");
+
+  return result?.data?.messageId || "";
+}
+
+export async function requestCloudBaseEmailPasswordReset(email) {
+  const auth = getCloudBaseAuth();
+  if (!auth) {
+    throw new Error("CloudBase is not configured; cannot reset password.");
+  }
+
+  if (!auth.resetPasswordForEmail) {
+    if (auth.sendPasswordResetEmail) {
+      await auth.sendPasswordResetEmail(email);
+    }
+
+    throw new Error("当前 CloudBase SDK 不支持在应用内输入验证码重置密码");
+  }
+
+  const result = await auth.resetPasswordForEmail(email);
+
+  assertCloudBaseAuthSuccess(result, "CloudBase password reset failed.");
+
+  if (typeof result?.data?.updateUser !== "function") {
+    throw new Error("CloudBase 未返回可用的密码重置会话，请重新发送验证码");
+  }
+
+  return {
+    updateUser: result.data.updateUser,
+    raw: result,
+  };
+}
+
+export async function verifyCloudBaseEmailPasswordReset(updateUser, verificationCode, newPassword) {
+  if (typeof updateUser !== "function") {
+    throw new Error("重置密码会话已失效，请重新发送验证码");
+  }
+
+  const result = await updateUser({
+    nonce: verificationCode,
+    password: newPassword,
+  });
+
+  assertCloudBaseAuthSuccess(result, "CloudBase password reset failed.");
+
+  return normalizeSignInResult(result) || (await getCloudBaseCurrentUser());
+}
+
 export async function signInCloudBaseWithEmail(email, password) {
   const auth = getCloudBaseAuth();
   if (!auth) {
