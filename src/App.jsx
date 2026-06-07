@@ -624,9 +624,9 @@ function LegacyHomePage({ members, onOpenSchedule, coachName }) {
 function SchedulePage({ member, members = [], languagePreference, onMembersUpdated }) {
   const memberPickerRef = useRef(null);
   const themeFieldRef = useRef(null);
+  const actionDetailsRef = useRef(null);
   const actionSearchAreaRef = useRef(null);
   const quickMenuRef = useRef(null);
-  const moreApparatusRef = useRef(null);
   const didAutoSaveOnceRef = useRef(false);
   const isRestoringLessonRef = useRef(false);
   const [isScheduleInputActive, setIsScheduleInputActive] = useState(false);
@@ -642,9 +642,13 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     [allScheduleActions]
   );
   const weatherOptions = ["晴", "多云", "小雨", "大雨", "暴雨", "雷雨", "雪"];
-  const primaryApparatusOptions = ["all", "M", "R", "TT", "C", "LB"];
-  const extraApparatusOptions = scheduleApparatusOptions.filter(
-    (item) => !primaryApparatusOptions.includes(item.key) && item.key !== "favorite"
+  const scheduleFilterOptions = useMemo(
+    () => [
+      { key: "all", label: "所有器械", desc: "全部动作" },
+      { key: "favorite", label: "收藏", desc: "收藏动作" },
+      ...scheduleApparatusOptions.filter((item) => item.key !== "all" && item.key !== "favorite"),
+    ],
+    [scheduleApparatusOptions]
   );
 
   const [scheduleMember, setScheduleMember] = useState(member || null);
@@ -653,7 +657,6 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   const [isLessonPickerOpen, setIsLessonPickerOpen] = useState(false);
   const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
   const [selectedApparatus, setSelectedApparatus] = useState("all");
-  const [isMoreApparatusOpen, setIsMoreApparatusOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [isRecommendationOpen, setIsRecommendationOpen] = useState(false);
   const [themePresets, setThemePresets] = useState(
@@ -763,13 +766,17 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   }
 
   function openActionSearchPanel() {
+    if (!searchKeyword.trim()) {
+      setSelectedApparatus("favorite");
+    }
+
     setIsRecommendationOpen(true);
     activateScheduleInput("action");
 
     window.setTimeout(() => {
-      actionSearchAreaRef.current?.scrollIntoView({
+      actionDetailsRef.current?.scrollIntoView({
         behavior: "smooth",
-        block: "center",
+        block: "start",
       });
     }, 80);
   }
@@ -957,12 +964,6 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         setIsQuickMenuOpen(false);
       }
 
-      if (
-        moreApparatusRef.current &&
-        !moreApparatusRef.current.contains(event.target)
-      ) {
-        setIsMoreApparatusOpen(false);
-      }
     }
 
     document.addEventListener("mousedown", closeWhenClickOutside);
@@ -1889,61 +1890,41 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         </div>
       </section>
 
-      <section className="schedule-v2-card">
+      <section className="schedule-v2-card schedule-v2-action-section" ref={actionDetailsRef}>
         <div className="schedule-v2-card-title">
           <h2>
             <SparklesIcon size={18} />
             训练动作详情
           </h2>
-          <span>{actions.length}个动作</span>
+          <div className="schedule-v2-title-actions">
+            <button
+              type="button"
+              className={selectedApparatus === "favorite" ? "active" : ""}
+              onClick={() => {
+                setSelectedApparatus("favorite");
+                setIsRecommendationOpen(true);
+              }}
+            >
+              收藏
+            </button>
+            <span>{actions.length}个动作</span>
+          </div>
         </div>
 
         <div className="schedule-v2-filter-row">
-          {primaryApparatusOptions.map((key) => {
-            const item = scheduleApparatusOptions.find((option) => option.key === key);
-
-            return (
-              <button
-                key={key}
-                type="button"
-                className={selectedApparatus === key ? "active" : ""}
-                onClick={() => {
-                  setSelectedApparatus(key);
-                  setIsMoreApparatusOpen(false);
-                  setIsRecommendationOpen(true);
-                }}
-              >
-                {item?.label || key}
-              </button>
-            );
-          })}
-          <div className="schedule-v2-more-filter" ref={moreApparatusRef}>
+          {scheduleFilterOptions.map((item) => (
             <button
+              key={item.key}
               type="button"
-              className={!primaryApparatusOptions.includes(selectedApparatus) ? "active" : ""}
-              onClick={() => setIsMoreApparatusOpen((current) => !current)}
+              className={selectedApparatus === item.key ? "active" : ""}
+              onClick={() => {
+                setSelectedApparatus(item.key);
+                setIsRecommendationOpen(true);
+              }}
             >
-              更多
+              {item.label}
             </button>
-            {isMoreApparatusOpen && (
-              <div className="schedule-v2-dropdown schedule-v2-more-menu">
-                {extraApparatusOptions.map((item) => (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => {
-                      setSelectedApparatus(item.key);
-                      setIsMoreApparatusOpen(false);
-                      setIsRecommendationOpen(true);
-                    }}
-                  >
-                    <strong>{item.label}</strong>
-                    <span>{item.desc}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          ))}
         </div>
 
         <div className="schedule-v2-action-search" ref={actionSearchAreaRef}>
@@ -2161,7 +2142,6 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
           placeholder={getSummaryOption().placeholder}
         />
       </section>
-      </div>
 
       <div className="schedule-v2-bottom-bar">
         <button type="button" onClick={saveCurrentLesson}>
@@ -2176,6 +2156,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
           <ClipboardListIcon size={21} />
           <span>复制</span>
         </button>
+      </div>
       </div>
 
       {isLessonPickerOpen && (
