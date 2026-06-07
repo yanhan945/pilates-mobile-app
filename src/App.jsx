@@ -75,6 +75,112 @@ import {
 const POSTER_API_URL =
   import.meta.env.VITE_POSTER_API_URL ||
   "https://pilates-poster-api.onrender.com/generate";
+const POSTER_SOFT_BREAK = "\u200B";
+const POSTER_LONG_TOKEN_PATTERN = /[A-Za-z0-9_./\\-]{18,}/g;
+const POSTER_TEXT_CHUNK_SIZE = 14;
+
+function addPosterSoftBreaks(value) {
+  if (value === null || value === undefined) return "";
+
+  return String(value)
+    .trim()
+    .replace(POSTER_LONG_TOKEN_PATTERN, (token) => {
+      if (token.includes(POSTER_SOFT_BREAK)) return token;
+
+      const chunks = [];
+
+      for (let index = 0; index < token.length; index += POSTER_TEXT_CHUNK_SIZE) {
+        chunks.push(token.slice(index, index + POSTER_TEXT_CHUNK_SIZE));
+      }
+
+      return chunks.join(POSTER_SOFT_BREAK);
+    });
+}
+
+function getPosterDownloadName(studentName, lessonNumber) {
+  const safeStudentName =
+    String(studentName || "student")
+      .trim()
+      .replace(/[\\/:*?"<>|]+/g, "")
+      .replace(/\s+/g, "-") || "student";
+
+  return `${safeStudentName}-pilates-lesson-${lessonNumber || "poster"}.jpg`;
+}
+
+function isAppleMobileBrowser() {
+  if (typeof navigator === "undefined") return false;
+
+  const userAgent = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+
+  return (
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
+function clickTemporaryLink(href, { downloadName = "", target = "" } = {}) {
+  const link = document.createElement("a");
+  link.href = href;
+  if (downloadName) link.download = downloadName;
+  if (target) {
+    link.target = target;
+    link.rel = "noopener noreferrer";
+  }
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function openPosterOriginalUrl(imageUrl) {
+  if (!imageUrl) return;
+
+  const opened = window.open(imageUrl, "_blank", "noopener,noreferrer");
+  if (!opened) window.location.href = imageUrl;
+}
+
+async function savePosterImageToDevice(imageUrl, fileName) {
+  if (!imageUrl) return "missing";
+
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error(`Poster download failed: ${response.status}`);
+
+    const blob = await response.blob();
+    const mimeType = blob.type || "image/jpeg";
+    const file =
+      typeof File === "function" ? new File([blob], fileName, { type: mimeType }) : null;
+
+    if (
+      file &&
+      isAppleMobileBrowser() &&
+      typeof navigator.share === "function" &&
+      typeof navigator.canShare === "function" &&
+      navigator.canShare({ files: [file] })
+    ) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: "Pilates poster",
+        });
+        return "shared";
+      } catch (error) {
+        if (error?.name === "AbortError") return "cancelled";
+      }
+    }
+
+    const objectUrl = URL.createObjectURL(blob);
+    clickTemporaryLink(objectUrl, { downloadName: fileName });
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1200);
+    return "downloaded";
+  } catch (error) {
+    console.warn("Poster direct download failed, opening original image instead", error);
+    clickTemporaryLink(imageUrl, { downloadName: fileName, target: "_blank" });
+    return "opened";
+  }
+}
+
 const TAB_ITEMS = [
   { key: "home", label: "首页", Icon: HomeIcon },
   { key: "schedule", label: "排课", Icon: CalendarIcon },
@@ -584,6 +690,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
   const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false);
   const [generatedPosterUrl, setGeneratedPosterUrl] = useState("");
+  const [isPosterGenerating, setIsPosterGenerating] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [lessonForm, setLessonForm] = useState({
     weather: "晴",
@@ -599,6 +706,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     isCustomActionOpen ||
     isQuickPanelOpen ||
     isPosterModalOpen ||
+    isPosterGenerating ||
     Boolean(generatedPosterUrl);
 
   function growTextareaElement(textarea) {
@@ -712,14 +820,21 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         ? lessonForm.lessonTheme
         : "";
 
-    return searchActions({
-      keyword: recommendationKeyword,
-      apparatus: selectedApparatus,
-      languagePreference,
-    })
-      .filter((action) => !addedBaseActionIds.has(action.id))
-      .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)))
-      .slice(0, 8);
+    const getCandidates = (apparatus) =>
+      searchActions({
+        keyword: recommendationKeyword,
+        apparatus,
+        languagePreference,
+      })
+        .filter((action) => !addedBaseActionIds.has(action.id))
+        .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)));
+    const scopedCandidates = getCandidates(selectedApparatus);
+    const candidates =
+      scopedCandidates.length || selectedApparatus === "all"
+        ? scopedCandidates
+        : getCandidates("all");
+
+    return candidates.slice(0, 8);
   }, [
     searchKeyword,
     selectedApparatus,
@@ -1326,32 +1441,34 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
 
     return {
       posterTheme: selectedPosterTheme,
-      studentName: lessonForm.studentName || "未命名学员",
+      studentName: addPosterSoftBreaks(lessonForm.studentName || "未命名学员"),
       studentNameSlug: lessonForm.studentName || "student",
-      date: getTodayLabel(),
-      weather: lessonForm.weather || "晴",
+      date: addPosterSoftBreaks(getTodayLabel()),
+      weather: addPosterSoftBreaks(lessonForm.weather || "晴"),
       lessonNumber: `第${lessonNumber}课`,
-      courseTheme: lessonForm.lessonTheme || "",
-      studioName: latestSettings.studioNameCn || "",
-      studioSubName: latestSettings.studioNameEn || "",
+      courseTheme: addPosterSoftBreaks(lessonForm.lessonTheme || ""),
+      studioName: addPosterSoftBreaks(latestSettings.studioNameCn || ""),
+      studioSubName: addPosterSoftBreaks(latestSettings.studioNameEn || ""),
       logo: latestSettings.logoDataUrl || "",
-      summary: lessonForm.summary || "",
+      summary: addPosterSoftBreaks(lessonForm.summary || ""),
       summaryMode,
-      summaryLabel: summaryOption.label,
-      summaryTitle: summaryOption.label,
-      summary_label: summaryOption.label,
-      summary_title: summaryOption.label,
+      summaryLabel: addPosterSoftBreaks(summaryOption.label),
+      summaryTitle: addPosterSoftBreaks(summaryOption.label),
+      summary_label: addPosterSoftBreaks(summaryOption.label),
+      summary_title: addPosterSoftBreaks(summaryOption.label),
       actions: actions.map((action, index) => ({
         number: index + 1,
         equipment: action.apparatus || "",
-        name: getPosterActionName(action),
-        benefit: action.benefit || "",
-        comment: action.comment || "",
+        name: addPosterSoftBreaks(getPosterActionName(action)),
+        benefit: addPosterSoftBreaks(action.benefit || ""),
+        comment: addPosterSoftBreaks(action.comment || ""),
       })),
     };
   }
 
   async function generatePoster() {
+    if (isPosterGenerating) return;
+
     if (!lessonForm.studentName.trim()) {
       showToast("请先填写学员姓名");
       return;
@@ -1363,7 +1480,8 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     }
 
     try {
-      showToast("正在生成海报...", 2200);
+      setIsPosterGenerating(true);
+      setSaveMessage("");
       saveLesson(buildLessonPayload());
       syncMembersFromStore();
 
@@ -1391,7 +1509,34 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     } catch (error) {
       console.error("生成海报失败", error);
       showToast("生成海报失败，请检查后端接口", 2200);
+    } finally {
+      setIsPosterGenerating(false);
     }
+  }
+
+  async function saveGeneratedPosterImage() {
+    const status = await savePosterImageToDevice(
+      generatedPosterUrl,
+      getPosterDownloadName(lessonForm.studentName, lessonNumber)
+    );
+
+    if (status === "shared") {
+      showToast("已打开系统保存菜单");
+      return;
+    }
+
+    if (status === "downloaded") {
+      showToast("已开始下载高清原图");
+      return;
+    }
+
+    if (status === "opened") {
+      showToast("已打开高清原图，请长按保存");
+    }
+  }
+
+  function openGeneratedPosterOriginal() {
+    openPosterOriginalUrl(generatedPosterUrl);
   }
 
   function buildCourseText() {
@@ -2246,12 +2391,24 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
               <button type="button" onClick={() => setIsPosterPreviewOpen((current) => !current)}>
                 预览
               </button>
-              <button type="button" onClick={generatePoster}>
-                生成
+              <button type="button" onClick={generatePoster} disabled={isPosterGenerating}>
+                {isPosterGenerating ? "生成中" : "生成"}
               </button>
             </div>
           </div>
         </div>
+        </PortalLayer>
+      )}
+
+      {isPosterGenerating && (
+        <PortalLayer>
+          <div className="modal-backdrop schedule-v2-backdrop poster-loading-backdrop" role="status" aria-live="polite">
+            <div className="poster-loading-sheet" onClick={(event) => event.stopPropagation()}>
+              <span className="poster-loading-spinner" aria-hidden="true" />
+              <strong>努力生成中</strong>
+              <p>高清海报正在生成，请稍等一下。</p>
+            </div>
+          </div>
         </PortalLayer>
       )}
 
@@ -2262,20 +2419,29 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
             <div className="modal-header">
               <div>
                 <h2>海报已生成</h2>
-                <p>可打开原图保存。</p>
+                <p>保存高清原图，或在浏览器中打开。</p>
               </div>
               <button type="button" onClick={() => setGeneratedPosterUrl("")}>×</button>
             </div>
             <div className="poster-result-image-wrap">
               <img src={generatedPosterUrl} alt="生成的课后海报" />
             </div>
-            <button
-              type="button"
-              className="schedule-v2-primary-wide"
-              onClick={() => window.open(generatedPosterUrl, "_blank")}
-            >
-              打开原图
-            </button>
+            <div className="poster-result-actions">
+              <button
+                type="button"
+                className="schedule-v2-primary-wide"
+                onClick={saveGeneratedPosterImage}
+              >
+                保存高清原图
+              </button>
+              <button
+                type="button"
+                className="poster-result-link"
+                onClick={openGeneratedPosterOriginal}
+              >
+                点击这里，在浏览器中打开高清原图
+              </button>
+            </div>
           </div>
         </div>
         </PortalLayer>
@@ -2328,6 +2494,7 @@ function LegacySchedulePage({ member, members = [], languagePreference }) {
   const [selectedPosterTheme, setSelectedPosterTheme] = useState("vitalityOrange");
 const [isPosterPreviewOpen, setIsPosterPreviewOpen] = useState(false);
   const [generatedPosterUrl, setGeneratedPosterUrl] = useState("");
+  const [isPosterGenerating, setIsPosterGenerating] = useState(false);
   const [quickMode, setQuickMode] = useState("templates");
   const [pasteText, setPasteText] = useState("");
   const [parsedRows, setParsedRows] = useState([]);
@@ -2667,29 +2834,31 @@ function buildPosterPayload() {
   return {
     posterTheme: selectedPosterTheme,
 
-    studentName: lessonForm.studentName || "未命名学员",
+    studentName: addPosterSoftBreaks(lessonForm.studentName || "未命名学员"),
     studentNameSlug: lessonForm.studentName || "student",
-    date: getTodayLabel(),
-    weather: lessonForm.weather || "晴",
+    date: addPosterSoftBreaks(getTodayLabel()),
+    weather: addPosterSoftBreaks(lessonForm.weather || "晴"),
     lessonNumber: `第${lessonNumber}课`,
-    courseTheme: lessonForm.lessonTheme || "",
+    courseTheme: addPosterSoftBreaks(lessonForm.lessonTheme || ""),
 
-    studioName: latestSettings.studioNameCn || "",
-    studioSubName: latestSettings.studioNameEn || "",
+    studioName: addPosterSoftBreaks(latestSettings.studioNameCn || ""),
+    studioSubName: addPosterSoftBreaks(latestSettings.studioNameEn || ""),
     logo: latestSettings.logoDataUrl || "",
 
-    summary: lessonForm.summary || "",
+    summary: addPosterSoftBreaks(lessonForm.summary || ""),
     actions: actions.map((action, index) => ({
       number: index + 1,
       equipment: action.apparatus || "",
-      name: getPosterActionName(action),
-      benefit: action.benefit || "",
-      comment: action.comment || "",
+      name: addPosterSoftBreaks(getPosterActionName(action)),
+      benefit: addPosterSoftBreaks(action.benefit || ""),
+      comment: addPosterSoftBreaks(action.comment || ""),
     })),
   };
 }
 
 async function generatePoster() {
+  if (isPosterGenerating) return;
+
   if (!lessonForm.studentName.trim()) {
     setSaveMessage("请先填写学员姓名");
     setTimeout(() => setSaveMessage(""), 1600);
@@ -2703,7 +2872,8 @@ async function generatePoster() {
   }
 
   try {
-    setSaveMessage("正在生成海报...");
+    setIsPosterGenerating(true);
+    setSaveMessage("");
 
     saveLesson(buildLessonPayload());
 
@@ -2732,7 +2902,32 @@ setTimeout(() => setSaveMessage(""), 1600);
     console.error("生成海报失败", error);
     setSaveMessage("生成海报失败，请检查后端接口");
     setTimeout(() => setSaveMessage(""), 2200);
+  } finally {
+    setIsPosterGenerating(false);
   }
+}
+
+async function saveGeneratedPosterImage() {
+  const status = await savePosterImageToDevice(
+    generatedPosterUrl,
+    getPosterDownloadName(lessonForm.studentName, lessonNumber)
+  );
+
+  if (status === "shared") {
+    setSaveMessage("已打开系统保存菜单");
+  } else if (status === "downloaded") {
+    setSaveMessage("已开始下载高清原图");
+  } else if (status === "opened") {
+    setSaveMessage("已打开高清原图，请长按保存");
+  }
+
+  if (status !== "cancelled") {
+    setTimeout(() => setSaveMessage(""), 1600);
+  }
+}
+
+function openGeneratedPosterOriginal() {
+  openPosterOriginalUrl(generatedPosterUrl);
 }
 
   function clearCurrentDraft() {
@@ -3156,11 +3351,21 @@ setTimeout(() => setSaveMessage(""), 1600);
     <span>预览</span>
   </button>
 
-  <button className="poster-tool-action main-action" onClick={generatePoster}>
+  <button className="poster-tool-action main-action" onClick={generatePoster} disabled={isPosterGenerating}>
     <ImageIcon size={20} />
-    <span>生成</span>
+    <span>{isPosterGenerating ? "生成中" : "生成"}</span>
   </button>
 </div>
+
+     {isPosterGenerating && (
+  <div className="modal-backdrop poster-loading-backdrop" role="status" aria-live="polite">
+    <div className="poster-loading-sheet" onClick={(event) => event.stopPropagation()}>
+      <span className="poster-loading-spinner" aria-hidden="true" />
+      <strong>努力生成中</strong>
+      <p>高清海报正在生成，请稍等一下。</p>
+    </div>
+  </div>
+)}
 
      {generatedPosterUrl && (
   <div className="modal-backdrop" onClick={() => setGeneratedPosterUrl("")}>
@@ -3171,7 +3376,7 @@ setTimeout(() => setSaveMessage(""), 1600);
       <div className="modal-header">
         <div>
           <h2>海报已生成</h2>
-          <p>长按图片保存，或点击下方按钮打开原图。</p>
+          <p>保存高清原图，或在浏览器中打开。</p>
         </div>
         <button onClick={() => setGeneratedPosterUrl("")}>×</button>
       </div>
@@ -3180,12 +3385,22 @@ setTimeout(() => setSaveMessage(""), 1600);
         <img src={generatedPosterUrl} alt="生成的课后海报" />
       </div>
 
-      <button
-        className="main-wide-button"
-        onClick={() => window.open(generatedPosterUrl, "_blank")}
-      >
-        打开原图
-      </button>
+      <div className="poster-result-actions">
+        <button
+          type="button"
+          className="main-wide-button"
+          onClick={saveGeneratedPosterImage}
+        >
+          保存高清原图
+        </button>
+        <button
+          type="button"
+          className="poster-result-link"
+          onClick={openGeneratedPosterOriginal}
+        >
+          点击这里，在浏览器中打开高清原图
+        </button>
+      </div>
     </div>
   </div>
 )}
