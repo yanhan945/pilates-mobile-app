@@ -8691,3 +8691,65 @@ body.schedule-input-active .app-shell--schedule .bottom-tabs {
   background: rgba(125, 110, 85, 0.12) !important;
   border-color: rgba(125, 110, 85, 0.28) !important;
 }
+/* ===== Schedule final override: date + compact recommendations ===== */
+.schedule-v2-meta-grid input[type="date"] {
+  width: 100% !important;
+  height: 26px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--schedule-text, #1c1a18) !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+  font-weight: 760 !important;
+  line-height: 1.2 !important;
+  color-scheme: light !important;
+}
+
+.schedule-v2-meta-grid small {
+  color: var(--schedule-muted, #8d8982) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+}
+
+.schedule-v2-action-search {
+  overflow: visible !important;
+}
+
+.schedule-v2-recommend-panel,
+.schedule-v2-input-active .schedule-v2-recommend-panel {
+  right: 58px !important;
+  max-height: min(38dvh, 320px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  padding: 7px !important;
+  gap: 5px !important;
+}
+
+.schedule-v2-recommend-panel button,
+.schedule-v2-input-active .schedule-v2-recommend-panel button {
+  min-height: 42px !important;
+  padding: 7px 8px !important;
+  border-radius: 11px !important;
+  gap: 8px !important;
+}
+
+.schedule-v2-recommend-panel strong,
+.schedule-v2-input-active .schedule-v2-recommend-panel strong {
+  font-size: 12.5px !important;
+  line-height: 1.2 !important;
+}
+
+.schedule-v2-recommend-panel small,
+.schedule-v2-input-active .schedule-v2-recommend-panel small {
+  margin-top: 2px !important;
+  font-size: 10.8px !important;
+  line-height: 1.22 !important;
+  -webkit-line-clamp: 1 !important;
+}
+
+.schedule-v2-recommend-head {
+  gap: 8px !important;
+}
