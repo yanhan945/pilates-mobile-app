@@ -6,11 +6,91 @@ const userCustomActions = [];
 const userFavorites = new Set();
 
 const tagAliasGroups = [
-  ["臀腿", "臀部", "腿部", "翘臀", "美腿", "髋", "髋膝踝"],
-  ["核心", "核心增强", "腹部", "腹肌", "骨盆稳定", "躯干"],
-  ["肩颈", "肩背", "美背", "圆肩", "肩颈理疗", "肩胛"],
-  ["柔韧", "柔韧性", "灵活", "活动度", "脊柱灵活"],
-  ["平衡", "协调", "稳定", "体态", "体态调整"],
+  {
+    key: "glutesLegs",
+    words: ["臀腿", "臀部", "腿部", "翘臀", "美腿", "髋膝踝", "下肢力量", "下肢肌耐力"],
+  },
+  {
+    key: "core",
+    words: [
+      "核心",
+      "核心增强",
+      "核心稳定",
+      "强化核心",
+      "腹部核心",
+      "腹部",
+      "腹肌",
+      "骨盆稳定",
+      "躯干稳定",
+      "身体稳定",
+    ],
+  },
+  {
+    key: "shoulderNeck",
+    words: ["肩颈", "肩背", "美背", "圆肩", "肩颈理疗", "肩胛", "肩带稳定"],
+  },
+  {
+    key: "flexibility",
+    words: [
+      "柔韧",
+      "柔韧性",
+      "柔韧提升",
+      "基础灵活",
+      "拉伸",
+      "关节活动度",
+      "髋活动度",
+      "髋关节活动度",
+      "肩活动度",
+      "肩关节活动度",
+      "踝活动度",
+      "踝关节活动度",
+      "大腿内侧柔韧",
+      "大腿后侧柔韧",
+      "腿后侧柔韧",
+      "腘绳肌柔韧",
+      "背部柔韧",
+      "后背柔韧",
+      "肩关节柔韧",
+      "髋关节柔韧",
+    ],
+  },
+  {
+    key: "spineMobility",
+    words: [
+      "脊柱灵活",
+      "灵活脊柱",
+      "脊柱活动度",
+      "脊柱分节",
+      "脊柱屈曲",
+      "脊柱伸展",
+      "脊柱旋转",
+      "脊柱回旋",
+      "胸椎灵活",
+      "胸椎活动度",
+      "胸椎旋转",
+      "腰椎活动度",
+    ],
+  },
+  {
+    key: "upperStrength",
+    words: [
+      "上肢肌耐力",
+      "强化上肢肌耐力",
+      "上肢力量",
+      "强化上肢力量",
+      "上肢综合",
+      "上肢承重",
+      "上肢推力",
+      "上肢拉力",
+      "上肢功能",
+      "手臂力量",
+      "肩袖稳定",
+    ],
+  },
+  {
+    key: "balancePosture",
+    words: ["平衡", "协调", "稳定", "体态", "体态调整", "姿势控制"],
+  },
 ];
 
 function normalizeText(value) {
@@ -22,6 +102,18 @@ function normalizeText(value) {
 
 function compactText(value) {
   return normalizeText(value).replace(/[/\s（）()·+＋-]/g, "");
+}
+
+function getAliasGroupWords(group) {
+  return Array.isArray(group) ? group : group.words || [];
+}
+
+function isAliasMatch(sourceToken, aliasToken) {
+  if (!sourceToken || !aliasToken) return false;
+  if (sourceToken === aliasToken) return true;
+  if (sourceToken.length < 2 || aliasToken.length < 2) return false;
+
+  return sourceToken.includes(aliasToken) || aliasToken.includes(sourceToken);
 }
 
 function createSafeId(prefix = "selected") {
@@ -230,9 +322,9 @@ function getTagSearchTokens(keyword) {
   const tokens = new Set([compactKeyword]);
 
   tagAliasGroups.forEach((group) => {
-    const normalizedGroup = group.map(compactText);
+    const normalizedGroup = getAliasGroupWords(group).map(compactText);
     const hasMatch = normalizedGroup.some(
-      (item) => item && (compactKeyword.includes(item) || item.includes(compactKeyword))
+      (item) => item && isAliasMatch(compactKeyword, item)
     );
 
     if (hasMatch) {
@@ -245,14 +337,39 @@ function getTagSearchTokens(keyword) {
   return Array.from(tokens);
 }
 
-function matchesTagSearch(action, keyword) {
+function getTagMatchScore(action, keyword) {
   const tags = Array.isArray(action.tags) ? action.tags : [];
-  if (!tags.length) return false;
+  if (!tags.length) return 0;
 
-  const tagText = compactText(tags.join(" "));
+  const compactKeyword = compactText(keyword);
+  const tagTokens = tags.map(compactText).filter(Boolean);
+  const tagText = tagTokens.join(" ");
   const tokens = getTagSearchTokens(keyword);
+  let score = 0;
 
-  return tokens.some((token) => token && tagText.includes(token));
+  if (compactKeyword && tagTokens.some((tag) => isAliasMatch(tag, compactKeyword))) {
+    score += 9000;
+  }
+
+  tokens.forEach((token) => {
+    if (!token) return;
+
+    if (tagTokens.some((tag) => tag === token)) {
+      score += 2200;
+      return;
+    }
+
+    if (tagTokens.some((tag) => isAliasMatch(tag, token))) {
+      score += 1400;
+      return;
+    }
+
+    if (tagText.includes(token)) {
+      score += 800;
+    }
+  });
+
+  return score;
 }
 
 function getExpandedSearchTokens(keyword) {
@@ -265,9 +382,9 @@ function getExpandedSearchTokens(keyword) {
 
   Array.from(tokens).forEach((token) => {
     tagAliasGroups.forEach((group) => {
-      const normalizedGroup = group.map(compactText);
+      const normalizedGroup = getAliasGroupWords(group).map(compactText);
       const hasMatch = normalizedGroup.some(
-        (item) => item && (token.includes(item) || item.includes(token))
+        (item) => item && isAliasMatch(token, item)
       );
 
       if (hasMatch) {
@@ -311,6 +428,7 @@ function getSearchMatchScore(action, keyword) {
     .filter(Boolean);
   const tokens = getExpandedSearchTokens(keyword);
   let score = 0;
+  const tagScore = getTagMatchScore(action, keyword);
 
   if (
     normalizeText(action.cnName) === normalizedKeyword ||
@@ -346,9 +464,7 @@ function getSearchMatchScore(action, keyword) {
     }
   });
 
-  if (matchesTagSearch(action, keyword)) {
-    score += 350;
-  }
+  score += tagScore;
 
   return score;
 }
@@ -371,6 +487,7 @@ export function searchActions({
   keyword = "",
   apparatus = "all",
   languagePreference = "mixed",
+  preferTagged = false,
 } = {}) {
   const normalizedKeyword = normalizeText(keyword);
 
@@ -386,6 +503,7 @@ export function searchActions({
     })
     .map((action) => ({
       action,
+      tagScore: getTagMatchScore(action, keyword),
       matchScore: getSearchMatchScore(action, keyword),
     }))
     .filter(({ matchScore }) => {
@@ -393,6 +511,14 @@ export function searchActions({
       return matchScore > 0;
     })
     .sort((a, b) => {
+      if (preferTagged) {
+        const aTagged = a.tagScore > 0;
+        const bTagged = b.tagScore > 0;
+
+        if (aTagged !== bTagged) return aTagged ? -1 : 1;
+        if (b.tagScore !== a.tagScore) return b.tagScore - a.tagScore;
+      }
+
       if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore;
       return getRecommendationScore(b.action) - getRecommendationScore(a.action);
     })
