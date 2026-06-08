@@ -262,6 +262,53 @@ function getTodayLabel() {
   ).padStart(2, "0")} · ${weekdays[now.getDay()]}`;
 }
 
+function getDateInputValue(date = new Date()) {
+  const nextDate = date instanceof Date ? date : new Date(date);
+
+  if (Number.isNaN(nextDate.getTime())) return getDateInputValue(new Date());
+
+  return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}-${String(
+    nextDate.getDate()
+  ).padStart(2, "0")}`;
+}
+
+function getLessonDateInputValue(value) {
+  const rawValue = String(value || "").trim();
+
+  if (!rawValue) return getDateInputValue();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) return rawValue;
+
+  const fullDateMatch = rawValue.match(/(\d{4})[.\-/年](\d{1,2})[.\-/月](\d{1,2})/);
+  if (fullDateMatch) {
+    const [, year, month, day] = fullDateMatch;
+    return getDateInputValue(new Date(Number(year), Number(month) - 1, Number(day)));
+  }
+
+  const monthDayMatch = rawValue.match(/(\d{1,2})月(\d{1,2})日/);
+  if (monthDayMatch) {
+    const [, month, day] = monthDayMatch;
+    const currentYear = new Date().getFullYear();
+    return getDateInputValue(new Date(currentYear, Number(month) - 1, Number(day)));
+  }
+
+  const parsedDate = new Date(rawValue);
+  if (!Number.isNaN(parsedDate.getTime())) return getDateInputValue(parsedDate);
+
+  return getDateInputValue();
+}
+
+function getDateLabel(dateValue) {
+  const [year, month, day] = getLessonDateInputValue(dateValue)
+    .split("-")
+    .map(Number);
+  const date = new Date(year || new Date().getFullYear(), (month || 1) - 1, day || 1);
+  const weekdays = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, "0")}.${String(
+    date.getDate()
+  ).padStart(2, "0")} · ${weekdays[date.getDay()]}`;
+}
+
 function getApparatusLabel(apparatus) {
   return apparatusOptions.find((item) => item.key === apparatus)?.label || apparatus || "";
 }
@@ -342,9 +389,48 @@ function App() {
     saveSettings({ languagePreference });
   }, [languagePreference]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    window.history.replaceState({ tab: "home" }, "", window.location.href);
+
+    function handlePopState(event) {
+      const nextTab = event.state?.tab || "home";
+      setActiveTab(nextTab);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  function switchTab(nextTab) {
+    setActiveTab(nextTab);
+
+    if (typeof window === "undefined") return;
+
+    const currentTab = window.history.state?.tab || "home";
+    if (currentTab === nextTab) return;
+
+    if (nextTab === "home") {
+      if (currentTab !== "home") {
+        window.history.back();
+      } else {
+        window.history.replaceState({ tab: "home" }, "", window.location.href);
+      }
+      return;
+    }
+
+    if (currentTab === "home") {
+      window.history.pushState({ tab: nextTab }, "", window.location.href);
+    } else {
+      window.history.replaceState({ tab: nextTab }, "", window.location.href);
+    }
+  }
+
   function openSchedule(member) {
     setSelectedMember(member);
-    setActiveTab("schedule");
+    switchTab("schedule");
   }
 
   return (
@@ -390,7 +476,7 @@ function App() {
             type="button"
             className={activeTab === item.key ? "tab active" : "tab"}
             aria-current={activeTab === item.key ? "page" : undefined}
-            onClick={() => setActiveTab(item.key)}
+            onClick={() => switchTab(item.key)}
           >
             <span className="tab-icon-wrap">
               <item.Icon className="tab-icon" size={27} strokeWidth={1.9} />
@@ -698,6 +784,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   const [isPosterGenerating, setIsPosterGenerating] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [lessonForm, setLessonForm] = useState({
+    lessonDate: getDateInputValue(),
     weather: "晴",
     studentName: member?.name || "",
     lessonTheme: "",
@@ -776,14 +863,20 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       const section = actionDetailsRef.current;
       if (!scroller || !section) return;
 
+      const scrollerRect = scroller.getBoundingClientRect();
+      const sectionRect = section.getBoundingClientRect();
+      const nextTop = scroller.scrollTop + sectionRect.top - scrollerRect.top - 8;
+
       scroller.scrollTo({
-        top: Math.max(section.offsetTop - 14, 0),
+        top: Math.max(nextTop, 0),
         behavior: "smooth",
       });
     };
 
-    window.setTimeout(scrollToActionSection, 60);
-    window.setTimeout(scrollToActionSection, 260);
+    window.requestAnimationFrame(scrollToActionSection);
+    window.setTimeout(scrollToActionSection, 80);
+    window.setTimeout(scrollToActionSection, 280);
+    window.setTimeout(scrollToActionSection, 520);
   }
 
   function primeActionSearch(event) {
@@ -836,9 +929,11 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   const recommendationApparatus = isFavoriteFilterActive ? "favorite" : selectedApparatus;
 
   const recommendedActions = useMemo(() => {
-    const recommendationKeyword = searchKeyword.trim()
+    const hasTypedKeyword = Boolean(searchKeyword.trim());
+    const hasLinkedTheme = isThemeLinked && Boolean(lessonForm.lessonTheme.trim());
+    const recommendationKeyword = hasTypedKeyword
       ? searchKeyword
-      : isThemeLinked
+      : hasLinkedTheme
         ? lessonForm.lessonTheme
         : "";
 
@@ -847,6 +942,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         keyword: recommendationKeyword,
         apparatus,
         languagePreference,
+        preferTagged: !hasTypedKeyword && hasLinkedTheme,
       })
         .filter((action) => !addedBaseActionIds.has(action.id))
         .filter((action) => !addedActionKeys.has(getActionIdentityKey(action)));
@@ -903,6 +999,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
 
     if (existingLesson) {
       setLessonForm({
+        lessonDate: getLessonDateInputValue(existingLesson.lessonDate || existingLesson.lesson_date),
         weather: existingLesson.weather || "晴",
         studentName: existingLesson.memberName || memberName,
         lessonTheme: existingLesson.lessonTheme || "",
@@ -913,6 +1010,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     } else {
       setLessonForm((current) => ({
         ...current,
+        lessonDate: current.lessonDate || getDateInputValue(),
         weather: current.weather || "晴",
         studentName: memberName,
         lessonTheme: "",
@@ -1037,6 +1135,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
     setScheduleMember(nextMember);
     setLessonNumber(nextLessonNumber);
     setLessonForm({
+      lessonDate: getDateInputValue(),
       weather: "晴",
       studentName: nextMember.name,
       lessonTheme: "",
@@ -1387,7 +1486,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       id: `lesson-${lessonForm.studentName || "guest"}-${lessonNumber}`,
       memberName: lessonForm.studentName,
       lessonNumber,
-      lessonDate: getTodayLabel(),
+      lessonDate: getDateLabel(lessonForm.lessonDate),
       weather: lessonForm.weather,
       lessonTheme: lessonForm.lessonTheme,
       posterTheme: selectedPosterTheme,
@@ -1423,6 +1522,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
   function clearCurrentDraft() {
     clearLessonDraft(lessonForm.studentName, lessonNumber);
     setLessonForm({
+      lessonDate: getDateInputValue(),
       weather: "晴",
       studentName: currentMember?.name || "",
       lessonTheme: "",
@@ -1460,7 +1560,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
       posterTheme: selectedPosterTheme,
       studentName: addPosterSoftBreaks(lessonForm.studentName || "未命名学员"),
       studentNameSlug: lessonForm.studentName || "student",
-      date: addPosterSoftBreaks(getTodayLabel()),
+      date: addPosterSoftBreaks(getDateLabel(lessonForm.lessonDate)),
       weather: addPosterSoftBreaks(lessonForm.weather || "晴"),
       lessonNumber: `第${lessonNumber}课`,
       courseTheme: addPosterSoftBreaks(lessonForm.lessonTheme || ""),
@@ -1575,7 +1675,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
 
     return [
       `${lessonForm.studentName || "未命名学员"} · 第${lessonNumber}节`,
-      `日期：${getTodayLabel()}`,
+      `日期：${getDateLabel(lessonForm.lessonDate)}`,
       `天气：${lessonForm.weather || "晴"}`,
       `主题：${lessonForm.lessonTheme || "未填写"}`,
       "",
@@ -1745,7 +1845,7 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         <div>
           <h1>普拉提私教助手</h1>
           <p>
-            {lessonForm.studentName || "选择学员"} · {getTodayLabel()}
+            {lessonForm.studentName || "选择学员"} · {getDateLabel(lessonForm.lessonDate)}
           </p>
         </div>
         <div className="schedule-v2-quick-wrap" ref={quickMenuRef}>
@@ -1793,7 +1893,14 @@ function SchedulePage({ member, members = [], languagePreference, onMembersUpdat
         <div className="schedule-v2-meta-grid">
           <label>
             <span>日期</span>
-            <strong>{getTodayLabel().split(" · ")[0] || getTodayLabel()}</strong>
+            <input
+              type="date"
+              value={lessonForm.lessonDate}
+              onChange={(event) =>
+                updateLessonField("lessonDate", event.target.value || getDateInputValue())
+              }
+            />
+            <small>{getDateLabel(lessonForm.lessonDate).split(" · ")[1]}</small>
           </label>
           <label>
             <span>天气</span>
